@@ -1,10 +1,16 @@
 import click
+from   .         import __version__
 from   .checker  import WheelChecker
 from   .checks   import parse_checks_string
 from   .contents import WheelContents
 from   .util     import UserInputError
 
-@click.command()
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
+@click.version_option(
+    __version__,
+    '-V', '--version',
+    message = '%(prog)s %(version)s',
+)
 @click.option(
     '-c', '--config',
     type = click.Path(exists=True, dir_okay=False),
