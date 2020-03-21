@@ -10,18 +10,18 @@ class Check(Enum):
         ### TODO: Rethink W005's message
     W006 = '__init__.py at top level of library'
     W007 = 'Wheel library is empty'
-    W008 = 'Wheel contains multiple toplevel files'
+    W008 = 'Wheel contains multiple toplevel library entries'
     W009 = 'Toplevel library directory contains no .py files'
-    W101 = 'Wheel contains files not in source tree'
-    W102 = 'Wheel is missing files in source tree'
-    W201 = 'Wheel is missing specifies toplevel entry'
-    W202 = 'Wheel has undeclared toplevel entry'
+    W101 = 'Wheel library contains files not in source tree'
+    W102 = 'Wheel library is missing files in source tree'
+    W201 = 'Wheel library is missing specified toplevel entry'
+    W202 = 'Wheel library has undeclared toplevel entry'
 
 
 @attr.s
 class FailedCheck:
     check = attr.ib()
-    args  = attr.ib()
+    args  = attr.ib(factory=list)
 
     def show(self, filename=None):
         s = ''

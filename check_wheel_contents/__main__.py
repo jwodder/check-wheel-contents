@@ -1,19 +1,26 @@
 import click
 from   .checker  import WheelChecker
 from   .contents import WheelContents
+from   .util     import UserInputError
 
 @click.command()
-@click.argument('wheel', nargs=-1)
-def main(wheel, **kwargs):
+@click.option(
+    '-c', '--config',
+    type = click.Path(exists=True, dir_okay=False),
+    help = 'Use the specified configuration file',
+)
+@click.argument('wheel', nargs=-1, type=click.Path(exists=True, dir_okay=False))
+@click.pass_context
+def main(ctx, wheel, config, **kwargs):
     checker = WheelChecker()
     try:
-        checker.apply_config_dict(???)
+        checker.read_config_file(config)
         checker.apply_command_options(**kwargs)
-    except UserInputError:
-        ???
+    except UserInputError as e:
+        ctx.fail(str(e))
     ok = True
     for w in wheel:
-        contents = WheelContent.from_wheel(w)
+        contents = WheelContents.from_wheel(w)
         failures = checker.check_contents(contents)
         if failures:
             for f in failures:

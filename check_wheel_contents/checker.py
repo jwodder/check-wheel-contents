@@ -1,6 +1,8 @@
-from operator import attrgetter
-from .checks  import Check, FailedCheck
-from .util    import bytes_signature, get_ext
+from   operator import attrgetter
+import re
+import attr
+from   .checks  import Check, FailedCheck
+from   .util    import bytes_signature
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 
@@ -16,6 +18,8 @@ ALLOWED_DUPLICATES = {
 
 IGNORED_TOPLEVEL_RGX = re.compile(r'.\.pth\Z')
 
+COMMON_DIRS = 'doc docs example exmaples src test tests'.split()
+
 @attr.s
 class WheelChecker:
     selected = attr.ib()
@@ -25,10 +29,13 @@ class WheelChecker:
         return set(Check)
 
     def apply_command_options(self, **kwargs):
-        ???
+        raise NotImplementedError
+
+    def read_config_file(self, configpath):
+        raise NotImplementedError
 
     def apply_config_dict(self, cfg):
-        ???
+        raise NotImplementedError
 
     def check_contents(self, contents):
         failures = []
@@ -61,15 +68,14 @@ class WheelChecker:
     def check_W003(self, contents):
         # 'Wheel contains non-module at library toplevel'
         # Only checks purelib and platlib sections
-        # Ignore *.pth files (TODO: and py.typed and *.pyi files?)
+        # Ignores *.pth files and directories (TODO: and py.typed and *.pyi
+        # files?)
         badtops = []
-        for t in sorted(contents.lib_toplevel):
-            if IGNORED_TOPLEVEL_RGX.search(t):
-                continue
-            # If `t` is neither a directory nor a .py file, fail:
-            ### TODO: Allow all module extensions, not just `.py`
-            if get_ext(t) != '.py' and t not in contents.lib_dirs:
-                badtops.append(t)
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            for f in sorted(tree.files):
+                if IGNORED_TOPLEVEL_RGX.search(f.libpath) is None \
+                        and not f.has_module_ext():
+                    badtops.append(f.path)
         if badtops:
             return [FailedCheck(Check.W003, badtops)]
         else:
@@ -80,52 +86,111 @@ class WheelChecker:
         # Only checks things under purelib and platlib
         badfiles = []
         for f in contents.files:
-            if f.in_library() and f.is_module() and not f.valid_module_path():
-                badfiles.append(f)
+            if f.in_library() and f.has_module_ext() \
+                    and not f.valid_module_path():
+                badfiles.append(f.path)
         if badfiles:
             return [FailedCheck(Check.W004, badfiles)]
         else:
             return []
 
     def check_W005(self, contents):
-    #W005 = 'Wheel contains common toplevel directory in library'
-    # Checks for: src, test, tests, doc, docs, example, examples
-    # Only checks purelib and platlib
-    # TODO: Add a configuration option for explicitly removing (or adding?)
-    # values from consideration
+        #W005 = 'Wheel contains common toplevel directory in library'
+        # Checks for COMMON_DIRS
+        # Only checks purelib and platlib
+        # TODO: Add a configuration option for explicitly removing (or adding?)
+        # values from consideration
+        badfiles = []
+        for tree, prefix in [
+            (contents.purelib_tree, contents.purelib_path_prefix),
+            (contents.platlib_tree, contents.platlib_path_prefix),
+        ]:
+            for common in COMMON_DIRS:
+                if common in tree.subdirectories:
+                    badfiles.append(prefix + common)
+        if badfiles:
+            return [FailedCheck(Check.W005, badfiles)]
+        else:
+            return []
 
     def check_W006(self, contents):
-    #W006 = '__init__.py at top level of library'
-    # Only checks purelib and platlib
+        #W006 = '__init__.py at top level of library'
+        # Only checks purelib and platlib
+        badfiles = []
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            badfiles.extend(
+                f.path for f in tree.files if f.libpath == '__init__.py'
+            )
+        if badfiles:
+            return [FailedCheck(Check.W006, badfiles)]
+        else:
+            return []
 
     def check_W007(self, contents):
-    #W007 = 'Wheel library is empty'
-    # Only errors if both purelib and platlib are empty
+        #W007 = 'Wheel library is empty'
+        # Only errors if both purelib and platlib are empty
+        if not contents.purelib_tree and not contents.platlib_tree:
+            return [FailedCheck(Check.W007)]
+        else:
+            return []
 
     def check_W008(self, contents):
-    #W008 = 'Wheel contains multiple toplevel files'
-    # Ignores the same things as W003 as well as modules starting with an
-    # underscore
-    # Not active when certain options given on command line
+        #W008 = 'Wheel contains multiple toplevel library entries'
+        # Ignores the same files as W003 as well as files & directories
+        # starting with an underscore
+        # Checks the combination of purelib and platlib
+        # TODO: Not active when certain options given on command line
+        toplevels = []
+        for tree, prefix in [
+            (contents.purelib_tree, contents.purelib_path_prefix),
+            (contents.platlib_tree, contents.platlib_path_prefix),
+        ]:
+            for sd in tree.subdirectories:
+                if not sd.startswith('_'):
+                    toplevels.append(prefix + sd)
+            for f in tree.files:
+                if not f.libpath.startswith('_') \
+                        and IGNORED_TOPLEVEL_RGX.search(f.libpath) is None:
+                    toplevels.append(f.path)
+        if len(toplevels) > 1:
+            return [FailedCheck(Check.W008, toplevels)]
+        else:
+            return []
 
     def check_W009(self, contents):
-    #W009 = 'Toplevel library directory contains no .py files'
-    # Only checks purelib and platlib
-    # Does not fail on directories that only contain typing files (iff root dir
-    # ends with -stubs?)
+        #W009 = 'Toplevel library directory contains no modules'
+        # Only checks purelib and platlib
+        # TODO: Do not fail on directories that only contain typing files (iff
+        # root dir ends with -stubs?)
+        baddirs = []
+        for tree, prefix in [
+            (contents.purelib_tree, contents.purelib_path_prefix),
+            (contents.platlib_tree, contents.platlib_path_prefix),
+        ]:
+            for name, subdir in tree.subdirectories.items():
+                if not any(f.has_module_ext() for f in subdir.all_files()):
+                    baddirs.append(prefix + name)
+        if baddirs:
+            return [FailedCheck(Check.W009, baddirs)]
+        else:
+            return []
 
     def check_W101(self, contents):
-    #W101 = 'Wheel contains files not in source tree'
-    # Only active when certain option given on command line
+        #W101 = 'Wheel library contains files not in source tree'
+        # Only active when certain option given on command line
+        raise NotImplementedError
 
     def check_W102(self, contents):
-    #W102 = 'Wheel is missing files in source tree'
-    # Only active when certain option given on command line
+        #W102 = 'Wheel library is missing files in source tree'
+        # Only active when certain option given on command line
+        raise NotImplementedError
 
     def check_W201(self, contents):
-    #W201 = 'Wheel is missing specifies toplevel entry'
-    # Only active when certain option given on command line
+        #W201 = 'Wheel library is missing specified toplevel entry'
+        # Only active when certain option given on command line
+        raise NotImplementedError
 
     def check_W202(self, contents):
-    #W202 = 'Wheel has undeclared toplevel entry'
-    # Only active when certain option given on command line
+        #W202 = 'Wheel library has undeclared toplevel entry'
+        # Only active when certain option given on command line
+        raise NotImplementedError

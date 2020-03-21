@@ -1,9 +1,16 @@
 import base64
 import hashlib
-from   os.path import splitext
 import re
 
 COMMA_SEP_RGX = re.compile(r'\s*,\s*')
+
+class UserInputError(ValueError):
+    """
+    Subclass of `ValueError` raised whenever the user supplies an invalid value
+    for something
+    """
+    pass
+
 
 def comma_split(s):
     return COMMA_SEP_RGX.split(s)
@@ -16,6 +23,3 @@ def bytes_signature(b):
 
 def urlsafe_b64encode_nopad(data):
     return base64.urlsafe_b64encode(data).rstrip(b'=').decode('us-ascii')
-
-def get_ext(path):
-    return splitext(path.split('/')[-1])[1]

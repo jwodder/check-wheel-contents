@@ -6,6 +6,7 @@ from   os.path      import basename, splitext
 import re
 from   zipfile      import ZipFile
 import attr
+from   .directory   import Directory
 from   .whlfilename import parse_wheel_filename
 
 # <https://discuss.python.org/t/identifying-parsing-binary-extension-filenames/>
@@ -28,18 +29,10 @@ class WheelContents:
     dist_info_dir   = attr.ib()
     data_dir        = attr.ib()
     root_is_purelib = attr.ib(default=True)
-    #: Set of all toplevel elements in the purelib and platlib sections (i.e.,
-    #: all `entry.libparts[0]` values)
-    lib_toplevel    = attr.ib(factory=set)
-    #: Set of all toplevel directories in the purelib and platlib sections
-    #: (i.e., all `entry.libparts[0]` values where `len(entry.libparts) > 1`)
-    lib_dirs        = attr.ib(factory=set)
-    #: Set of all toplevel directories in the purelib and platlib that contain
-    #: Python files at valid module paths (TODO: Should the "at valid module
-    #: paths" condition be dropped?)
-    lib_pkg_roots   = attr.ib(factory=set)
     files           = attr.ib(factory=list)
     by_signature    = attr.ib(factory=lambda: defaultdict(list))
+    purelib_tree    = attr.ib(factory=Directory)
+    platlib_tree    = attr.ib(factory=Directory)
 
     @classmethod
     def from_wheel(cls, path):
@@ -48,28 +41,27 @@ class WheelContents:
         data_dir = f'{whlname.project}-{whlname.version}.data'
         wc = cls(dist_info_dir=dist_info_dir, data_dir=data_dir)
         with open(path, 'rb') as fp, ZipFile(fp) as zf:
-            for filename in zf.namelist():
-                with zf.open(f'{dist_info_dir}/RECORD') as rf:
-                    wc.add_record_file(TextIOWrapper(rf, 'utf-8', newline=''))
-                with zf.open(f'{dist_info_dir}/WHEEL') as wf:
-                    for line in TextIOWrapper(wf, 'utf-8'):
-                        m = ROOT_IS_PURELIB_RGX.fullmatch(line)
-                        if m:
-                            rip = m.group(1)
-                            if rip.lower() == 'true':
-                                wc.root_is_purelib = True
-                            elif rip.lower() == 'false':
-                                wc.root_is_purelib = False
-                            else:
-                                raise ValueError(
-                                    f'Invalid Root-Is-Purelib value in WHEEL'
-                                    f' file: {rip}'
-                                )
-                            break
-                    else:
-                        raise ValueError(
-                            'Root-Is-Purelib header not found in WHEEL file'
-                        )
+            with zf.open(f'{dist_info_dir}/WHEEL') as wf:
+                for line in TextIOWrapper(wf, 'utf-8'):
+                    m = ROOT_IS_PURELIB_RGX.fullmatch(line)
+                    if m:
+                        rip = m.group(1)
+                        if rip.lower() == 'true':
+                            wc.root_is_purelib = True
+                        elif rip.lower() == 'false':
+                            wc.root_is_purelib = False
+                        else:
+                            raise ValueError(
+                                f'Invalid Root-Is-Purelib value in WHEEL'
+                                f' file: {rip}'
+                            )
+                        break
+                else:
+                    raise ValueError(
+                        'Root-Is-Purelib header not found in WHEEL file'
+                    )
+            with zf.open(f'{dist_info_dir}/RECORD') as rf:
+                wc.add_record_file(TextIOWrapper(rf, 'utf-8', newline=''))
         return wc
 
     def add_record_file(self, fp):
@@ -81,26 +73,26 @@ class WheelContents:
             self.add_file(entry)
 
     def add_file(self, entry):
-        if entry.in_library():
-            self.lib_toplevel.add(entry.libparts[0])
-            if len(entry.libparts) > 1:
-                self.lib_dirs.add(entry.libparts[0])
-                if entry.valid_module_path():
-                    self.lib_pkg_roots.add(entry.libparts[0])
         self.files.append(entry)
         self.by_signature[entry.signature].append(entry)
+        if entry.section is FileSection.PURELIB:
+            self.purelib_tree.add_at_path(entry, entry.libparts)
+        elif entry.section is FileSection.PLATLIB:
+            self.platlib_tree.add_at_path(entry, entry.libparts)
 
     @property
-    def filepaths(self):
-        return [f.path for f in self.files]
+    def purelib_path_prefix(self):
+        if self.root_is_purelib:
+            return ''
+        else:
+            return f'{self.data_dir}/purelib/'
 
     @property
-    def fileparts(self):
-        return [f.parts for f in self.files]
-
-    @property
-    def path_set(self):
-        return {f.parts for f in self.files}
+    def platlib_path_prefix(self):
+        if not self.root_is_purelib:
+            return ''
+        else:
+            return f'{self.data_dir}/platlib/'
 
     def categorize_path(self, path):
         parts = tuple(path.split('/'))
@@ -144,6 +136,9 @@ class FileEntry:
             section  = section,
         )
 
+    def __str__(self):
+        return self.path
+
     @property
     def path(self):
         return '/'.join(self.parts)
@@ -164,7 +159,7 @@ class FileEntry:
     def in_library(self):
         return self.section in (FileSection.PURELIB, FileSection.PLATLIB)
 
-    def is_module(self):
+    def has_module_ext(self):
         return MODULE_EXT_RGX.search(self.parts[-1]) is not None
 
     def valid_module_path(self):
