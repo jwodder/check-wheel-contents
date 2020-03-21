@@ -102,7 +102,7 @@ class WheelContents:
             elif len(parts) > 2 and parts[1] == 'platlib':
                 return (FileSection.PLATLIB, parts[2:])
             else:
-                return (FileSection.DATA, None)
+                return (FileSection.MISC_DATA, None)
         elif parts[0] == self.dist_info_dir:
             return (FileSection.DIST_INFO, None)
         elif self.root_is_purelib:
