@@ -1,4 +1,0 @@
-# Python ~= 3.6
-attrs >= 18.1
-click ~= 7.0
-toml
