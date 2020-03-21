@@ -1,8 +1,9 @@
-from   operator import attrgetter
+from   operator    import attrgetter
 import re
 import attr
-from   .checks  import Check, FailedCheck
-from   .util    import bytes_signature
+from   .checks     import Check, FailedCheck, parse_checks_string
+from   .configfile import find_config_dict, read_config_dict
+from   .util       import UserInputError, bytes_signature
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 
@@ -23,19 +24,42 @@ COMMON_DIRS = 'doc docs example exmaples src test tests'.split()
 @attr.s
 class WheelChecker:
     selected = attr.ib()
+    options  = attr.ib(factory=dict)
 
     @selected.default
     def _selected_default(self):
         return set(Check)
 
-    def apply_command_options(self, **kwargs):
-        raise NotImplementedError
+    def read_config_file(self, configpath=None):
+        if configpath is None:
+            cfg = find_config_dict()
+        else:
+            cfg = read_config_dict(configpath)
+        self.load_config_dict(cfg)
 
-    def read_config_file(self, configpath):
-        raise NotImplementedError
+    def load_config_dict(self, cfg: dict) -> None:
+        if "select" in cfg:
+            if not isinstance(cfg["select"], str):
+                raise UserInputError('"select" config key must be a string')
+            self.options["select"] = parse_checks_string(cfg["select"])
+        if "ignore" in cfg:
+            if not isinstance(cfg["ignore"], str):
+                raise UserInputError('"ignore" config key must be a string')
+            self.options["ignore"] = parse_checks_string(cfg["ignore"])
 
-    def apply_config_dict(self, cfg):
-        raise NotImplementedError
+    def load_command_options(self, select=None, ignore=None):
+        if select is not None:
+            self.options["select"] = select
+        if ignore is not None:
+            self.options["ignore"] = ignore
+
+    def finalize_options(self):
+        select = self.options.pop("select", None)
+        if select is not None:
+            self.selected = select.copy()
+        ignore = self.options.pop("ignore", None)
+        if ignore is not None:
+            self.selected -= ignore
 
     def check_contents(self, contents):
         failures = []

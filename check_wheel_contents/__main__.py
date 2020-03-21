@@ -1,5 +1,6 @@
 import click
 from   .checker  import WheelChecker
+from   .checks   import parse_checks_string
 from   .contents import WheelContents
 from   .util     import UserInputError
 
@@ -9,13 +10,26 @@ from   .util     import UserInputError
     type = click.Path(exists=True, dir_okay=False),
     help = 'Use the specified configuration file',
 )
+@click.option(
+    '--ignore',
+    type    = parse_checks_string,
+    help    = 'Comma-separated list of checks to disable',
+    metavar = 'CHECKS',
+)
+@click.option(
+    '--select',
+    type    = parse_checks_string,
+    help    = 'Comma-separated list of checks to enable',
+    metavar = 'CHECKS',
+)
 @click.argument('wheel', nargs=-1, type=click.Path(exists=True, dir_okay=False))
 @click.pass_context
-def main(ctx, wheel, config, **kwargs):
+def main(ctx, wheel, config, select, ignore):
     checker = WheelChecker()
     try:
         checker.read_config_file(config)
-        checker.apply_command_options(**kwargs)
+        checker.load_command_options(select=select, ignore=ignore)
+        checker.finalize_options()
     except UserInputError as e:
         ctx.fail(str(e))
     ok = True
