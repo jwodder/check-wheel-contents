@@ -7,10 +7,8 @@ import re
 from   zipfile      import ZipFile
 import attr
 from   .directory   import Directory
+from   .util        import pymodule_basename
 from   .whlfilename import parse_wheel_filename
-
-# <https://discuss.python.org/t/identifying-parsing-binary-extension-filenames/>
-MODULE_EXT_RGX = re.compile(r'(?:\.py|\.[-A-Za-z0-9_]+\.(?:pyd|so))\Z')
 
 ROOT_IS_PURELIB_RGX = re.compile(
     r'\s*Root-Is-Purelib\s*:\s*(.*?)\s*',
@@ -160,16 +158,15 @@ class FileEntry:
         return self.section in (FileSection.PURELIB, FileSection.PLATLIB)
 
     def has_module_ext(self):
-        return MODULE_EXT_RGX.search(self.parts[-1]) is not None
+        return pymodule_basename(self.parts[-1]) is not None
 
     def valid_module_path(self):
         if self.libparts is None:
             return False
         *pkgs, basename = self.libparts
-        m = MODULE_EXT_RGX.search(basename)
-        if m is None:
+        base = pymodule_basename(basename)
+        if base is None:
             return False
-        base = basename[:m.start()]
         return all(
             p.isidentifier() and not p.iskeyword() for p in (*pkgs, base)
         )
