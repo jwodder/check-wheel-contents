@@ -5,6 +5,16 @@ from   .checks   import parse_checks_string
 from   .contents import WheelContents
 from   .util     import UserInputError
 
+class ChecksParamType(click.ParamType):
+    name = 'checks'
+
+    def convert(self, value, param, ctx):
+        try:
+            return parse_checks_string(value)
+        except UserInputError as e:
+            self.fail(str(e), param, ctx)
+
+
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(
     __version__,
@@ -18,13 +28,13 @@ from   .util     import UserInputError
 )
 @click.option(
     '--ignore',
-    type    = parse_checks_string,
+    type    = ChecksParamType(),
     help    = 'Comma-separated list of checks to disable',
     metavar = 'CHECKS',
 )
 @click.option(
     '--select',
-    type    = parse_checks_string,
+    type    = ChecksParamType(),
     help    = 'Comma-separated list of checks to enable',
     metavar = 'CHECKS',
 )

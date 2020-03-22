@@ -160,7 +160,7 @@ class FileEntry:
     def has_module_ext(self):
         return pymodule_basename(self.parts[-1]) is not None
 
-    def valid_module_path(self):
+    def is_valid_module_path(self):
         if self.libparts is None:
             return False
         *pkgs, basename = self.libparts

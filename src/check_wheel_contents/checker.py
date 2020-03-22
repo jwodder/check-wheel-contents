@@ -111,7 +111,7 @@ class WheelChecker:
         badfiles = []
         for f in contents.files:
             if f.in_library() and f.has_module_ext() \
-                    and not f.valid_module_path():
+                    and not f.is_valid_module_path():
                 badfiles.append(f.path)
         if badfiles:
             return [FailedCheck(Check.W004, badfiles)]
@@ -153,6 +153,8 @@ class WheelChecker:
     def check_W007(self, contents):
         #W007 = 'Wheel library is empty'
         # Only errors if both purelib and platlib are empty
+        # TODO: Disable if there are things in *.data/scripts/ ?
+        # TODO: Change to "No files outside .dist-info directory"?
         if not contents.purelib_tree and not contents.platlib_tree:
             return [FailedCheck(Check.W007)]
         else:

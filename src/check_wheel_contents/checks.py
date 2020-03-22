@@ -1,7 +1,7 @@
 from   enum   import Enum
 from   typing import Set
 import attr
-from   .util  import comma_split
+from   .util  import UserInputError, comma_split
 
 class Check(Enum):
     W001 = 'Wheel contains .pyc/.pyo files'
@@ -42,10 +42,10 @@ def parse_checks_string(s: str) -> Set[Check]:
     Convert a string of comma-separated check names & check name prefixes to a
     set of `Check`\\ s
     """
-    ### TODO: Error on invalid prefixes?
     checks = set()
     for cs in comma_split(s):
-        for chk in Check:
-            if chk.name.startswith(cs):
-                checks.add(chk)
+        new_checks = [chk for chk in Check if chk.name.startswith(cs)]
+        if not new_checks:
+            raise UserInputError('Unknown check prefix: {cs}')
+        checks.update(new_checks)
     return checks
