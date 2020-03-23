@@ -12,10 +12,7 @@ from   wheel_filename   import parse_wheel_filename
 from   .errors          import WheelValidationError
 from   .util            import pymodule_basename
 
-ROOT_IS_PURELIB_RGX = re.compile(
-    r'\s*Root-Is-Purelib\s*:\s*(.*?)\s*',
-    flags=re.I,
-)
+ROOT_IS_PURELIB_RGX = re.compile(r'Root-Is-Purelib\s*:\s*(.*?)\s*', flags=re.I)
 
 class Section(Enum):
     PURELIB   = 1
