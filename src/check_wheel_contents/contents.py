@@ -1,25 +1,17 @@
 from   collections      import defaultdict
 import csv
-from   enum             import Enum
 from   io               import TextIOWrapper
 from   os.path          import basename, splitext
 import re
-from   typing           import Dict, Iterator, Tuple, Union
+from   typing           import Dict, Iterator, Optional, Tuple, Union
 from   zipfile          import ZipFile
 import attr
 from   property_manager import cached_property
 from   wheel_filename   import parse_wheel_filename
 from   .errors          import WheelValidationError
-from   .util            import pymodule_basename
+from   .util            import is_data_dir, is_dist_info_dir, pymodule_basename
 
 ROOT_IS_PURELIB_RGX = re.compile(r'Root-Is-Purelib\s*:\s*(.*?)\s*', flags=re.I)
-
-class Section(Enum):
-    PURELIB   = 1
-    PLATLIB   = 2
-    MISC_DATA = 3
-    DIST_INFO = 4
-
 
 @attr.s
 class WheelContents:
@@ -89,6 +81,7 @@ class WheelContents:
                     )
             with zf.open(f'{dist_info_dir}/RECORD') as rf:
                 wc.add_record_file(TextIOWrapper(rf, 'utf-8', newline=''))
+        wc.sanity_checks()
         return wc
 
     def add_record_file(self, fp):
@@ -99,57 +92,86 @@ class WheelContents:
             if row and row[0].endswith('/'):
                 entry = Directory(row[0])
             else:
-                entry = File.from_record_row(self, row)
+                entry = File.from_record_row(row)
             self.add_file(entry)
 
     def add_entry(self, entry: Union['File', 'Directory']):
-        self.tree.add_entry(entry)
+        self.filetree.add_entry(entry)
         if isinstance(entry, File):
             self.by_signature[entry.signature].append(entry)
         # Invalidate cached properties:
         del self.purelib_tree
         del self.platlib_tree
 
-    def categorize_path(self, path):
-        parts = tuple(path.split('/'))
-        if parts[0] == self.data_dir:
-            if len(parts) > 2 and parts[1] == 'purelib':
-                return (Section.PURELIB, parts[2:])
-            elif len(parts) > 2 and parts[1] == 'platlib':
-                return (Section.PLATLIB, parts[2:])
-            else:
-                return (Section.MISC_DATA, None)
-        elif parts[0] == self.dist_info_dir:
-            return (Section.DIST_INFO, None)
-        elif self.root_is_purelib:
-            return (Section.PURELIB, parts)
-        else:
-            return (Section.PLATLIB, parts)
+    def sanity_checks(self):
+        dist_info_dirs = [
+            name for name in self.filetree.subdirectories.keys()
+                 if is_dist_info_dir(name)
+        ]
+        if len(dist_info_dirs) > 1:
+            raise WheelValidationError(
+                'Wheel contains multiple .dist-info directories'
+            )
+        elif len(dist_info_dirs) == 1 \
+                and dist_info_dirs[0] != self.dist_info_dir:
+            raise WheelValidationError(
+                f"Wheel's .dist-info directory has invalid name:"
+                f" {dist_info_dirs[0]!r}"
+            )
+        data_dirs = [
+            name for name in self.filetree.subdirectories.keys()
+                 if is_data_dir(name)
+        ]
+        if len(data_dirs) > 1:
+            raise WheelValidationError(
+                'Wheel contains multiple .data directories'
+            )
+        elif len(data_dirs) == 1 and data_dirs[0] != self.data_dir:
+            raise WheelValidationError(
+                f"Wheel's .data directory has invalid name: {data_dirs[0]!r}"
+            )
+        ### TODO: Check that .data and .dist-info are directories
+        ### TODO: Check that entries in .data (at least purelib and platlib)
+        ### are directories
+        ### TODO: Check that .data/{purelib,platlib} are not both present
 
 
-@attr.s(frozen=True)
+@attr.s(auto_attribs=True, frozen=True)
 class File:
-    parts    = attr.ib()
-    libparts = attr.ib()   ### Remove?
-    size     = attr.ib()
-    hashsum  = attr.ib()
-    section  = attr.ib()
+    parts:   Tuple[str]    = attr.ib()
+    size:    Optional[int] = attr.ib()
+    hashsum: Optional[str] = attr.ib()
 
     @classmethod
-    def from_record_row(cls, whlcon, row):
+    def from_record_row(cls, row):
         try:
             path, hashsum, size = row
             size = int(size) if size else None
         except ValueError:
-            raise ValueError(f'Invalid RECORD entry: {row!r}')
+            raise WheelValidationError(f'Invalid RECORD entry: {row!r}')
+        if path.endswith('/'):
+            # This is a ValueError, not a WheelValidationError, because it
+            # should only happen when the caller messes up.
+            raise ValueError(
+                f'Invalid file path passed to File.from_record_row(): {path!r}'
+            )
+        elif path.startswith('/'):
+            raise WheelValidationError(f'Absolute path in RECORD: {path!r}')
+        elif path == '':
+            raise WheelValidationError(f'Empty path in RECORD')
+        elif '//' in path:
+            raise WheelValidationError(
+                f'Non-normalized path in RECORD: {path!r}'
+            )
         parts = tuple(path.split('/'))
-        section, libparts = whlcon.categorize_path(path)
+        if '.' in parts or '..' in parts:
+            raise WheelValidationError(
+                f'Non-normalized path in RECORD: {path!r}'
+            )
         return cls(
-            parts    = parts,
-            libparts = libparts,
-            size     = size,
-            hashsum  = hashsum or None,
-            section  = section,
+            parts   = parts,
+            size    = size,
+            hashsum = hashsum or None,
         )
 
     def __str__(self):
@@ -163,17 +185,31 @@ class File:
     def signature(self):
         return (self.size, self.hashsum)
 
-    #@property
-    #def libpath(self):
-    #    lpp = self.libparts
-    #    return lpp and '/'.join(lpp)
+    @property
+    def libparts(self):
+        """
+        The path components of the file relative to the root of the purelib or
+        platlib folder, whichever contains it.  If the file is in neither
+        purelib nor platlib, return `None`.
+        """
+        if is_data_dir(self.parts[0]):
+            if len(self.parts) > 2 and self.parts[1] in ('purelib', 'platlib'):
+                return self.parts[2:]
+            else:
+                return None
+        elif is_dist_info_dir(self.parts[0]):
+            return None
+        else:
+            return self.parts
+
+    @property
+    def libpath(self):
+        lpp = self.libparts
+        return lpp and '/'.join(lpp)
 
     @property
     def extension(self):
         return splitext(self.parts[-1])[1]
-
-    #def in_library(self):
-    #    return self.section in (Section.PURELIB, Section.PLATLIB)
 
     def has_module_ext(self):
         return pymodule_basename(self.parts[-1]) is not None
@@ -198,6 +234,8 @@ class Directory:
     @path.validator
     def _validate_path(self, attribute, value):
         if not value.endswith('/'):
+            # This is a ValueError, not a WheelValidationError, because it
+            # should only happen when the caller messes up.
             raise ValueError(
                 f'Invalid directory path passed as Directory.path: {value!r}'
             )

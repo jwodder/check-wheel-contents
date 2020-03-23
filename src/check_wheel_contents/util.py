@@ -8,6 +8,14 @@ MODULE_EXT_RGX = re.compile(
     r'(?<=.)(?:\.(?:py|so)|\.[-A-Za-z0-9_]+\.(?:pyd|so))\Z'
 )
 
+DIST_INFO_DIR_RGX = re.compile(
+    r'[A-Za-z0-9](?:[A-Za-z0-9._]*[A-Za-z0-9])?-[A-Za-z0-9_.!+]+\.dist-info'
+)
+
+DATA_DIR_RGX = re.compile(
+    r'[A-Za-z0-9](?:[A-Za-z0-9._]*[A-Za-z0-9])?-[A-Za-z0-9_.!+]+\.data'
+)
+
 def comma_split(s: str) -> List[str]:
     """
     Split apart a string on commas, discarding leading & trailing whitespace
@@ -35,3 +43,9 @@ def pymodule_basename(filename: str) -> Optional[str]:
         return filename[:m.start()]
     else:
         return None
+
+def is_dist_info_dir(name: str) -> bool:
+    return DIST_INFO_DIR_RGX.fullmatch(name) is not None
+
+def is_data_dir(name: str) -> bool:
+    return DATA_DIR_RGX.fullmatch(name) is not None
