@@ -3,6 +3,7 @@ import re
 import attr
 from   .checks     import Check, FailedCheck, parse_checks_string
 from   .configfile import find_config_dict, read_config_dict
+from   .contents   import File
 from   .util       import UserInputError, bytes_signature
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
@@ -71,7 +72,7 @@ class WheelChecker:
     def check_W001(self, contents):
         # 'Wheel contains .pyc/.pyo files'
         badfiles = []
-        for f in contents.files:
+        for f in contents.tree.all_files():
             if f.extension in BYTECODE_SUFFIXES:
                 badfiles.append(f.path)
         if badfiles:
@@ -96,10 +97,10 @@ class WheelChecker:
         # files?)
         badtops = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
-            for f in sorted(tree.files):
-                if IGNORED_TOPLEVEL_RGX.search(f.libpath) is None \
-                        and not f.has_module_ext():
-                    badtops.append(f.path)
+            for name, entry in sorted(tree.files.items()):
+                if IGNORED_TOPLEVEL_RGX.search(name) is None \
+                        and not entry.has_module_ext():
+                    badtops.append(entry.path)
         if badtops:
             return [FailedCheck(Check.W003, badtops)]
         else:
@@ -109,10 +110,10 @@ class WheelChecker:
         # 'Module is not located at importable path'
         # Only checks things under purelib and platlib
         badfiles = []
-        for f in contents.files:
-            if f.in_library() and f.has_module_ext() \
-                    and not f.is_valid_module_path():
-                badfiles.append(f.path)
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            for f in tree.all_files():
+                if f.has_module_ext() and not f.is_valid_module_path():
+                    badfiles.append(f.path)
         if badfiles:
             return [FailedCheck(Check.W004, badfiles)]
         else:
@@ -124,16 +125,17 @@ class WheelChecker:
         # Only checks purelib and platlib
         # TODO: Add a configuration option for explicitly removing (or adding?)
         # values from consideration
-        badfiles = []
-        for tree, prefix in [
-            (contents.purelib_tree, contents.purelib_path_prefix),
-            (contents.platlib_tree, contents.platlib_path_prefix),
-        ]:
+        baddirs = []
+        for tree in (contents.purelib_tree, contents.platlib_tree):
             for common in COMMON_DIRS:
-                if common in tree.subdirectories:
-                    badfiles.append(prefix + common)
-        if badfiles:
-            return [FailedCheck(Check.W005, badfiles)]
+                try:
+                    d = tree.subdirectories[common]
+                except KeyError:
+                    pass
+                else:
+                    baddirs.append(d.path)
+        if baddirs:
+            return [FailedCheck(Check.W005, baddirs)]
         else:
             return []
 
@@ -142,9 +144,12 @@ class WheelChecker:
         # Only checks purelib and platlib
         badfiles = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
-            badfiles.extend(
-                f.path for f in tree.files if f.libpath == '__init__.py'
-            )
+            try:
+                init_entry = tree.files["__init__.py"]
+            except KeyError:
+                pass
+            else:
+                badfiles.append(init_entry.path)
         if badfiles:
             return [FailedCheck(Check.W006, badfiles)]
         else:
@@ -167,17 +172,12 @@ class WheelChecker:
         # Checks the combination of purelib and platlib
         # TODO: Not active when certain options given on command line
         toplevels = []
-        for tree, prefix in [
-            (contents.purelib_tree, contents.purelib_path_prefix),
-            (contents.platlib_tree, contents.platlib_path_prefix),
-        ]:
-            for sd in tree.subdirectories:
-                if not sd.startswith('_'):
-                    toplevels.append(prefix + sd)
-            for f in tree.files:
-                if not f.libpath.startswith('_') \
-                        and IGNORED_TOPLEVEL_RGX.search(f.libpath) is None:
-                    toplevels.append(f.path)
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            for name, entry in tree.entries.items():
+                if not name.startswith('_') and not (
+                    isinstance(entry,File) and IGNORED_TOPLEVEL_RGX.search(name)
+                ):
+                    toplevels.append(entry.path)
         if len(toplevels) > 1:
             return [FailedCheck(Check.W008, toplevels)]
         else:
@@ -189,13 +189,10 @@ class WheelChecker:
         # TODO: Do not fail on directories that only contain typing files (iff
         # root dir ends with -stubs?)
         baddirs = []
-        for tree, prefix in [
-            (contents.purelib_tree, contents.purelib_path_prefix),
-            (contents.platlib_tree, contents.platlib_path_prefix),
-        ]:
-            for name, subdir in tree.subdirectories.items():
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            for subdir in tree.subdirectories.values():
                 if not any(f.has_module_ext() for f in subdir.all_files()):
-                    baddirs.append(prefix + name)
+                    baddirs.append(subdir.path)
         if baddirs:
             return [FailedCheck(Check.W009, baddirs)]
         else:

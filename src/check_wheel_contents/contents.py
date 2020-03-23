@@ -1,21 +1,22 @@
-from   collections  import defaultdict
+from   collections      import defaultdict
 import csv
-from   enum         import Enum
-from   io           import TextIOWrapper
-from   os.path      import basename, splitext
+from   enum             import Enum
+from   io               import TextIOWrapper
+from   os.path          import basename, splitext
 import re
-from   zipfile      import ZipFile
+from   typing           import Dict, Iterator, List, Tuple, Union
+from   zipfile          import ZipFile
 import attr
-from   .directory   import Directory
-from   .util        import pymodule_basename
-from   .whlfilename import parse_wheel_filename
+from   property_manager import cached_property
+from   .util            import InvalidWheelError, pymodule_basename
+from   .whlfilename     import parse_wheel_filename
 
 ROOT_IS_PURELIB_RGX = re.compile(
     r'\s*Root-Is-Purelib\s*:\s*(.*?)\s*',
     flags=re.I,
 )
 
-class FileSection(Enum):
+class Section(Enum):
     PURELIB   = 1
     PLATLIB   = 2
     MISC_DATA = 3
@@ -27,10 +28,40 @@ class WheelContents:
     dist_info_dir   = attr.ib()
     data_dir        = attr.ib()
     root_is_purelib = attr.ib(default=True)
-    files           = attr.ib(factory=list)
     by_signature    = attr.ib(factory=lambda: defaultdict(list))
-    purelib_tree    = attr.ib(factory=Directory)
-    platlib_tree    = attr.ib(factory=Directory)
+    filetree        = attr.ib(factory=lambda: Directory('./'))
+
+    @cached_property
+    def purelib_tree(self):
+        if self.root_is_purelib:
+            return Directory(
+                path='./',
+                entries={
+                    k:v for k,v in self.filetree.entries
+                    if k not in (self.dist_info_dir, self.data_dir)
+                },
+            )
+        else:
+            try:
+                return self.filetree.entries[self.data_dir].entries['purelib']
+            except (AttributeError, KeyError):
+                return Directory(f'{self.data_dir}/purelib/')
+
+    @cached_property
+    def platlib_tree(self):
+        if not self.root_is_purelib:
+            return Directory(
+                path='./',
+                entries={
+                    k:v for k,v in self.filetree.entries
+                    if k not in (self.dist_info_dir, self.data_dir)
+                },
+            )
+        else:
+            try:
+                return self.filetree.entries[self.data_dir].entries['platlib']
+            except (AttributeError, KeyError):
+                return Directory(f'{self.data_dir}/platlib/')
 
     @classmethod
     def from_wheel(cls, path):
@@ -67,52 +98,41 @@ class WheelContents:
 
     def add_record_rows(self, rows):
         for row in rows:
-            entry = FileEntry.from_record_row(self, row)
+            if row and row[0].endswith('/'):
+                entry = Directory(row[0])
+            else:
+                entry = File.from_record_row(self, row)
             self.add_file(entry)
 
-    def add_file(self, entry):
-        self.files.append(entry)
-        self.by_signature[entry.signature].append(entry)
-        if entry.section is FileSection.PURELIB:
-            self.purelib_tree.add_at_path(entry, entry.libparts)
-        elif entry.section is FileSection.PLATLIB:
-            self.platlib_tree.add_at_path(entry, entry.libparts)
-
-    @property
-    def purelib_path_prefix(self):
-        if self.root_is_purelib:
-            return ''
-        else:
-            return f'{self.data_dir}/purelib/'
-
-    @property
-    def platlib_path_prefix(self):
-        if not self.root_is_purelib:
-            return ''
-        else:
-            return f'{self.data_dir}/platlib/'
+    def add_entry(self, entry: Union['File', 'Directory']):
+        self.tree.add_entry(entry)
+        if isinstance(entry, File):
+            self.by_signature[entry.signature].append(entry)
+        # Invalidate cached properties:
+        del self.purelib_tree
+        del self.platlib_tree
 
     def categorize_path(self, path):
         parts = tuple(path.split('/'))
         if parts[0] == self.data_dir:
             if len(parts) > 2 and parts[1] == 'purelib':
-                return (FileSection.PURELIB, parts[2:])
+                return (Section.PURELIB, parts[2:])
             elif len(parts) > 2 and parts[1] == 'platlib':
-                return (FileSection.PLATLIB, parts[2:])
+                return (Section.PLATLIB, parts[2:])
             else:
-                return (FileSection.MISC_DATA, None)
+                return (Section.MISC_DATA, None)
         elif parts[0] == self.dist_info_dir:
-            return (FileSection.DIST_INFO, None)
+            return (Section.DIST_INFO, None)
         elif self.root_is_purelib:
-            return (FileSection.PURELIB, parts)
+            return (Section.PURELIB, parts)
         else:
-            return (FileSection.PLATLIB, parts)
+            return (Section.PLATLIB, parts)
 
 
 @attr.s(frozen=True)
-class FileEntry:
+class File:
     parts    = attr.ib()
-    libparts = attr.ib()
+    libparts = attr.ib()   ### Remove?
     size     = attr.ib()
     hashsum  = attr.ib()
     section  = attr.ib()
@@ -145,17 +165,17 @@ class FileEntry:
     def signature(self):
         return (self.size, self.hashsum)
 
-    @property
-    def libpath(self):
-        lpp = self.libparts
-        return lpp and '/'.join(lpp)
+    #@property
+    #def libpath(self):
+    #    lpp = self.libparts
+    #    return lpp and '/'.join(lpp)
 
     @property
     def extension(self):
         return splitext(self.parts[-1])[1]
 
-    def in_library(self):
-        return self.section in (FileSection.PURELIB, FileSection.PLATLIB)
+    #def in_library(self):
+    #    return self.section in (Section.PURELIB, Section.PLATLIB)
 
     def has_module_ext(self):
         return pymodule_basename(self.parts[-1]) is not None
@@ -170,3 +190,60 @@ class FileEntry:
         return all(
             p.isidentifier() and not p.iskeyword() for p in (*pkgs, base)
         )
+
+
+@attr.s(auto_attribs=True)
+class Directory:
+    path: str = attr.ib()
+    entries: Dict[str, Union[File, 'Directory']] = attr.Factory(dict)
+
+    @path.validator
+    def _validate_path(self, attribute, value):
+        if not value.endswith('/'):
+            raise ValueError(
+                f'Invalid directory path passed as Directory.path: {value!r}'
+            )
+
+    @property
+    def parts(self) -> Tuple[str]:
+        return tuple(self.path.rstrip('/').split('/'))
+
+    @property
+    def subdirectories(self) -> Dict[str, 'Directory']:
+        ### TODO: Cache this?
+        return {k:v for k,v in self.entries.items() if isinstance(v, Directory)}
+
+    @property
+    def files(self) -> Dict[str, File]:
+        ### TODO: Cache this?
+        return {k:v for k,v in self.entries.items() if isinstance(v, File)}
+
+    def __bool__(self):
+        return bool(self.entries)
+
+    def add_entry(self, entry: Union[File, 'Directory']):
+        current: Directory = self
+        *dirs, basename = entry.parts
+        for i,p in enumerate(dirs):
+            this_path = '/'.join(dirs[:i+1]) + '/'
+            if p in current.entries:
+                if isinstance(current.entries[p], Directory):
+                    current = current.entries[p]
+                else:
+                    raise InvalidWheelError(
+                        f'Conflicting occurrences of path {this_path!r}'
+                    )
+            else:
+                current = current.entries[p] = Directory(this_path)
+        if basename in current.entries:
+            raise InvalidWheelError(
+                f'Conflicting occurrences of path {entry.path!r}'
+            )
+        current.entries[basename] = entry
+
+    def all_files(self) -> Iterator[File]:
+        for e in self.entries.values():
+            if isinstance(e, Directory):
+                yield from e.all_files()
+            else:
+                yield e

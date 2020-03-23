@@ -16,6 +16,10 @@ class UserInputError(ValueError):
     pass
 
 
+class InvalidWheelError(ValueError):
+    pass
+
+
 def comma_split(s: str) -> List[str]:
     return [k for k in map(str.strip, s.split(',')) if k]
 
