@@ -8,9 +8,9 @@ from   typing           import Dict, Iterator, Tuple, Union
 from   zipfile          import ZipFile
 import attr
 from   property_manager import cached_property
+from   wheel_filename   import parse_wheel_filename
 from   .errors          import WheelValidationError
 from   .util            import pymodule_basename
-from   .whlfilename     import parse_wheel_filename
 
 ROOT_IS_PURELIB_RGX = re.compile(
     r'\s*Root-Is-Purelib\s*:\s*(.*?)\s*',
