@@ -1,5 +1,6 @@
 import pytest
-from   check_wheel_contents.util import comma_split, pymodule_basename
+from   check_wheel_contents.util import comma_split, is_data_dir, \
+                                            is_dist_info_dir, pymodule_basename
 
 @pytest.mark.parametrize('filename,expected', [
     ('foo.py', 'foo'),
@@ -39,3 +40,27 @@ def test_pymodule_basename(filename, expected):
 ])
 def test_comma_split(sin, lout):
     assert comma_split(sin) == lout
+
+@pytest.mark.parametrize('name,expected', [
+    ('somepackage-1.0.0.dist-info', True),
+    ('somepackage.dist-info', False),
+    ('somepackage-1.0.0-1.dist-info', False),
+    ('somepackage-1.0.0.data', False),
+    ('SOME_._PaCkAgE-0.dist-info', True),
+    ('foo-1!2+local.dist-info', True),
+    ('foo-1_2_local.dist-info', True),
+])
+def test_is_dist_info_dir(name, expected):
+    assert is_dist_info_dir(name) is expected
+
+@pytest.mark.parametrize('name,expected', [
+    ('somepackage-1.0.0.data', True),
+    ('somepackage.data', False),
+    ('somepackage-1.0.0-1.data', False),
+    ('somepackage-1.0.0.dist-info', False),
+    ('SOME_._PaCkAgE-0.data', True),
+    ('foo-1!2+local.data', True),
+    ('foo-1_2_local.data', True),
+])
+def test_is_data_dir(name, expected):
+    assert is_data_dir(name) is expected
