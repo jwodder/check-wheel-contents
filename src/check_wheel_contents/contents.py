@@ -4,7 +4,7 @@ from   io               import TextIOWrapper
 from   keyword          import iskeyword
 from   os.path          import basename, splitext
 import re
-from   typing           import Dict, Iterator, Optional, Tuple, Union
+from   typing           import Dict, Iterator, List, Optional, Tuple, Union
 from   zipfile          import ZipFile
 import attr
 from   property_manager import cached_property
@@ -144,7 +144,7 @@ class File:
     hashsum: Optional[str] = attr.ib()
 
     @classmethod
-    def from_record_row(cls, row):
+    def from_record_row(cls, row: List[str]):
         try:
             path, hashsum, size = row
             size = int(size) if size else None

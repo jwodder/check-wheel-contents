@@ -1,5 +1,59 @@
 import pytest
-from   check_wheel_contents.contents import File
+from   check_wheel_contents.contents import File, WheelValidationError
+
+@pytest.mark.parametrize('row,expected', [
+    (['foo.py', '', ''], File(parts=('foo.py',), size=None, hashsum=None)),
+    (['foo.py', '', '42'], File(parts=('foo.py',), size=42, hashsum=None)),
+    (
+        ['foo.py', 'sha256=...', ''],
+        File(parts=('foo.py',), size=None, hashsum='sha256=...'),
+    ),
+    (
+        ['foo.py', 'sha256=...', '42'],
+        File(parts=('foo.py',), size=42, hashsum='sha256=...'),
+    ),
+    (
+        ['foo/bar.py', '', ''],
+        File(parts=('foo', 'bar.py'), size=None, hashsum=None),
+    ),
+])
+def test_from_record_row(row, expected):
+    assert File.from_record_row(row) == expected
+
+@pytest.mark.parametrize('row', [
+    [],
+    ['foo.py'],
+    ['foo.py', 'sha256=...'],
+    ['foo.py', 'sha256=...', '42', 'stuff'],
+    ['foo.py', '42', 'sha256=...'],
+    ['foo.py', 'sha256=...', '42a'],
+])
+def test_from_record_row_bad_row(row):
+    with pytest.raises(WheelValidationError) as excinfo:
+        File.from_record_row(row)
+    assert str(excinfo.value) == f'Invalid RECORD entry: {row!r}'
+
+def test_from_record_row_dirpath_error():
+    with pytest.raises(ValueError) as excinfo:
+        File.from_record_row(['foo/', '', ''])
+    assert str(excinfo.value) \
+        == "Invalid file path passed to File.from_record_row(): 'foo/'"
+
+@pytest.mark.parametrize('path,errmsg', [
+    ('', "Empty path in RECORD"),
+    ('/foo.py', "Absolute path in RECORD: '/foo.py'"),
+    ('foo//bar.py', "Non-normalized path in RECORD: 'foo//bar.py'"),
+    ('./foo.py', "Non-normalized path in RECORD: './foo.py'"),
+    ('../foo.py', "Non-normalized path in RECORD: '../foo.py'"),
+    ('bar/./foo.py', "Non-normalized path in RECORD: 'bar/./foo.py'"),
+    ('bar/../foo.py', "Non-normalized path in RECORD: 'bar/../foo.py'"),
+    ('foo/.', "Non-normalized path in RECORD: 'foo/.'"),
+    ('foo/..', "Non-normalized path in RECORD: 'foo/..'"),
+])
+def test_from_record_row_path_validation_error(path, errmsg):
+    with pytest.raises(WheelValidationError) as excinfo:
+        File.from_record_row([path, '', ''])
+    assert str(excinfo.value) == errmsg
 
 @pytest.mark.parametrize('path,expected', [
     ('somepackage.py', ('somepackage.py',)),
@@ -39,7 +93,7 @@ from   check_wheel_contents.contents import File
     ),
 ])
 def test_libparts(path, expected):
-    assert File.from_record_row([path, None, None]).libparts == expected
+    assert File.from_record_row([path, '', '']).libparts == expected
 
 @pytest.mark.parametrize('prefix,prebool', [
     ('', True),
@@ -65,5 +119,5 @@ def test_libparts(path, expected):
     ('foo-bar/baz.py', False),
 ])
 def test_is_valid_module_path(prefix, path, prebool, pathbool):
-    f = File.from_record_row([prefix+path, None, None])
+    f = File.from_record_row([prefix+path, '', ''])
     assert f.is_valid_module_path() is (prebool and pathbool)
