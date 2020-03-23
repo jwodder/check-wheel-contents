@@ -40,3 +40,30 @@ from   check_wheel_contents.contents import File
 ])
 def test_libparts(path, expected):
     assert File.from_record_row([path, None, None]).libparts == expected
+
+@pytest.mark.parametrize('prefix,prebool', [
+    ('', True),
+    ('foo-1.0.dist-info/', False),
+    ('foo-1.0.data/purelib/', True),
+    ('foo-1.0.data/platlib/', True),
+    ('foo-1.0.data/data/', False),
+    ('foo-1.0.data/scripts/', False),
+    ('foo-1.0.data/headers/', False),
+])
+@pytest.mark.parametrize('path,pathbool', [
+    ('foo.py', True),
+    ('foo-1.0.data/purelib', False),
+    ('foo-1.0.data/platlib', False),
+    ('foo/__init__.py', True),
+    ('foo/bar.py', True),
+    ('foo/__init__', False),
+    ('foo.py/bar.py', False),
+    ('def.py', False),
+    ('foo_bar.py', True),
+    ('foo-bar.py', False),
+    ('foo_bar/baz.py', True),
+    ('foo-bar/baz.py', False),
+])
+def test_is_valid_module_path(prefix, path, prebool, pathbool):
+    f = File.from_record_row([prefix+path, None, None])
+    assert f.is_valid_module_path() is (prebool and pathbool)

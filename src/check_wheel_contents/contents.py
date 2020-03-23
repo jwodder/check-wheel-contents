@@ -1,6 +1,7 @@
 from   collections      import defaultdict
 import csv
 from   io               import TextIOWrapper
+from   keyword          import iskeyword
 from   os.path          import basename, splitext
 import re
 from   typing           import Dict, Iterator, Optional, Tuple, Union
@@ -222,7 +223,7 @@ class File:
         if base is None:
             return False
         return all(
-            p.isidentifier() and not p.iskeyword() for p in (*pkgs, base)
+            p.isidentifier() and not iskeyword(p) for p in (*pkgs, base)
         )
 
 
