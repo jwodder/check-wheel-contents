@@ -4,7 +4,8 @@ import attr
 from   .checks     import Check, FailedCheck, parse_checks_string
 from   .configfile import find_config_dict, read_config_dict
 from   .contents   import File
-from   .util       import UserInputError, bytes_signature
+from   .errors     import UserInputError
+from   .util       import bytes_signature
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 

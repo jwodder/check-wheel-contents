@@ -1,7 +1,8 @@
-from   enum   import Enum
-from   typing import Set
+from   enum    import Enum
+from   typing  import Set
 import attr
-from   .util  import UserInputError, comma_split
+from   .errors import UserInputError
+from   .util   import comma_split
 
 class Check(Enum):
     W001 = 'Wheel contains .pyc/.pyo files'

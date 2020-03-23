@@ -8,19 +8,11 @@ MODULE_EXT_RGX = re.compile(
     r'(?<=.)(?:\.(?:py|so)|\.[-A-Za-z0-9_]+\.(?:pyd|so))\Z'
 )
 
-class UserInputError(ValueError):
-    """
-    Subclass of `ValueError` raised whenever the user supplies an invalid value
-    for something
-    """
-    pass
-
-
-class InvalidWheelError(ValueError):
-    pass
-
-
 def comma_split(s: str) -> List[str]:
+    """
+    Split apart a string on commas, discarding leading & trailing whitespace
+    from all parts and discarding empty parts
+    """
     return [k for k in map(str.strip, s.split(',')) if k]
 
 def bytes_signature(b: bytes) -> Tuple[int, str]:

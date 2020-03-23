@@ -1,5 +1,6 @@
 import re
 import attr
+from   .errors import InvalidFilenameError
 
 # These patterns are interpreted with re.UNICODE in effect, so there's probably
 # some character that matches \d but not \w that needs to be included
@@ -63,11 +64,11 @@ def parse_wheel_filename(filename):
 
     :param str filename: a wheel filename
     :rtype: ParsedWheelFilename
-    :raises ValueError: if the filename is invalid
+    :raises InvalidFilenameError: if the filename is invalid
     """
     m = WHEEL_FILENAME_CRGX.fullmatch(filename)
     if not m:
-        raise ValueError(f'invalid wheel filename: {filename}')
+        raise InvalidFilenameError(filename)
     return ParsedWheelFilename(
         project       = m.group('project'),
         version       = m.group('version'),

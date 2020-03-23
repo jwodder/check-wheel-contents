@@ -4,11 +4,12 @@ from   enum             import Enum
 from   io               import TextIOWrapper
 from   os.path          import basename, splitext
 import re
-from   typing           import Dict, Iterator, List, Tuple, Union
+from   typing           import Dict, Iterator, Tuple, Union
 from   zipfile          import ZipFile
 import attr
 from   property_manager import cached_property
-from   .util            import InvalidWheelError, pymodule_basename
+from   .errors          import WheelValidationError
+from   .util            import pymodule_basename
 from   .whlfilename     import parse_wheel_filename
 
 ROOT_IS_PURELIB_RGX = re.compile(
@@ -230,13 +231,13 @@ class Directory:
                 if isinstance(current.entries[p], Directory):
                     current = current.entries[p]
                 else:
-                    raise InvalidWheelError(
+                    raise WheelValidationError(
                         f'Conflicting occurrences of path {this_path!r}'
                     )
             else:
                 current = current.entries[p] = Directory(this_path)
         if basename in current.entries:
-            raise InvalidWheelError(
+            raise WheelValidationError(
                 f'Conflicting occurrences of path {entry.path!r}'
             )
         current.entries[basename] = entry

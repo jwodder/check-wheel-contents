@@ -3,7 +3,7 @@ from   .         import __version__
 from   .checker  import WheelChecker
 from   .checks   import parse_checks_string
 from   .contents import WheelContents
-from   .util     import UserInputError
+from   .errors   import UserInputError
 
 class ChecksParamType(click.ParamType):
     name = 'checks'
