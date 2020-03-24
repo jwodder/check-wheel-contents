@@ -145,3 +145,40 @@ def test_has_module_ext(path, expected):
 def test_is_valid_module_path(prefix, path, prebool, pathbool):
     f = File.from_record_row([prefix+path, '', ''])
     assert f.is_valid_module_path() is (prebool and pathbool)
+
+@pytest.mark.parametrize('path,ext', [
+    ('foo.py', '.py'),
+    ('FOO.PY', '.PY'),
+    ('foo.pyc', '.pyc'),
+    ('foo.pyo', '.pyo'),
+    ('foo/bar.py', '.py'),
+    ('foo.py/bar', ''),
+    ('foo/.py', ''),
+    ('foo/py', ''),
+    ('extra.ext.py', '.py'),
+    ('foo.cpython-38-x86_64-linux-gnu.so', '.so'),
+    ('graph.cpython-37m-darwin.so', '.so'),
+    ('foo.cp38-win_amd64.pyd', '.pyd'),
+    ('foo.cp38-win32.pyd', '.pyd'),
+    ('foo.so', '.so'),
+    ('foo.pyd', '.pyd'),
+    ('_ffi.abi3.so', '.so'),
+])
+def test_extension(path, ext):
+    assert File.from_record_row([path, '', '']).extension == ext
+
+def test_signature():
+    assert File.from_record_row(['foo.py', 'sha256=abc', '42']).signature \
+        == (42, 'sha256=abc')
+
+@pytest.mark.parametrize('path,parts', [
+    ('foo.py', ('foo.py',)),
+    ('foo/bar.py', ('foo', 'bar.py')),
+    ('foo.py/bar.py', ('foo.py', 'bar.py')),
+    ('foo/bar/baz', ('foo', 'bar', 'baz')),
+])
+def test_str_path_parts(path, parts):
+    f = File.from_record_row([path, '', ''])
+    assert str(f) == path
+    assert f.path == path
+    assert f.parts == parts

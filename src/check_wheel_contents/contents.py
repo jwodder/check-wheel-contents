@@ -194,11 +194,6 @@ class File:
             return self.parts
 
     @property
-    def libpath(self):
-        lpp = self.libparts
-        return lpp and '/'.join(lpp)
-
-    @property
     def extension(self):
         return splitext(self.parts[-1])[1]
 
