@@ -21,7 +21,7 @@ ALLOWED_DUPLICATES = {
 
 IGNORED_TOPLEVEL_RGX = re.compile(r'.\.pth\Z')
 
-COMMON_DIRS = 'doc docs example examples src test tests'.split()
+COMMON_DIRS = 'build dist doc docs example examples src test tests'.split()
 
 @attr.s
 class WheelChecker:
@@ -125,7 +125,7 @@ class WheelChecker:
         # Checks for COMMON_DIRS
         # Only checks purelib and platlib
         # TODO: Add a configuration option for explicitly removing (or adding?)
-        # values from consideration
+        # values from consideration?
         baddirs = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for common in COMMON_DIRS:
@@ -159,15 +159,21 @@ class WheelChecker:
     def check_W007(self, contents):
         #W007 = 'Wheel library is empty'
         # Only errors if both purelib and platlib are empty
-        # TODO: Disable if there are things in *.data/scripts/ ?
-        # TODO: Change to "No files outside .dist-info directory"?
         if not contents.purelib_tree and not contents.platlib_tree:
             return [FailedCheck(Check.W007)]
         else:
             return []
 
     def check_W008(self, contents):
-        #W008 = 'Wheel contains multiple toplevel library entries'
+        #W008 = 'Wheel is empty'
+        # Errors if there are no files outside .dist-info
+        for name in contents.filetree.entries.keys():
+            if name != contents.dist_info_dir:
+                return []
+        return [FailedCheck(Check.W007)]
+
+    def check_W009(self, contents):
+        #W009 = 'Wheel contains multiple toplevel library entries'
         # Ignores the same files as W003 as well as files & directories
         # starting with an underscore
         # Checks the combination of purelib and platlib
@@ -184,8 +190,8 @@ class WheelChecker:
         else:
             return []
 
-    def check_W009(self, contents):
-        #W009 = 'Toplevel library directory contains no modules'
+    def check_W010(self, contents):
+        #W010 = 'Toplevel library directory contains no Python modules'
         # Only checks purelib and platlib
         # TODO: Do not fail on directories that only contain typing files (iff
         # root dir ends with -stubs?)

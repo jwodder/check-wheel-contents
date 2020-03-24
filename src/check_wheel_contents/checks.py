@@ -10,15 +10,15 @@ class Check(Enum):
     W003 = 'Wheel contains non-module at library toplevel'
     W004 = 'Module is not located at importable path'
     W005 = 'Wheel contains common toplevel directory in library'
-        ### TODO: Rethink W005's message
     W006 = '__init__.py at top level of library'
     W007 = 'Wheel library is empty'
-    W008 = 'Wheel contains multiple toplevel library entries'
-    W009 = 'Toplevel library directory contains no .py files'
-    W101 = 'Wheel library contains files not in source tree'
-    W102 = 'Wheel library is missing files in source tree'
-    W201 = 'Wheel library is missing specified toplevel entry'
-    W202 = 'Wheel library has undeclared toplevel entry'
+    W008 = 'Wheel is empty'
+    W009 = 'Wheel contains multiple toplevel library entries'
+    W010 = 'Toplevel library directory contains no Python modules'
+    #W101 = 'Wheel library contains files not in source tree'
+    #W102 = 'Wheel library is missing files in source tree'
+    #W201 = 'Wheel library is missing specified toplevel entry'
+    #W202 = 'Wheel library has undeclared toplevel entry'
 
 
 @attr.s
