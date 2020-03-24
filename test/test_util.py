@@ -5,6 +5,8 @@ from   check_wheel_contents.util import comma_split, is_data_dir, \
 @pytest.mark.parametrize('filename,expected', [
     ('foo.py', 'foo'),
     ('FOO.PY', None),
+    ('foo.pyc', None),
+    ('foo.pyo', None),
     ('.py', None),
     ('py', None),
     ('not-an-identifier.py', 'not-an-identifier'),

@@ -95,6 +95,29 @@ def test_from_record_row_path_validation_error(path, errmsg):
 def test_libparts(path, expected):
     assert File.from_record_row([path, '', '']).libparts == expected
 
+@pytest.mark.parametrize('path,expected', [
+    ('foo.py', True),
+    ('FOO.PY', False),
+    ('foo.pyc', False),
+    ('foo.pyo', False),
+    ('foo/bar.py', True),
+    ('foo.py/bar', False),
+    ('foo/.py', False),
+    ('foo/py', False),
+    ('not-an-identifier.py', True),
+    ('def.py', True),
+    ('extra.ext.py', True),
+    ('foo.cpython-38-x86_64-linux-gnu.so', True),
+    ('graph.cpython-37m-darwin.so', True),
+    ('foo.cp38-win_amd64.pyd', True),
+    ('foo.cp38-win32.pyd', True),
+    ('foo.so', True),
+    ('foo.pyd', False),
+    ('_ffi.abi3.so', True),
+])
+def test_has_module_ext(path, expected):
+    assert File.from_record_row([path, '', '']).has_module_ext() is expected
+
 @pytest.mark.parametrize('prefix,prebool', [
     ('', True),
     ('foo-1.0.dist-info/', False),

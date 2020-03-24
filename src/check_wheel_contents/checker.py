@@ -21,7 +21,7 @@ ALLOWED_DUPLICATES = {
 
 IGNORED_TOPLEVEL_RGX = re.compile(r'.\.pth\Z')
 
-COMMON_DIRS = 'doc docs example exmaples src test tests'.split()
+COMMON_DIRS = 'doc docs example examples src test tests'.split()
 
 @attr.s
 class WheelChecker:

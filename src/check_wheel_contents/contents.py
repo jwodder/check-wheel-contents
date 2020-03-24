@@ -20,13 +20,13 @@ class WheelContents:
     data_dir        = attr.ib()
     root_is_purelib = attr.ib(default=True)
     by_signature    = attr.ib(factory=lambda: defaultdict(list))
-    filetree        = attr.ib(factory=lambda: Directory('./'))
+    filetree        = attr.ib(factory=lambda: Directory())
 
     @cached_property
     def purelib_tree(self):
         if self.root_is_purelib:
             return Directory(
-                path='./',
+                path=None,
                 entries={
                     k:v for k,v in self.filetree.entries
                     if k not in (self.dist_info_dir, self.data_dir)
@@ -34,15 +34,15 @@ class WheelContents:
             )
         else:
             try:
-                return self.filetree.entries[self.data_dir].entries['purelib']
-            except (AttributeError, KeyError):
+                return self.filetree[self.data_dir]['purelib']
+            except (KeyError, TypeError):
                 return Directory(f'{self.data_dir}/purelib/')
 
     @cached_property
     def platlib_tree(self):
         if not self.root_is_purelib:
             return Directory(
-                path='./',
+                path=None,
                 entries={
                     k:v for k,v in self.filetree.entries
                     if k not in (self.dist_info_dir, self.data_dir)
@@ -50,8 +50,8 @@ class WheelContents:
             )
         else:
             try:
-                return self.filetree.entries[self.data_dir].entries['platlib']
-            except (AttributeError, KeyError):
+                return self.filetree[self.data_dir]['platlib']
+            except (KeyError, TypeError):
                 return Directory(f'{self.data_dir}/platlib/')
 
     @classmethod
@@ -104,7 +104,7 @@ class WheelContents:
         del self.purelib_tree
         del self.platlib_tree
 
-    def sanity_checks(self):
+    def sanity_checks(self) -> None:
         dist_info_dirs = [
             name for name in self.filetree.subdirectories.keys()
                  if is_dist_info_dir(name)
@@ -134,7 +134,8 @@ class WheelContents:
         ### TODO: Check that .data and .dist-info are directories
         ### TODO: Check that entries in .data (at least purelib and platlib)
         ### are directories
-        ### TODO: Check that .data/{purelib,platlib} are not both present
+        ### TODO: Check that .data/purelib is not present when Root-Is-Purelib
+        ### and .data/platlib is not present when it's not
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -229,12 +230,12 @@ class File:
 
 @attr.s(auto_attribs=True)
 class Directory:
-    path: str = attr.ib()
+    path: Optional[str] = attr.ib(default=None)
     entries: Dict[str, Union[File, 'Directory']] = attr.Factory(dict)
 
     @path.validator
     def _validate_path(self, attribute, value):
-        if not value.endswith('/'):
+        if value is not None and not value.endswith('/'):
             # This is a ValueError, not a WheelValidationError, because it
             # should only happen when the caller messes up.
             raise ValueError(
@@ -243,7 +244,10 @@ class Directory:
 
     @property
     def parts(self) -> Tuple[str]:
-        return tuple(self.path.rstrip('/').split('/'))
+        if self.path is None:
+            return ()
+        else:
+            return tuple(self.path.rstrip('/').split('/'))
 
     @property
     def subdirectories(self) -> Dict[str, 'Directory']:
@@ -258,9 +262,20 @@ class Directory:
     def __bool__(self):
         return bool(self.entries)
 
+    def __getitem__(self, value):
+        return self.entries[value]
+
     def add_entry(self, entry: Union[File, 'Directory']):
+        if isinstance(entry, Directory) and bool(entry):
+            raise ValueError('Cannot add nonempty directory to directory tree')
+        myparts = self.parts
+        parts = entry.parts
+        if not (len(myparts) < len(parts) and myparts == parts[:len(myparts)]):
+            raise ValueError(
+                f'Path {entry.path!r} is not a descendant of {self.path!r}'
+            )
         current: Directory = self
-        *dirs, basename = entry.parts
+        *dirs, basename = parts[len(myparts):]
         for i,p in enumerate(dirs):
             this_path = '/'.join(dirs[:i+1]) + '/'
             if p in current.entries:
@@ -271,12 +286,17 @@ class Directory:
                         f'Conflicting occurrences of path {this_path!r}'
                     )
             else:
-                current = current.entries[p] = Directory(this_path)
+                sd = Directory(this_path)
+                current.entries[p] = sd
+                current = sd
         if basename in current.entries:
-            raise WheelValidationError(
-                f'Conflicting occurrences of path {entry.path!r}'
-            )
-        current.entries[basename] = entry
+            if not (isinstance(entry, Directory)
+                    and isinstance(current.entries[basename], Directory)):
+                raise WheelValidationError(
+                    f'Conflicting occurrences of path {entry.path!r}'
+                )
+        else:
+            current.entries[basename] = entry
 
     def all_files(self) -> Iterator[File]:
         for e in self.entries.values():
