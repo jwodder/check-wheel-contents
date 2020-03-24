@@ -2,6 +2,7 @@ import base64
 import hashlib
 import re
 from   typing  import List, Optional, Tuple
+from   .errors import WheelValidationError
 
 # <https://discuss.python.org/t/identifying-parsing-binary-extension-filenames/>
 MODULE_EXT_RGX = re.compile(
@@ -49,3 +50,18 @@ def is_dist_info_dir(name: str) -> bool:
 
 def is_data_dir(name: str) -> bool:
     return DATA_DIR_RGX.fullmatch(name) is not None
+
+def validate_path(path: str) -> None:
+    if path.startswith('/'):
+        raise WheelValidationError(f'Absolute path in RECORD: {path!r}')
+    elif path == '':
+        raise WheelValidationError(f'Empty path in RECORD')
+    elif '//' in path:
+        raise WheelValidationError(
+            f'Non-normalized path in RECORD: {path!r}'
+        )
+    parts = tuple(path.split('/'))
+    if '.' in parts or '..' in parts:
+        raise WheelValidationError(
+            f'Non-normalized path in RECORD: {path!r}'
+        )

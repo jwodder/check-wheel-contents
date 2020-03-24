@@ -10,7 +10,8 @@ import attr
 from   property_manager import cached_property
 from   wheel_filename   import parse_wheel_filename
 from   .errors          import WheelValidationError
-from   .util            import is_data_dir, is_dist_info_dir, pymodule_basename
+from   .util            import is_data_dir, is_dist_info_dir, \
+                                    pymodule_basename, validate_path
 
 ROOT_IS_PURELIB_RGX = re.compile(r'Root-Is-Purelib\s*:\s*(.*?)\s*', flags=re.I)
 
@@ -82,7 +83,7 @@ class WheelContents:
                     )
             with zf.open(f'{dist_info_dir}/RECORD') as rf:
                 wc.add_record_file(TextIOWrapper(rf, 'utf-8', newline=''))
-        wc.sanity_checks()
+        wc.validate_tree()
         return wc
 
     def add_record_file(self, fp):
@@ -104,7 +105,7 @@ class WheelContents:
         del self.purelib_tree
         del self.platlib_tree
 
-    def sanity_checks(self) -> None:
+    def validate_tree(self) -> None:
         dist_info_dirs = [
             name for name in self.filetree.subdirectories.keys()
                  if is_dist_info_dir(name)
@@ -157,21 +158,9 @@ class File:
             raise ValueError(
                 f'Invalid file path passed to File.from_record_row(): {path!r}'
             )
-        elif path.startswith('/'):
-            raise WheelValidationError(f'Absolute path in RECORD: {path!r}')
-        elif path == '':
-            raise WheelValidationError(f'Empty path in RECORD')
-        elif '//' in path:
-            raise WheelValidationError(
-                f'Non-normalized path in RECORD: {path!r}'
-            )
-        parts = tuple(path.split('/'))
-        if '.' in parts or '..' in parts:
-            raise WheelValidationError(
-                f'Non-normalized path in RECORD: {path!r}'
-            )
+        validate_path(path)
         return cls(
-            parts   = parts,
+            parts   = tuple(path.split('/')),
             size    = size,
             hashsum = hashsum or None,
         )
@@ -235,12 +224,14 @@ class Directory:
 
     @path.validator
     def _validate_path(self, attribute, value):
-        if value is not None and not value.endswith('/'):
-            # This is a ValueError, not a WheelValidationError, because it
-            # should only happen when the caller messes up.
-            raise ValueError(
-                f'Invalid directory path passed as Directory.path: {value!r}'
-            )
+        if value is not None:
+            if not value.endswith('/'):
+                # This is a ValueError, not a WheelValidationError, because it
+                # should only happen when the caller messes up.
+                raise ValueError(
+                    f'Invalid directory path passed as Directory.path: {value!r}'
+                )
+            validate_path(value)
 
     @property
     def parts(self) -> Tuple[str]:
@@ -277,7 +268,7 @@ class Directory:
         current: Directory = self
         *dirs, basename = parts[len(myparts):]
         for i,p in enumerate(dirs):
-            this_path = '/'.join(dirs[:i+1]) + '/'
+            this_path = '/'.join(dirs[:i+1])
             if p in current.entries:
                 if isinstance(current.entries[p], Directory):
                     current = current.entries[p]
@@ -286,7 +277,7 @@ class Directory:
                         f'Conflicting occurrences of path {this_path!r}'
                     )
             else:
-                sd = Directory(this_path)
+                sd = Directory(this_path + '/')
                 current.entries[p] = sd
                 current = sd
         if basename in current.entries:
