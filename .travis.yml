@@ -1,0 +1,14 @@
+language: python
+cache: pip
+dist: xenial
+python:
+    - '3.6'
+    - '3.7'
+    - '3.8'
+    - pypy3
+install:
+    - pip install codecov tox
+script:
+    - tox -e py
+after_success:
+    - codecov
