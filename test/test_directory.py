@@ -44,6 +44,7 @@ def test_add_entry_1level_file():
     assert not bool(d)
     assert d.entries == {}
     assert d.files == {}
+    assert "foo.py" not in d
     f = File.from_record_row(['foo.py', '', ''])
     d.add_entry(f)
     assert bool(d)
@@ -52,12 +53,14 @@ def test_add_entry_1level_file():
     assert d.entries["foo.py"] is f
     assert d.files["foo.py"] is f
     assert d["foo.py"] is f
+    assert "foo.py" in d
 
 def test_add_entry_two_1level_files():
     d = Directory()
     assert not bool(d)
     assert d.entries == {}
     assert d.files == {}
+    assert "bar.py" not in d
     f = File.from_record_row(['foo.py', '', ''])
     d.add_entry(f)
     f2 = File.from_record_row(['bar.py', '', ''])
@@ -68,6 +71,7 @@ def test_add_entry_two_1level_files():
     assert d.entries["bar.py"] is f2
     assert d.files["bar.py"] is f2
     assert d["bar.py"] is f2
+    assert "bar.py" in d
     assert list(d.entries.keys()) == ["foo.py", "bar.py"]
 
 def test_add_entry_1level_dir():
@@ -75,6 +79,7 @@ def test_add_entry_1level_dir():
     assert not bool(d)
     assert d.entries == {}
     assert d.subdirectories == {}
+    assert "foo" not in d
     sd = Directory('foo/')
     d.add_entry(sd)
     assert bool(d)
@@ -83,12 +88,14 @@ def test_add_entry_1level_dir():
     assert d.entries["foo"] is sd
     assert d.subdirectories["foo"] is sd
     assert d["foo"] is sd
+    assert "foo" in d
     assert sd.entries == {}
 
 def test_add_entry_2level_file():
     d = Directory()
     assert not bool(d)
     assert d.entries == {}
+    assert "foo" not in d
     f = File.from_record_row(['foo/bar.py', '', ''])
     d.add_entry(f)
     assert bool(d)
@@ -97,6 +104,8 @@ def test_add_entry_2level_file():
     }
     assert d.entries["foo"].entries["bar.py"] is f
     assert d["foo"]["bar.py"] is f
+    assert "foo" in d
+    assert "bar.py" in d["foo"]
 
 def test_add_entry_known_dir():
     d = Directory()
@@ -128,6 +137,7 @@ def test_add_entry_descendant():
     assert not bool(foo)
     assert foo.entries == {}
     assert foo.files == {}
+    assert "bar.py" not in foo
     f = File.from_record_row(['foo/bar.py', '', ''])
     foo.add_entry(f)
     assert bool(foo)
@@ -136,6 +146,7 @@ def test_add_entry_descendant():
     assert foo.entries["bar.py"] is f
     assert foo.files["bar.py"] is f
     assert foo["bar.py"] is f
+    assert "bar.py" in foo
 
 @pytest.mark.parametrize('path', [
     'bar.py',
@@ -229,5 +240,3 @@ def test_all_files():
     assert list(d.entries.keys()) == ["foo.py", "bar", "quux.py"]
     assert list(d["bar"].entries.keys()) == ["glarch.py", "cleesh.py"]
     assert list(d.all_files()) == [foo, bar_glarch, bar_cleesh, quux]
-
-# Test __contains__
