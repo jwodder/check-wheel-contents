@@ -66,3 +66,6 @@ def test_is_dist_info_dir(name, expected):
 ])
 def test_is_data_dir(name, expected):
     assert is_data_dir(name) is expected
+
+# Test bytes_signature()
+# Test urlsafe_b64encode_nopad
