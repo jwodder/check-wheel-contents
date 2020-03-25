@@ -62,7 +62,11 @@ class WheelContents:
         data_dir = f'{whlname.project}-{whlname.version}.data'
         wc = cls(dist_info_dir=dist_info_dir, data_dir=data_dir)
         with open(path, 'rb') as fp, ZipFile(fp) as zf:
-            with zf.open(f'{dist_info_dir}/WHEEL') as wf:
+            try:
+                wheel_info = zf.getinfo(f'{dist_info_dir}/WHEEL')
+            except KeyError:
+                raise WheelValidationError('No WHEEL file in wheel')
+            with zf.open(wheel_info) as wf:
                 for line in TextIOWrapper(wf, 'utf-8'):
                     m = ROOT_IS_PURELIB_RGX.fullmatch(line)
                     if m:
@@ -74,14 +78,18 @@ class WheelContents:
                         else:
                             raise WheelValidationError(
                                 f'Invalid Root-Is-Purelib value in WHEEL'
-                                f' file: {rip}'
+                                f' file: {rip!r}'
                             )
                         break
                 else:
                     raise WheelValidationError(
                         'Root-Is-Purelib header not found in WHEEL file'
                     )
-            with zf.open(f'{dist_info_dir}/RECORD') as rf:
+            try:
+                record_info = zf.getinfo(f'{dist_info_dir}/RECORD')
+            except KeyError:
+                raise WheelValidationError('No RECORD file in wheel')
+            with zf.open(record_info) as rf:
                 wc.add_record_file(TextIOWrapper(rf, 'utf-8', newline=''))
         wc.validate_tree()
         return wc

@@ -493,5 +493,152 @@ def test_validate_tree_error_platlib(rows, errmsg):
         whlcon.validate_tree()
     assert str(excinfo.value) == errmsg
 
-# Test by_signature after loading records with duplicate files
-# Test loading records with a directory entry
+@pytest.mark.parametrize('purelib', [True, False])
+def test_validate_tree_data_no_datalib(purelib):
+    whlcon = WheelContents(
+        dist_info_dir='foo-1.0.dist-info',
+        data_dir='foo-1.0.data',
+        root_is_purelib=purelib,
+    )
+    whlcon.add_record_rows([
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo-1.0.data/scripts/dothing',
+            'sha256=q4OhQ7ORBfBZ2yK5taBaY1uXgH5KmaC7hd9DDWL_IHM',
+            '994',
+        ],
+    ])
+    whlcon.validate_tree()
+
+@pytest.mark.parametrize('purelib', [True, False])
+def test_validate_tree_dir_rows(purelib):
+    whlcon = WheelContents(
+        dist_info_dir='foo-1.0.dist-info',
+        data_dir='foo-1.0.data',
+        root_is_purelib=purelib,
+    )
+    whlcon.add_record_rows([
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        ['empty/', '', ''],
+    ])
+    whlcon.validate_tree()
+    assert whlcon.filetree == Directory(
+        path=None,
+        entries={
+            "empty": Directory('empty/'),
+            "foo-1.0.dist-info": Directory(
+                path="foo-1.0.dist-info/",
+                entries={
+                    "METADATA": File(
+                        ('foo-1.0.dist-info', 'METADATA'),
+                        950,
+                        'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                    ),
+                },
+            ),
+        },
+    )
+    assert whlcon.by_signature == {
+        (950, 'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk'):
+            [whlcon.filetree["foo-1.0.dist-info"]["METADATA"]],
+    }
+
+def test_from_wheel_no_purelib_line():
+    with pytest.raises(WheelValidationError) as excinfo:
+        WheelContents.from_wheel(
+            DATA_DIR / 'no_purelib_line-1.0.0-py3-none-any.whl'
+        )
+    assert str(excinfo.value) \
+        == 'Root-Is-Purelib header not found in WHEEL file'
+
+def test_from_wheel_empty_purelib_line():
+    with pytest.raises(WheelValidationError) as excinfo:
+        WheelContents.from_wheel(
+            DATA_DIR / 'empty_purelib_line-1.0.0-py3-none-any.whl'
+        )
+    assert str(excinfo.value) \
+        == "Invalid Root-Is-Purelib value in WHEEL file: ''"
+
+def test_from_wheel_bad_purelib_line():
+    with pytest.raises(WheelValidationError) as excinfo:
+        WheelContents.from_wheel(
+            DATA_DIR / 'bad_purelib_line-1.0.0-py3-none-any.whl'
+        )
+    assert str(excinfo.value) \
+        == "Invalid Root-Is-Purelib value in WHEEL file: 'purelib'"
+
+def test_from_wheel_no_record_file():
+    with pytest.raises(WheelValidationError) as excinfo:
+        WheelContents.from_wheel(
+            DATA_DIR / 'no_record-1.0.0-py3-none-any.whl'
+        )
+    assert str(excinfo.value) == "No RECORD file in wheel"
+
+def test_from_wheel_no_wheel_file():
+    with pytest.raises(WheelValidationError) as excinfo:
+        WheelContents.from_wheel(
+            DATA_DIR / 'no_wheel_file-1.0.0-py3-none-any.whl'
+        )
+    assert str(excinfo.value) == "No WHEEL file in wheel"
+
+def test_by_signature_dup_files():
+    whlcon = WheelContents(
+        dist_info_dir='foo-1.0.dist-info',
+        data_dir='foo-1.0.data',
+        root_is_purelib=True,
+    )
+    whlcon.add_record_rows([
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=feFUDF3H45ZfOetuMteWVwEzHex4AH9o_1vuVTvl9g4',
+            '995',
+        ],
+        [
+            'foo/__init__.py',
+            'sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU',
+            '0',
+        ],
+        [
+            'foo/duplicate.py',
+            'sha256=feFUDF3H45ZfOetuMteWVwEzHex4AH9o_1vuVTvl9g4',
+            '995',
+        ],
+    ])
+    whlcon.validate_tree()
+    assert whlcon.by_signature == {
+        (950, 'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk'):
+            [File(
+                ('foo-1.0.dist-info', 'METADATA'),
+                950,
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            )],
+        (995, 'sha256=feFUDF3H45ZfOetuMteWVwEzHex4AH9o_1vuVTvl9g4'):
+            [File(
+                ('foo.py',),
+                995,
+                'sha256=feFUDF3H45ZfOetuMteWVwEzHex4AH9o_1vuVTvl9g4',
+            ), File(
+                ('foo', 'duplicate.py'),
+                995,
+                'sha256=feFUDF3H45ZfOetuMteWVwEzHex4AH9o_1vuVTvl9g4',
+            )],
+        (0, 'sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU'):
+            [File(
+                ('foo', '__init__.py'),
+                0,
+                'sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU',
+            )],
+    }
