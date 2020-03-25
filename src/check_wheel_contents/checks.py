@@ -1,5 +1,5 @@
 from   enum    import Enum
-from   typing  import Set
+from   typing  import List, Optional, Set
 import attr
 from   .errors import UserInputError
 from   .util   import comma_split
@@ -21,12 +21,12 @@ class Check(Enum):
     #W202 = 'Wheel library has undeclared toplevel entry'
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class FailedCheck:
-    check = attr.ib()
-    args  = attr.ib(factory=list)
+    check: Check
+    args:  List[str] = attr.Factory(list)
 
-    def show(self, filename=None):
+    def show(self, filename: Optional[str] = None) -> str:
         s = ''
         if filename is not None:
             s = f'{filename}: '
@@ -47,6 +47,6 @@ def parse_checks_string(s: str) -> Set[Check]:
     for cs in comma_split(s):
         new_checks = [chk for chk in Check if chk.name.startswith(cs)]
         if not new_checks:
-            raise UserInputError('Unknown check prefix: {cs}')
+            raise UserInputError(f'Unknown check prefix: {cs}')
         checks.update(new_checks)
     return checks
