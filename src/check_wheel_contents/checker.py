@@ -98,7 +98,7 @@ class WheelChecker:
         # files?)
         badtops = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
-            for name, entry in sorted(tree.files.items()):
+            for name, entry in tree.files.items():
                 if IGNORED_TOPLEVEL_RGX.search(name) is None \
                         and not entry.has_module_ext():
                     badtops.append(entry.path)
