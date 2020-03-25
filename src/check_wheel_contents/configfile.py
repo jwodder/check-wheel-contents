@@ -27,7 +27,7 @@ def find_config_dict(dirpath: Union[str, Path, None] = None) -> dict:
         dirpath = Path()
     else:
         dirpath = Path(dirpath)
-    for d in (dirpath, *dirpath.parents):
+    for d in (dirpath, *dirpath.resolve().parents):
         for filename, loader, section in CONFIG_FILES:
             try:
                 cfg = loader(d / filename)

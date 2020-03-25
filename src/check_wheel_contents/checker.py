@@ -3,8 +3,8 @@ import re
 import attr
 from   .checks     import Check, FailedCheck, parse_checks_string
 from   .configfile import find_config_dict, read_config_dict
-from   .contents   import File
 from   .errors     import UserInputError
+from   .filetree   import File
 from   .util       import bytes_signature
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
@@ -21,7 +21,7 @@ ALLOWED_DUPLICATES = {
 
 IGNORED_TOPLEVEL_RGX = re.compile(r'.\.pth\Z')
 
-COMMON_DIRS = 'build dist doc docs example examples src test tests'.split()
+COMMON_DIRS = 'build data dist doc docs example examples src test tests'.split()
 
 @attr.s
 class WheelChecker:
@@ -73,7 +73,7 @@ class WheelChecker:
     def check_W001(self, contents):
         # 'Wheel contains .pyc/.pyo files'
         badfiles = []
-        for f in contents.tree.all_files():
+        for f in contents.filetree.all_files():
             if f.extension in BYTECODE_SUFFIXES:
                 badfiles.append(f.path)
         if badfiles:

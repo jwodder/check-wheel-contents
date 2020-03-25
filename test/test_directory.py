@@ -1,7 +1,7 @@
 import os
 import pytest
-from   check_wheel_contents.contents import Directory, File
 from   check_wheel_contents.errors   import WheelValidationError
+from   check_wheel_contents.filetree import Directory, File
 
 def test_default_path():
     d = Directory()
@@ -229,3 +229,5 @@ def test_all_files():
     assert list(d.entries.keys()) == ["foo.py", "bar", "quux.py"]
     assert list(d["bar"].entries.keys()) == ["glarch.py", "cleesh.py"]
     assert list(d.all_files()) == [foo, bar_glarch, bar_cleesh, quux]
+
+# Test __contains__

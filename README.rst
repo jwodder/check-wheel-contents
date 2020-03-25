@@ -113,12 +113,12 @@ components being invalid Python identifiers.
 
 W005 — Wheel contains common toplevel directory in library
 ----------------------------------------------------------
-This check fails if there are any directories named ``build``, ``dist``,
-``doc``,  ``docs``, ``example``, ``examples``, ``src``, ``test``, or ``tests``
-located at the root of the purelib or platlib section of the wheel.  These
-directories conventionally contain files that don't belong in wheels (aside
-from ``src``, whose contents belong in wheels but itself does not belong in a
-wheel).  Projects should only use toplevel names that resemble the project
+This check fails if there are any directories named ``build``, ``data``,
+``dist``, ``doc``,  ``docs``, ``example``, ``examples``, ``src``, ``test``, or
+``tests`` located at the root of the purelib or platlib section of the wheel.
+These directories conventionally contain files that don't belong in wheels
+(aside from ``src``, whose contents belong in wheels but itself does not belong
+in a wheel).  Projects should only use toplevel names that resemble the project
 name; using common names will cause different projects' files to overwrite each
 other on installation.
 

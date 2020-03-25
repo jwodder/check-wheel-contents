@@ -1,6 +1,6 @@
 import pytest
-from   check_wheel_contents.contents import File
 from   check_wheel_contents.errors   import WheelValidationError
+from   check_wheel_contents.filetree import File
 
 @pytest.mark.parametrize('row,expected', [
     (['foo.py', '', ''], File(parts=('foo.py',), size=None, hashsum=None)),
