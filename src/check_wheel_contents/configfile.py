@@ -39,8 +39,14 @@ def find_config_dict(dirpath: Union[str, Path, None] = None) -> dict:
     return {}
 
 def read_config_dict(path: Path) -> dict:
-    cfg = DEFAULT_LOADER(path)
-    if DEFAULT_SECTION in cfg:
-        return cfg[DEFAULT_SECTION]
+    if path.suffix == '.toml':
+        loader = toml.load
+        section = 'tool.check-wheel-contents'
+    else:
+        loader = DEFAULT_LOADER
+        section = DEFAULT_SECTION
+    cfg = loader(path)
+    if section in cfg:
+        return cfg[section]
     else:
         return {}
