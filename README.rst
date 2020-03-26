@@ -102,6 +102,17 @@ W003 — Wheel contains non-module at library toplevel
 ----------------------------------------------------
 This check fails if there are any files at the root of the purelib or platlib
 section of the wheel that are not Python modules or ``.pth`` files.
+Non-modules belong elsewhere in a wheel:
+
+- Licenses and similar notices should be stored in the wheel's ``*.dist-info``
+  directory using ``wheel``'s ``license_files`` option.
+
+- Package data/resource files belong inside a package directory so that they
+  can be located with ``pkg_resources`` or ``importlib-resources``.
+
+- A project's ``README`` should already be used as the project's
+  ``long_description``, in which case the text of the ``README`` is already
+  included in the wheel inside the ``*.dist-info/METADATA`` file.
 
 
 W004 — Module is not located at importable path
@@ -220,7 +231,7 @@ Common causes:
 
 W008 — Wheel is empty
 ---------------------
-This check fails if the wheel contains no files other than the ``.dist-info``
+This check fails if the wheel contains no files other than the ``*.dist-info``
 metadata directory.  It is a stronger check than W007, intended for users who
 are creating wheels that only contain scripts, headers, and other data files
 and thus need to ignore W007.
