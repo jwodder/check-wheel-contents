@@ -113,7 +113,7 @@ def test_libparts(path, expected):
     ('foo.cp38-win_amd64.pyd', True),
     ('foo.cp38-win32.pyd', True),
     ('foo.so', True),
-    ('foo.pyd', False),
+    ('foo.pyd', True),
     ('_ffi.abi3.so', True),
 ])
 def test_has_module_ext(path, expected):

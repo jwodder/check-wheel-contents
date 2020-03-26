@@ -17,7 +17,7 @@ from   check_wheel_contents.util import comma_split, is_data_dir, \
     ('foo.cp38-win_amd64.pyd', 'foo'),
     ('foo.cp38-win32.pyd', 'foo'),
     ('foo.so', 'foo'),
-    ('foo.pyd', None),
+    ('foo.pyd', 'foo'),
     ('_ffi.abi3.so', '_ffi'),
 ])
 def test_pymodule_basename(filename, expected):

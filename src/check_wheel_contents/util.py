@@ -6,7 +6,7 @@ from   .errors import WheelValidationError
 
 # <https://discuss.python.org/t/identifying-parsing-binary-extension-filenames/>
 MODULE_EXT_RGX = re.compile(
-    r'(?<=.)(?:\.(?:py|so)|\.[-A-Za-z0-9_]+\.(?:pyd|so))\Z'
+    r'(?<=.)\.(?:py|pyd|so|[-A-Za-z0-9_]+\.(?:pyd|so))\Z'
 )
 
 DIST_INFO_DIR_RGX = re.compile(
