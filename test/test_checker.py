@@ -1694,6 +1694,54 @@ def test_check_W009(rows, failures):
         ],
         [FailedCheck(Check.W010, ['foo/'])],
     ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo/bar.pyi',
+                'sha256=PtaxheMY_aFHWsKvcPeKZuLTfWAbHQaKPe5PWzXzt30',
+                '1082',
+            ],
+        ],
+        [FailedCheck(Check.W010, ['foo/'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo-stubs/bar.pyi',
+                'sha256=PtaxheMY_aFHWsKvcPeKZuLTfWAbHQaKPe5PWzXzt30',
+                '1082',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                '-stubs/bar.pyi',
+                'sha256=PtaxheMY_aFHWsKvcPeKZuLTfWAbHQaKPe5PWzXzt30',
+                '1082',
+            ],
+        ],
+        [FailedCheck(Check.W010, ['-stubs/'])],
+    ),
 ])
 def test_check_W010(rows, failures):
     whlcon = WheelContents(

@@ -5,7 +5,7 @@ from   .checks     import Check, FailedCheck, parse_checks_string
 from   .configfile import find_config_dict, read_config_dict
 from   .errors     import UserInputError
 from   .filetree   import File
-from   .util       import bytes_signature
+from   .util       import bytes_signature, is_stubs_dir
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 
@@ -200,12 +200,13 @@ class WheelChecker:
     def check_W010(self, contents):
         #W010 = 'Toplevel library directory contains no Python modules'
         # Only checks purelib and platlib
-        # TODO: Do not fail on directories that only contain typing files iff
-        # root dir ends with -stubs
+        # *-stubs directories are ignored
         baddirs = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
-            for subdir in tree.subdirectories.values():
-                if not any(f.has_module_ext() for f in subdir.all_files()):
+            for name, subdir in tree.subdirectories.items():
+                if not is_stubs_dir(name) and not any(
+                    f.has_module_ext() for f in subdir.all_files()
+                ):
                     baddirs.append(subdir.path)
         if baddirs:
             return [FailedCheck(Check.W010, baddirs)]

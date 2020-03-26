@@ -1,6 +1,7 @@
 import pytest
 from   check_wheel_contents.util import comma_split, is_data_dir, \
-                                            is_dist_info_dir, pymodule_basename
+                                            is_dist_info_dir, is_stubs_dir, \
+                                            pymodule_basename
 
 @pytest.mark.parametrize('filename,expected', [
     ('foo.py', 'foo'),
@@ -66,6 +67,18 @@ def test_is_dist_info_dir(name, expected):
 ])
 def test_is_data_dir(name, expected):
     assert is_data_dir(name) is expected
+
+@pytest.mark.parametrize('name,expected', [
+    ('foo-stubs', True),
+    ('foo-stub', False),
+    ('foo-STUBS', False),
+    ('-stubs', False),
+    ('def-stubs', False),
+    ('has-hyphen-stubs', False),
+    ('has.period-stubs', False),
+])
+def test_is_stubs_dir(name, expected):
+    assert is_stubs_dir(name) is expected
 
 # Test bytes_signature()
 # Test urlsafe_b64encode_nopad

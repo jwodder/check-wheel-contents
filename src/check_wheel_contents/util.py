@@ -1,5 +1,6 @@
 import base64
 import hashlib
+from   keyword import iskeyword
 import re
 from   typing  import List, Optional, Tuple
 from   .errors import WheelValidationError
@@ -65,3 +66,9 @@ def validate_path(path: str) -> None:
         raise WheelValidationError(
             f'Non-normalized path in RECORD: {path!r}'
         )
+
+def is_stubs_dir(name: str) -> bool:
+    if not name.endswith('-stubs'):
+        return False
+    basename = name[:-6]
+    return basename.isidentifier() and not iskeyword(basename)

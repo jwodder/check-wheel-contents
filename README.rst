@@ -283,7 +283,8 @@ Common causes:
 W010 — Toplevel library directory contains no Python modules
 ------------------------------------------------------------
 This check fails if a directory tree rooted at the root of the purelib or
-platlib section of the wheel contains no Python modules.
+platlib section of the wheel contains no Python modules.  ``*-stubs``
+directories are excluded from this check.
 
 
 ..
