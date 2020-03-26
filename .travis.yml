@@ -1,14 +1,24 @@
 language: python
 cache: pip
 dist: xenial
+
 python:
     - '3.6'
     - '3.7'
     - '3.8'
     - pypy3
+
+env:
+    - TOXENV=py
+
+jobs:
+    include:
+        - python: 3.8
+          env: TOXENV=dogfood
+
 install:
     - pip install codecov tox
 script:
-    - tox -e py
+    - tox
 after_success:
     - codecov

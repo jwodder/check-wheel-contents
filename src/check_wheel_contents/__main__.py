@@ -1,3 +1,5 @@
+from   pathlib   import Path
+from   typing    import Iterable, List
 import click
 from   .         import __version__
 from   .checker  import WheelChecker
@@ -38,7 +40,7 @@ class ChecksParamType(click.ParamType):
     help    = 'Comma-separated list of checks to enable',
     metavar = 'CHECKS',
 )
-@click.argument('wheel', nargs=-1, type=click.Path(exists=True, dir_okay=False))
+@click.argument('wheel', nargs=-1, type=click.Path(exists=True, dir_okay=True))
 @click.pass_context
 def main(ctx, wheel, config, select, ignore):
     checker = WheelChecker()
@@ -49,16 +51,24 @@ def main(ctx, wheel, config, select, ignore):
     except UserInputError as e:
         ctx.fail(str(e))
     ok = True
-    for w in wheel:
+    for w in args2wheelpaths(wheel):
         contents = WheelContents.from_wheel(w)
         failures = checker.check_contents(contents)
         if failures:
             for f in failures:
-                print(f.show(w))
+                print(f.show(str(w)))
             ok = False
         else:
             print(f'{w}: OK')
     ctx.exit(0 if ok else 1)
+
+def args2wheelpaths(args: List[str]) -> Iterable[Path]:
+    for a in args:
+        p = Path(a)
+        if p.is_dir():
+            yield from p.glob('**/*.whl')
+        else:
+            yield p
 
 if __name__ == '__main__':
     main()

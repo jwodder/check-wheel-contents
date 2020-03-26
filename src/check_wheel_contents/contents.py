@@ -1,6 +1,7 @@
 from   collections      import defaultdict
 import csv
 from   io               import TextIOWrapper
+import os
 from   os.path          import basename
 import re
 from   typing           import DefaultDict, List, Tuple, Union
@@ -56,7 +57,7 @@ class WheelContents:
                 return Directory(f'{self.data_dir}/platlib/')
 
     @classmethod
-    def from_wheel(cls, path):
+    def from_wheel(cls, path: Union[str, os.PathLike]):
         whlname = parse_wheel_filename(basename(path))
         dist_info_dir = f'{whlname.project}-{whlname.version}.dist-info'
         data_dir = f'{whlname.project}-{whlname.version}.data'
