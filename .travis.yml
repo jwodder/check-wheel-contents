@@ -13,7 +13,7 @@ env:
 
 jobs:
     include:
-        - python: 3.8
+        - python: '3.8'
           env: TOXENV=dogfood
 
 install:

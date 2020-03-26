@@ -137,14 +137,15 @@ Common causes:
 
 W005 — Wheel contains common toplevel name in library
 -----------------------------------------------------
-This check fails if there are any files or directories named ``build``,
-``data``, ``dist``, ``doc``,  ``docs``, ``example``, ``examples``, ``src``,
-``test``, or ``tests`` located at the root of the purelib or platlib section of
-the wheel.  These names are conventionally used for directories that don't
-belong in wheels (aside from ``src``, whose contents belong in wheels but
-itself does not belong in a wheel).  Projects should only use toplevel names
-that resemble the project name; using common names will cause different
-projects' files to overwrite each other on installation.
+This check fails if there are any files or directories named ``.eggs``,
+``.nox``, ``.tox``, ``.venv``, ``build``, ``data``, ``dist``, ``doc``,
+``docs``, ``example``, ``examples``, ``src``, ``test``, ``tests``, or ``venv``
+located at the root of the purelib or platlib section of the wheel.  These
+names are conventionally used for directories that don't belong in wheels
+(aside from ``src``, whose contents belong in wheels but itself does not belong
+in a wheel).  Projects should only use toplevel names that resemble the project
+name; using common names will cause different projects' files to overwrite each
+other on installation.
 
 Common causes:
 

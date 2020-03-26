@@ -21,7 +21,10 @@ ALLOWED_DUPLICATES = {
 
 IGNORED_TOPLEVEL_RGX = re.compile(r'.\.pth\Z')
 
-COMMON_NAMES = 'build data dist doc docs example examples src test tests'.split()
+COMMON_NAMES = '''
+    .eggs .nox .tox .venv
+    build data dist doc docs example examples src test tests venv
+'''.split()
 
 @attr.s
 class WheelChecker:
@@ -94,8 +97,10 @@ class WheelChecker:
     def check_W003(self, contents):
         # 'Wheel contains non-module at library toplevel'
         # Only checks purelib and platlib sections
-        # Ignores *.pth files and directories (TODO: and py.typed and *.pyi
-        # files?)
+        # Ignores *.pth files and directories
+        # Note that py.typed and *.pyi file belong inside packages, not at top
+        # level.  See the last paragraph of "Packaging Type Information" in PEP
+        # 561.
         badtops = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for name, entry in tree.files.items():
@@ -110,6 +115,8 @@ class WheelChecker:
     def check_W004(self, contents):
         # 'Module is not located at importable path'
         # Only checks things under purelib and platlib
+        # TODO: Ignore __init__.py files underneath *-stubs?  Or are those not
+        # supposed to be there?
         badfiles = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for f in tree.all_files():
@@ -193,8 +200,8 @@ class WheelChecker:
     def check_W010(self, contents):
         #W010 = 'Toplevel library directory contains no Python modules'
         # Only checks purelib and platlib
-        # TODO: Do not fail on directories that only contain typing files (iff
-        # root dir ends with -stubs?)
+        # TODO: Do not fail on directories that only contain typing files iff
+        # root dir ends with -stubs
         baddirs = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for subdir in tree.subdirectories.values():
