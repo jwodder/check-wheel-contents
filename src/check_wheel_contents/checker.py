@@ -170,7 +170,7 @@ class WheelChecker:
         for name in contents.filetree.entries.keys():
             if name != contents.dist_info_dir:
                 return []
-        return [FailedCheck(Check.W007)]
+        return [FailedCheck(Check.W008)]
 
     def check_W009(self, contents):
         #W009 = 'Wheel contains multiple toplevel library entries'
@@ -186,7 +186,7 @@ class WheelChecker:
                 ):
                     toplevels.append(entry.path)
         if len(toplevels) > 1:
-            return [FailedCheck(Check.W008, toplevels)]
+            return [FailedCheck(Check.W009, toplevels)]
         else:
             return []
 
@@ -201,7 +201,7 @@ class WheelChecker:
                 if not any(f.has_module_ext() for f in subdir.all_files()):
                     baddirs.append(subdir.path)
         if baddirs:
-            return [FailedCheck(Check.W009, baddirs)]
+            return [FailedCheck(Check.W010, baddirs)]
         else:
             return []
 
