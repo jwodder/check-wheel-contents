@@ -21,7 +21,7 @@ ALLOWED_DUPLICATES = {
 
 IGNORED_TOPLEVEL_RGX = re.compile(r'.\.pth\Z')
 
-COMMON_DIRS = 'build data dist doc docs example examples src test tests'.split()
+COMMON_NAMES = 'build data dist doc docs example examples src test tests'.split()
 
 @attr.s
 class WheelChecker:
@@ -121,22 +121,22 @@ class WheelChecker:
             return []
 
     def check_W005(self, contents):
-        #W005 = 'Wheel contains common toplevel directory in library'
-        # Checks for COMMON_DIRS
+        #W005 = 'Wheel contains common toplevel name in library'
+        # Checks for COMMON_NAMES
         # Only checks purelib and platlib
         # TODO: Add a configuration option for explicitly removing (or adding?)
         # values from consideration?
-        baddirs = []
+        badpaths = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
-            for common in COMMON_DIRS:
+            for common in COMMON_NAMES:
                 try:
-                    d = tree.subdirectories[common]
+                    entry = tree[common]
                 except KeyError:
                     pass
                 else:
-                    baddirs.append(d.path)
-        if baddirs:
-            return [FailedCheck(Check.W005, baddirs)]
+                    badpaths.append(entry.path)
+        if badpaths:
+            return [FailedCheck(Check.W005, badpaths)]
         else:
             return []
 

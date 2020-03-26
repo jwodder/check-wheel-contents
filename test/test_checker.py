@@ -1,5 +1,5 @@
 import pytest
-from   check_wheel_contents.checker  import WheelChecker
+from   check_wheel_contents.checker  import COMMON_NAMES, WheelChecker
 from   check_wheel_contents.checks   import Check, FailedCheck
 from   check_wheel_contents.contents import WheelContents
 
@@ -1038,3 +1038,111 @@ def test_check_W004(rows, failures):
     whlcon.validate_tree()
     checker = WheelChecker()
     assert checker.check_W004(whlcon) == failures
+
+@pytest.mark.parametrize('name', COMMON_NAMES)
+@pytest.mark.parametrize('rows,failures', [
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                '{}/foo.py',
+                'sha256=ywELOYVsxhuCagPFoIizTjrI2kux_TxojiEPkLbwPII',
+                '973',
+            ],
+            [
+                'not_{}/foo.py',
+                'sha256=8iGRSxgfqkMEpbEXL0XLDBYnDqzzTy3XAprVrCE1ikM',
+                '1022',
+            ],
+            [
+                '{}.py',
+                'sha256=geZ-oqjlCmUGBPINcVlDfps60Wqp-3dBl2z4AwxM-7Q',
+                '1010',
+            ],
+        ],
+        [FailedCheck(Check.W005, ['{}/'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'quux/{}/foo.py',
+                'sha256=ywELOYVsxhuCagPFoIizTjrI2kux_TxojiEPkLbwPII',
+                '973',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                '{}',
+                'sha256=ywELOYVsxhuCagPFoIizTjrI2kux_TxojiEPkLbwPII',
+                '973',
+            ],
+        ],
+        [FailedCheck(Check.W005, ['{}'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo-1.0.data/platlib/{}/foo.py',
+                'sha256=ywELOYVsxhuCagPFoIizTjrI2kux_TxojiEPkLbwPII',
+                '973',
+            ],
+        ],
+        [FailedCheck(Check.W005, ['foo-1.0.data/platlib/{}/'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo-1.0.data/scripts/{}/foo.py',
+                'sha256=ywELOYVsxhuCagPFoIizTjrI2kux_TxojiEPkLbwPII',
+                '973',
+            ],
+        ],
+        [],
+    ),
+])
+def test_check_W005(name, rows, failures):
+    whlcon = WheelContents(
+        dist_info_dir='foo-1.0.dist-info',
+        data_dir='foo-1.0.data',
+        root_is_purelib=True,
+    )
+    rows = [[p.format(name), h, s] for p,h,s in rows]
+    failures = [
+        FailedCheck(f.check, [a.format(name) for a in f.args])
+        for f in failures
+    ]
+    whlcon.add_record_rows(rows)
+    whlcon.validate_tree()
+    checker = WheelChecker()
+    assert checker.check_W005(whlcon) == failures

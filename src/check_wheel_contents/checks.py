@@ -9,7 +9,7 @@ class Check(Enum):
     W002 = 'Wheel contains duplicate files'
     W003 = 'Wheel contains non-module at library toplevel'
     W004 = 'Module is not located at importable path'
-    W005 = 'Wheel contains common toplevel directory in library'
+    W005 = 'Wheel contains common toplevel name in library'
     W006 = '__init__.py at top level of library'
     W007 = 'Wheel library is empty'
     W008 = 'Wheel is empty'
