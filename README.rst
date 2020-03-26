@@ -110,6 +110,19 @@ This check fails if there are any Python modules in the purelib or platlib
 section of the wheel that cannot be imported due to one or more of their path
 components being invalid Python identifiers.
 
+Common causes:
+
+- *(Build tool agnostic)* You gave a package directory or module a name
+  containing a hyphen or other character not allowed in Python identifiers.
+
+  **Solution**: Rename the offending directory or module to remove the
+  offending character, most likely by changing it to an underscore.
+
+- *(Build tool agnostic)* You gave a package directory or module the name of a
+  Python keyword.
+
+  **Solution**: Rename the offending directory or module.
+
 
 W005 — Wheel contains common toplevel directory in library
 ----------------------------------------------------------
