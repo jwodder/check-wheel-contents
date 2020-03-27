@@ -39,6 +39,79 @@ Installation
     python3 -m pip install git+https://github.com/jwodder/check-wheel-contents.git
 
 
+Usage
+=====
+
+::
+
+    check-wheel-contents [<options>] <wheel or directory> ...
+
+``check-wheel-contents`` takes zero or more paths as arguments, each pointing
+to either a wheel to analyze or a directory that will be traversed for wheels
+to analyze.  If a given wheel fails any checks, a message will be printed for
+each check along with (if applicable) a list of filepaths in the wheel causing
+the check to fail, and the command will exit with a nonzero status.  If a wheel
+passes all checks, the program will print ``{path_to_wheel}: OK``.
+
+Options
+-------
+
+- ``-h``, ``--help`` — Display a usage message and exit
+
+- ``-V``, ``--version`` — Display the program version and exit
+
+- ``-c <file>``, ``--config <file>`` — Read configuration from the given file;
+  see below for more information
+
+- ``--ignore <checks>`` — Ignore/skip the given checks.  ``<checks>`` must be a
+  comma-separated list of check IDs and/or check ID prefixes (to ignore all
+  checks beginning with the given prefixes).  By default, no checks are
+  ignored.
+
+- ``--select <checks>`` — Select/enable only the given checks.  ``<checks>``
+  must be a comma-separated list of check IDs and/or check ID prefixes (to
+  select all checks beginning with the given prefixes).  By default, all checks
+  are selected.
+
+
+Configuration File
+==================
+
+If a configuration file is specified on the command line with the ``--config``
+option, ``check-wheel-contents`` reads its configuration from the given file.
+If the filename ends in ``.toml``, the file must be in TOML format, and the
+configuration is read from the ``tool.check-wheel-contents`` table; otherwise,
+the file must be in INI format, and the configuration is read from the
+``check-wheel-conents`` section.
+
+If no ``--config`` option is specified, the program searches the current
+directory for the first file found in the below table that contains the given
+section.  If none of the listed files exist and have the proper section, the
+search recurses into the parent directory.
+
+=============================  ======  ===============================
+File                           Format  Section
+=============================  ======  ===============================
+``pyproject.toml``             TOML    ``[tool.check-wheel-contents]``
+``tox.ini``                    INI     ``[check-wheel-contents]``
+``setup.cfg``                  INI     ``[tool:check-wheel-contents]``
+``check-wheel-contents.cfg``   INI     ``[check-wheel-contents]``
+``.check-wheel-contents.cfg``  INI     ``[check-wheel-contents]``
+=============================  ======  ===============================
+
+The following keys are read from the configuration file.  Unknown keys are
+ignored.  Settings given on the command line override those in the
+configuration file.
+
+``ignore``
+   A string with the same format & meaning as the ``--ignore`` command-line
+   option
+
+``select``
+   A string with the same format & meaning as the ``--select`` command-line
+   option
+
+
 Checks
 ======
 
@@ -82,8 +155,8 @@ Common causes:
 W002 — Wheel contains duplicate files
 -------------------------------------
 This check fails if any two files in the wheel have the same contents.  Common
-file contents, such files that are empty or just contain the line ``# -*-
-coding: utf-8 -*-``, are excluded from this check.
+file contents, such files that are empty or just contain the line "``# -*-
+coding: utf-8 -*-``", are excluded from this check.
 
 Common causes:
 
