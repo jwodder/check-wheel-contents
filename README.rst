@@ -166,7 +166,7 @@ Common causes:
 W002 — Wheel contains duplicate files
 -------------------------------------
 This check fails if any two files in the wheel have the same contents.  Common
-file contents, such files that are empty or just contain the line "``# -*-
+file contents, such as files that are empty or just contain the line "``# -*-
 coding: utf-8 -*-``", are excluded from this check.
 
 Common causes:
@@ -196,7 +196,8 @@ Non-modules belong elsewhere in a wheel:
 
 - A project's ``README`` should already be used as the project's
   ``long_description``, in which case the text of the ``README`` is already
-  included in the wheel inside the ``*.dist-info/METADATA`` file.
+  included in the wheel inside the ``*.dist-info/METADATA`` file.  There should
+  thus be no need to store the ``README`` in the wheel's library sections.
 
 
 W004 — Module is not located at importable path
