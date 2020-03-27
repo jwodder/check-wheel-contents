@@ -8,15 +8,15 @@ from   .util            import is_data_dir, is_dist_info_dir, \
 
 @attr.s(auto_attribs=True, frozen=True)
 class File:
-    parts:   Tuple[str]    = attr.ib()
+    parts:   Tuple[str, ...]    = attr.ib()
     size:    Optional[int] = attr.ib()
     hashsum: Optional[str] = attr.ib()
 
     @classmethod
-    def from_record_row(cls, row: List[str]):
+    def from_record_row(cls, row: List[str]) -> 'File':
         try:
-            path, hashsum, size = row
-            size = int(size) if size else None
+            path, hashsum, size_str = row
+            size = int(size_str) if size_str else None
         except ValueError:
             raise WheelValidationError(f'Invalid RECORD entry: {row!r}')
         if path.endswith('/'):
@@ -32,19 +32,19 @@ class File:
             hashsum = hashsum or None,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.path
 
     @property
-    def path(self):
+    def path(self) -> str:
         return '/'.join(self.parts)
 
     @property
-    def signature(self):
+    def signature(self) -> Tuple[Optional[int], Optional[str]]:
         return (self.size, self.hashsum)
 
     @property
-    def libparts(self):
+    def libparts(self) -> Optional[Tuple[str, ...]]:
         """
         The path components of the file relative to the root of the purelib or
         platlib folder, whichever contains it.  If the file is in neither
@@ -61,13 +61,13 @@ class File:
             return self.parts
 
     @property
-    def extension(self):
+    def extension(self) -> str:
         return splitext(self.parts[-1])[1]
 
-    def has_module_ext(self):
+    def has_module_ext(self) -> bool:
         return pymodule_basename(self.parts[-1]) is not None
 
-    def is_valid_module_path(self):
+    def is_valid_module_path(self) -> bool:
         if self.libparts is None:
             return False
         *pkgs, basename = self.libparts
@@ -85,7 +85,7 @@ class Directory:
     entries: Dict[str, Union[File, 'Directory']] = attr.Factory(dict)
 
     @path.validator
-    def _validate_path(self, attribute, value):
+    def _validate_path(self, attribute: attr.Attribute, value: Optional[str]) -> None:
         if value is not None:
             if not value.endswith('/'):
                 # This is a ValueError, not a WheelValidationError, because it
@@ -96,7 +96,7 @@ class Directory:
             validate_path(value)
 
     @property
-    def parts(self) -> Tuple[str]:
+    def parts(self) -> Tuple[str, ...]:
         if self.path is None:
             return ()
         else:
@@ -112,16 +112,16 @@ class Directory:
         ### TODO: Cache this?
         return {k:v for k,v in self.entries.items() if isinstance(v, File)}
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self.entries)
 
-    def __getitem__(self, value):
+    def __getitem__(self, value: str) -> Union[File, 'Directory']:
         return self.entries[value]
 
-    def __contains__(self, value):
+    def __contains__(self, value: str) -> bool:
         return value in self.entries
 
-    def add_entry(self, entry: Union[File, 'Directory']):
+    def add_entry(self, entry: Union[File, 'Directory']) -> None:
         if isinstance(entry, Directory) and bool(entry):
             raise ValueError('Cannot add nonempty directory to directory tree')
         myparts = self.parts
@@ -135,8 +135,9 @@ class Directory:
         for i,p in enumerate(dirs):
             this_path = '/'.join(dirs[:i+1])
             if p in current.entries:
-                if isinstance(current.entries[p], Directory):
-                    current = current.entries[p]
+                q = current.entries[p]
+                if isinstance(q, Directory):
+                    current = q
                 else:
                     raise WheelValidationError(
                         f'Conflicting occurrences of path {this_path!r}'

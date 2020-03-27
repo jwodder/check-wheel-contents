@@ -1,9 +1,11 @@
 from   configparser import ConfigParser
+import os
 from   pathlib      import Path
-from   typing       import Callable, List, Tuple, Union
+from   typing       import Any, Callable, List, Mapping, Tuple, Union
 import toml
+from   .errors      import UserInputError
 
-def load_ini(path: Path) -> dict:
+def load_ini(path: Path) -> Mapping[str, Any]:
     cfg = ConfigParser()
     with path.open(encoding='utf-8') as fp:
         cfg.read_file(fp)
@@ -12,7 +14,7 @@ def load_ini(path: Path) -> dict:
 DEFAULT_LOADER  = load_ini
 DEFAULT_SECTION = 'check-wheel-contents'
 
-CONFIG_FILES: List[Tuple[str, Callable[[Path], dict], str]] = [
+CONFIG_FILES: List[Tuple[str, Callable[[Path], Mapping[str, Any]], str]] = [
     # filename, loader, section name
     # Loaders must raise FileNotFoundError if path does not exist
     ('pyproject.toml',            toml.load,      'tool.check-wheel-contents'),
@@ -22,7 +24,7 @@ CONFIG_FILES: List[Tuple[str, Callable[[Path], dict], str]] = [
     ('.check-wheel-contents.cfg', DEFAULT_LOADER, DEFAULT_SECTION),
 ]
 
-def find_config_dict(dirpath: Union[str, Path, None] = None) -> dict:
+def find_config_dict(dirpath: Union[str,Path,None] = None) -> Mapping[str, Any]:
     if dirpath is None:
         dirpath = Path()
     else:
@@ -35,10 +37,17 @@ def find_config_dict(dirpath: Union[str, Path, None] = None) -> dict:
                 pass
             else:
                 if section in cfg:
-                    return cfg[section]
+                    subcfg = cfg[section]
+                    if not isinstance(subcfg, dict):
+                        raise UserInputError(
+                            f'{d/filename}: {section} is not a dict'
+                        )
+                    return subcfg
     return {}
 
-def read_config_dict(path: Path) -> dict:
+def read_config_dict(filepath: Union[str, os.PathLike]) -> dict:
+    path = Path(filepath)
+    loader: Callable[[Path], Mapping[str, Any]]
     if path.suffix == '.toml':
         loader = toml.load
         section = 'tool.check-wheel-contents'
@@ -47,6 +56,9 @@ def read_config_dict(path: Path) -> dict:
         section = DEFAULT_SECTION
     cfg = loader(path)
     if section in cfg:
-        return cfg[section]
+        subcfg = cfg[section]
+        if not isinstance(subcfg, dict):
+            raise UserInputError(f'{path}: {section} is not a dict')
+        return subcfg
     else:
         return {}

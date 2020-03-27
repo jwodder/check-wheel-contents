@@ -1,8 +1,10 @@
 from   operator    import attrgetter
 import re
+from   typing      import Any, Dict, List, Mapping, Optional, Set
 import attr
 from   .checks     import Check, FailedCheck, parse_checks_string
 from   .configfile import find_config_dict, read_config_dict
+from   .contents   import WheelContents
 from   .errors     import UserInputError
 from   .filetree   import File
 from   .util       import bytes_signature, is_stubs_dir
@@ -28,21 +30,21 @@ COMMON_NAMES = '''
 
 @attr.s
 class WheelChecker:
-    selected = attr.ib()
-    options  = attr.ib(factory=dict)
+    selected: Set[Check] = attr.ib()
+    options: Dict[str, Any] = attr.ib(factory=dict)
 
     @selected.default
-    def _selected_default(self):
+    def _selected_default(self) -> Set[Check]:
         return set(Check)
 
-    def read_config_file(self, configpath=None):
+    def read_config_file(self, configpath: Optional[str] = None) -> None:
         if configpath is None:
             cfg = find_config_dict()
         else:
             cfg = read_config_dict(configpath)
         self.load_config_dict(cfg)
 
-    def load_config_dict(self, cfg: dict) -> None:
+    def load_config_dict(self, cfg: Mapping[str, Any]) -> None:
         if "select" in cfg:
             if not isinstance(cfg["select"], str):
                 raise UserInputError('"select" config key must be a string')
@@ -52,13 +54,17 @@ class WheelChecker:
                 raise UserInputError('"ignore" config key must be a string')
             self.options["ignore"] = parse_checks_string(cfg["ignore"])
 
-    def load_command_options(self, select=None, ignore=None):
+    def load_command_options(
+        self,
+        select: Optional[Set[Check]] = None,
+        ignore: Optional[Set[Check]] = None,
+    ) -> None:
         if select is not None:
             self.options["select"] = select
         if ignore is not None:
             self.options["ignore"] = ignore
 
-    def finalize_options(self):
+    def finalize_options(self) -> None:
         select = self.options.pop("select", None)
         if select is not None:
             self.selected = select.copy()
@@ -66,14 +72,14 @@ class WheelChecker:
         if ignore is not None:
             self.selected -= ignore
 
-    def check_contents(self, contents):
+    def check_contents(self, contents: WheelContents) -> List[FailedCheck]:
         failures = []
         for c in sorted(self.selected, key=attrgetter('name')):
             method = getattr(self, 'check_' + c.name)
             failures.extend(method(contents))
         return failures
 
-    def check_W001(self, contents):
+    def check_W001(self, contents: WheelContents) -> List[FailedCheck]:
         # 'Wheel contains .pyc/.pyo files'
         badfiles = []
         for f in contents.filetree.all_files():
@@ -84,7 +90,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W002(self, contents):
+    def check_W002(self, contents: WheelContents) -> List[FailedCheck]:
         # 'Wheel contains duplicate files'
         # Ignore files whose signatures are in ALLOWED_DUPLICATES
         ### TODO: Support reading sets of allowed duplicates from config
@@ -94,7 +100,7 @@ class WheelChecker:
                 dups.append(FailedCheck(Check.W002, [f.path for f in files]))
         return dups
 
-    def check_W003(self, contents):
+    def check_W003(self, contents: WheelContents) -> List[FailedCheck]:
         # 'Wheel contains non-module at library toplevel'
         # Only checks purelib and platlib sections
         # Ignores *.pth files and directories
@@ -112,7 +118,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W004(self, contents):
+    def check_W004(self, contents: WheelContents) -> List[FailedCheck]:
         # 'Module is not located at importable path'
         # Only checks things under purelib and platlib
         # TODO: Ignore __init__.py files underneath *-stubs?  Or are those not
@@ -127,7 +133,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W005(self, contents):
+    def check_W005(self, contents: WheelContents) -> List[FailedCheck]:
         #W005 = 'Wheel contains common toplevel name in library'
         # Checks for COMMON_NAMES
         # Only checks purelib and platlib
@@ -147,7 +153,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W006(self, contents):
+    def check_W006(self, contents: WheelContents) -> List[FailedCheck]:
         #W006 = '__init__.py at top level of library'
         # Only checks purelib and platlib
         badfiles = []
@@ -163,7 +169,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W007(self, contents):
+    def check_W007(self, contents: WheelContents) -> List[FailedCheck]:
         #W007 = 'Wheel library is empty'
         # Only errors if both purelib and platlib are empty
         if not contents.purelib_tree and not contents.platlib_tree:
@@ -171,7 +177,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W008(self, contents):
+    def check_W008(self, contents: WheelContents) -> List[FailedCheck]:
         #W008 = 'Wheel is empty'
         # Errors if there are no files outside .dist-info
         for name in contents.filetree.entries.keys():
@@ -179,7 +185,7 @@ class WheelChecker:
                 return []
         return [FailedCheck(Check.W008)]
 
-    def check_W009(self, contents):
+    def check_W009(self, contents: WheelContents) -> List[FailedCheck]:
         #W009 = 'Wheel contains multiple toplevel library entries'
         # Ignores the same files as W003 as well as files & directories
         # starting with an underscore
@@ -197,7 +203,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W010(self, contents):
+    def check_W010(self, contents: WheelContents) -> List[FailedCheck]:
         #W010 = 'Toplevel library directory contains no Python modules'
         # Only checks purelib and platlib
         # *-stubs directories are ignored
@@ -213,22 +219,22 @@ class WheelChecker:
         else:
             return []
 
-    def check_W101(self, contents):
+    def check_W101(self, contents: WheelContents) -> List[FailedCheck]:
         #W101 = 'Wheel library contains files not in source tree'
         # Only active when certain option given on command line
         raise NotImplementedError
 
-    def check_W102(self, contents):
+    def check_W102(self, contents: WheelContents) -> List[FailedCheck]:
         #W102 = 'Wheel library is missing files in source tree'
         # Only active when certain option given on command line
         raise NotImplementedError
 
-    def check_W201(self, contents):
+    def check_W201(self, contents: WheelContents) -> List[FailedCheck]:
         #W201 = 'Wheel library is missing specified toplevel entry'
         # Only active when certain option given on command line
         raise NotImplementedError
 
-    def check_W202(self, contents):
+    def check_W202(self, contents: WheelContents) -> List[FailedCheck]:
         #W202 = 'Wheel library has undeclared toplevel entry'
         # Only active when certain option given on command line
         raise NotImplementedError

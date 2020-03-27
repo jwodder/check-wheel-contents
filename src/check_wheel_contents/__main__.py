@@ -1,16 +1,21 @@
 from   pathlib   import Path
-from   typing    import Iterable, List
+from   typing    import Iterable, List, Optional, Set
 import click
 from   .         import __version__
 from   .checker  import WheelChecker
-from   .checks   import parse_checks_string
+from   .checks   import Check, parse_checks_string
 from   .contents import WheelContents
 from   .errors   import UserInputError
 
 class ChecksParamType(click.ParamType):
     name = 'checks'
 
-    def convert(self, value, param, ctx):
+    def convert(
+        self,
+        value: str,
+        param: Optional[click.Parameter],
+        ctx: Optional[click.Context],
+    ) -> Set[Check]:
         try:
             return parse_checks_string(value)
         except UserInputError as e:
@@ -42,7 +47,13 @@ class ChecksParamType(click.ParamType):
 )
 @click.argument('wheel', nargs=-1, type=click.Path(exists=True, dir_okay=True))
 @click.pass_context
-def main(ctx, wheel, config, select, ignore):
+def main(
+    ctx: click.Context,
+    wheel: List[str],
+    config: Optional[str],
+    select: Optional[Set[Check]],
+    ignore: Optional[Set[Check]],
+) -> None:
     checker = WheelChecker()
     try:
         checker.read_config_file(config)

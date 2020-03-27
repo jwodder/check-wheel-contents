@@ -4,6 +4,7 @@
 .cache/
 .coverage
 .eggs/
+.mypy_cache/
 .nox/
 .pytest_cache/
 .tox/

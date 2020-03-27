@@ -4,7 +4,8 @@ from   io               import TextIOWrapper
 import os
 from   os.path          import basename
 import re
-from   typing           import DefaultDict, List, Tuple, Union
+from   typing           import DefaultDict, Iterable, List, Optional, TextIO, \
+                                    Tuple, Union
 from   zipfile          import ZipFile
 import attr
 from   property_manager import cached_property
@@ -20,12 +21,12 @@ class WheelContents:
     dist_info_dir: str = attr.ib()
     data_dir: str = attr.ib()
     root_is_purelib: bool = attr.ib(default=True)
-    by_signature: DefaultDict[Tuple[int, str], List[File]] \
+    by_signature: DefaultDict[Tuple[Optional[int], Optional[str]], List[File]] \
         = attr.ib(factory=lambda: defaultdict(list))
     filetree: Directory = attr.ib(factory=Directory)
 
     @cached_property
-    def purelib_tree(self):
+    def purelib_tree(self) -> Directory:
         if self.root_is_purelib:
             return Directory(
                 path=None,
@@ -36,12 +37,15 @@ class WheelContents:
             )
         else:
             try:
-                return self.filetree[self.data_dir]['purelib']
+                purelib = self.filetree[self.data_dir]['purelib']  # type: ignore
             except (KeyError, TypeError):
                 return Directory(f'{self.data_dir}/purelib/')
+            else:
+                assert isinstance(purelib, Directory)
+                return purelib
 
     @cached_property
-    def platlib_tree(self):
+    def platlib_tree(self) -> Directory:
         if not self.root_is_purelib:
             return Directory(
                 path=None,
@@ -52,12 +56,15 @@ class WheelContents:
             )
         else:
             try:
-                return self.filetree[self.data_dir]['platlib']
+                platlib = self.filetree[self.data_dir]['platlib']  # type: ignore
             except (KeyError, TypeError):
                 return Directory(f'{self.data_dir}/platlib/')
+            else:
+                assert isinstance(platlib, Directory)
+                return platlib
 
     @classmethod
-    def from_wheel(cls, path: Union[str, os.PathLike]):
+    def from_wheel(cls, path: Union[str, os.PathLike]) -> 'WheelContents':
         whlname = parse_wheel_filename(basename(path))
         dist_info_dir = f'{whlname.project}-{whlname.version}.dist-info'
         data_dir = f'{whlname.project}-{whlname.version}.data'
@@ -95,18 +102,19 @@ class WheelContents:
         wc.validate_tree()
         return wc
 
-    def add_record_file(self, fp):
+    def add_record_file(self, fp: TextIO) -> None:
         self.add_record_rows(csv.reader(fp, delimiter=',', quotechar='"'))
 
-    def add_record_rows(self, rows):
+    def add_record_rows(self, rows: Iterable[List[str]]) -> None:
         for row in rows:
+            entry: Union[File, Directory]
             if row and row[0].endswith('/'):
                 entry = Directory(row[0])
             else:
                 entry = File.from_record_row(row)
             self.add_entry(entry)
 
-    def add_entry(self, entry: Union['File', 'Directory']):
+    def add_entry(self, entry: Union['File', 'Directory']) -> None:
         self.filetree.add_entry(entry)
         if isinstance(entry, File):
             self.by_signature[entry.signature].append(entry)
@@ -148,12 +156,12 @@ class WheelContents:
             )
         if self.data_dir in self.filetree:
             if self.root_is_purelib:
-                if "purelib" in self.filetree[self.data_dir]:
+                if "purelib" in self.filetree[self.data_dir]:  # type: ignore
                     raise WheelValidationError(
                         'Wheel is purelib yet contains *.data/purelib'
                     )
                 try:
-                    platlib = self.filetree[self.data_dir]["platlib"]
+                    platlib = self.filetree[self.data_dir]["platlib"]  # type: ignore
                 except KeyError:
                     pass
                 else:
@@ -162,12 +170,12 @@ class WheelContents:
                             '*.data/platlib is not a directory'
                         )
             else:
-                if "platlib" in self.filetree[self.data_dir]:
+                if "platlib" in self.filetree[self.data_dir]:  # type: ignore
                     raise WheelValidationError(
                         'Wheel is platlib yet contains *.data/platlib'
                     )
                 try:
-                    purelib = self.filetree[self.data_dir]["purelib"]
+                    purelib = self.filetree[self.data_dir]["purelib"]  # type: ignore
                 except KeyError:
                     pass
                 else:
