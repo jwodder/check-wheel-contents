@@ -1,10 +1,11 @@
-from   keyword          import iskeyword
-from   os.path          import splitext
-from   typing           import Dict, Iterator, List, Optional, Tuple, Union
+from   keyword import iskeyword
+from   os.path import splitext
+from   pathlib import Path
+from   typing  import Dict, Iterator, List, Optional, Tuple, Union
 import attr
-from   .errors          import WheelValidationError
-from   .util            import is_data_dir, is_dist_info_dir, \
-                                    pymodule_basename, validate_path
+from   .errors import WheelValidationError
+from   .util   import is_data_dir, is_dist_info_dir, pymodule_basename, \
+                        validate_path
 
 @attr.s(auto_attribs=True, frozen=True)
 class File:
@@ -161,3 +162,42 @@ class Directory:
                 yield from e.all_files()
             else:
                 yield e
+
+    @classmethod
+    def from_local_tree(
+        cls,
+        root: Path,
+        exclude: Optional[List[str]] = None,
+        include_root: bool = True,
+    ) -> 'Directory':
+        if exclude is None:
+            exclude_list = []
+        else:
+            exclude_list = exclude
+        dir_root = cls()
+        root = root.resolve()
+        if root.is_dir():
+            if include_root:
+                d1 = cls(root.name + '/')
+                dir_root.add_entry(d1)
+                relroot = root.parent
+            else:
+                d1 = dir_root
+                relroot = root
+
+            def add_tree(d: 'Directory', path: Path) -> None:
+                """ Adds the contents of the directory ``path`` to ``d`` """
+                for p in path.iterdir():
+                    if not any(p.match(e) for e in exclude_list):
+                        parts = p.relative_to(relroot).parts
+                        if p.is_dir():
+                            subdir = cls('/'.join(parts) + '/')
+                            d.add_entry(subdir)
+                            add_tree(subdir, p)
+                        else:
+                            d.add_entry(File(parts, None, None))
+
+            add_tree(d1, root)
+        else:
+            dir_root.add_entry(File((root.name,), None, None))
+        return dir_root

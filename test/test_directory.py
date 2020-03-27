@@ -1,4 +1,5 @@
 import os
+from   pathlib                       import Path
 import pytest
 from   check_wheel_contents.errors   import WheelValidationError
 from   check_wheel_contents.filetree import Directory, File
@@ -240,3 +241,102 @@ def test_all_files():
     assert list(d.entries.keys()) == ["foo.py", "bar", "quux.py"]
     assert list(d["bar"].entries.keys()) == ["glarch.py", "cleesh.py"]
     assert list(d.all_files()) == [foo, bar_glarch, bar_cleesh, quux]
+
+@pytest.fixture
+def local_tree_fs(fs):
+    # fs is from pyfakefs
+    fs.create_file('/var/data/foo.py')
+    fs.create_file('/var/data/foo.pyc')
+    fs.create_file('/var/data/bar/__init__.py')
+    fs.create_file('/var/data/bar/__pycache__/__init__.cpython-36.pyc')
+
+def test_from_local_tree(local_tree_fs):
+    assert Directory.from_local_tree(Path('/var/data')) == Directory(
+        path=None,
+        entries={
+            "data": Directory(
+                path='data/',
+                entries={
+                    "foo.py": File(('data', 'foo.py'), None, None),
+                    "foo.pyc": File(('data', 'foo.pyc'), None, None),
+                    "bar": Directory(
+                        path='data/bar/',
+                        entries={
+                            "__init__.py": File(
+                                ('data', 'bar', '__init__.py'),
+                                None,
+                                None,
+                            ),
+                            "__pycache__": Directory(
+                                path='data/bar/__pycache__/',
+                                entries={
+                                    "__init__.cpython-36.pyc": File(
+                                        ('data', 'bar', '__pycache__',
+                                         '__init__.cpython-36.pyc'),
+                                        None,
+                                        None,
+                                    ),
+                                },
+                            ),
+                        },
+                    ),
+                },
+            ),
+        },
+    )
+
+def test_from_local_tree_no_include_root(local_tree_fs):
+    assert Directory.from_local_tree(Path('/var/data'), include_root=False) == Directory(
+        path=None,
+        entries={
+            "foo.py": File(('foo.py',), None, None),
+            "foo.pyc": File(('foo.pyc',), None, None),
+            "bar": Directory(
+                path='bar/',
+                entries={
+                    "__init__.py": File(
+                        ('bar', '__init__.py'),
+                        None,
+                        None,
+                    ),
+                    "__pycache__": Directory(
+                        path='bar/__pycache__/',
+                        entries={
+                            "__init__.cpython-36.pyc": File(
+                                ('bar', '__pycache__', '__init__.cpython-36.pyc'),
+                                None,
+                                None,
+                            ),
+                        },
+                    ),
+                },
+            ),
+        },
+    )
+
+def test_from_local_tree_exclude(local_tree_fs):
+    assert Directory.from_local_tree(Path('/var/data'), exclude=['*.pyc']) == Directory(
+        path=None,
+        entries={
+            "data": Directory(
+                path='data/',
+                entries={
+                    "foo.py": File(('data', 'foo.py'), None, None),
+                    "bar": Directory(
+                        path='data/bar/',
+                        entries={
+                            "__init__.py": File(
+                                ('data', 'bar', '__init__.py'),
+                                None,
+                                None,
+                            ),
+                            "__pycache__": Directory(
+                                path='data/bar/__pycache__/',
+                                entries={},
+                            ),
+                        },
+                    ),
+                },
+            ),
+        },
+    )
