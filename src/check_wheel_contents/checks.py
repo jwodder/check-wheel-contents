@@ -15,10 +15,10 @@ class Check(Enum):
     W008 = 'Wheel is empty'
     W009 = 'Wheel contains multiple toplevel library entries'
     W010 = 'Toplevel library directory contains no Python modules'
-    #W101 = 'Wheel library contains files not in source tree'
-    #W102 = 'Wheel library is missing files in source tree'
-    #W201 = 'Wheel library is missing specified toplevel entry'
-    #W202 = 'Wheel library has undeclared toplevel entry'
+    #W101 = 'Wheel library is missing files in source tree'
+    #W102 = 'Wheel library contains files not in source tree'
+    W201 = 'Wheel library is missing specified toplevel entry'
+    W202 = 'Wheel library has undeclared toplevel entry'
 
 
 @attr.s(auto_attribs=True)

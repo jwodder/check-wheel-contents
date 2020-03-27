@@ -73,6 +73,13 @@ Options
   select all checks beginning with the given prefixes).  By default, all checks
   are selected.
 
+- ``--toplevel <names>`` — Tell ``check-wheel-contents`` to check that the
+  toplevel library entries of the wheel equal the set of names in the
+  comma-separated list ``<names>``; e.g., ``--toplevel foo.py,bar/`` checks
+  that ``foo.py``, ``bar``, and nothing else is at the top level of your wheel.
+  Trailing slashes on directory names are optional.  This option disables check
+  W009 and enables checks W201 and W202.
+
 
 Configuration File
 ==================
@@ -109,6 +116,10 @@ configuration file.
 
 ``select``
    A string with the same format & meaning as the ``--select`` command-line
+   option
+
+``toplevel``
+   A string with the same format & meaning as the ``--toplevel`` command-line
    option
 
 
@@ -328,6 +339,9 @@ directories that begin with an underscore.  This is generally a sign that
 something has gone wrong in packaging your project, as very few projects want
 to distribute code with multiple top-level modules or packages.
 
+This check is disabled if the ``--toplevel`` command line option or
+``toplevel`` configuration option is given.
+
 Common causes:
 
 - You built a wheel, renamed a toplevel file or directory, and then built a
@@ -350,7 +364,8 @@ Common causes:
 - You are deliberately creating a wheel with multiple top-level Python modules
   or packages.
 
-  **Solution**: [Not yet implemented]
+  **Solution**: Use the ``--toplevel`` option to let ``check-wheel-contents``
+  know what toplevel entries to expect.
 
 
 W010 — Toplevel library directory contains no Python modules
@@ -361,7 +376,22 @@ directories are excluded from this check.
 
 
 ..
-    W101 — Wheel library contains files not in source tree
-    W102 — Wheel library is missing files in source tree
-    W201 — Wheel library is missing specified toplevel entry
-    W202 — Wheel library has undeclared toplevel entry
+    W101 — Wheel library is missing files in source tree
+    W102 — Wheel library contains files not in source tree
+
+
+W201 — Wheel library is missing specified toplevel entry
+--------------------------------------------------------
+This check is only enabled if the ``--toplevel`` command line option or
+``toplevel`` configuration option is given.  This check fails if one or more of
+the names given in the ``toplevel`` option does not appear at the root of the
+purelib or platlib section of the wheel.
+
+
+W202 — Wheel library has undeclared toplevel entry
+--------------------------------------------------
+This check is only enabled if the ``--toplevel`` command line option or
+``toplevel`` configuration option is given.  This check fails if there is a
+file or directory at the root of the purelib or platlib section of the wheel
+that is not listed in the ``toplevel`` option.  ``*.pth`` files are ignored for
+the purposes of this check.

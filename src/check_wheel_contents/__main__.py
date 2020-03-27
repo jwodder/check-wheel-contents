@@ -6,6 +6,7 @@ from   .checker  import WheelChecker
 from   .checks   import Check, parse_checks_string
 from   .contents import WheelContents
 from   .errors   import UserInputError
+from   .util     import comma_split
 
 class ChecksParamType(click.ParamType):
     name = 'checks'
@@ -45,6 +46,12 @@ class ChecksParamType(click.ParamType):
     help    = 'Comma-separated list of checks to enable',
     metavar = 'CHECKS',
 )
+@click.option(
+    '--toplevel',
+    type    = comma_split,
+    help    = 'Comma-separated list of expected toplevel library entries',
+    metavar = 'NAMES',
+)
 @click.argument('wheel', nargs=-1, type=click.Path(exists=True, dir_okay=True))
 @click.pass_context
 def main(
@@ -53,12 +60,16 @@ def main(
     config: Optional[str],
     select: Optional[Set[Check]],
     ignore: Optional[Set[Check]],
+    toplevel: Optional[List[str]],
 ) -> None:
     checker = WheelChecker()
     try:
-        checker.read_config_file(config)
-        checker.load_command_options(select=select, ignore=ignore)
-        checker.finalize_options()
+        checker.configure_options(
+            configpath = config,
+            select     = select,
+            ignore     = ignore,
+            toplevel   = toplevel,
+        )
     except UserInputError as e:
         ctx.fail(str(e))
     ok = True

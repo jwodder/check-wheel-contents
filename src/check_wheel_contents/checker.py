@@ -7,7 +7,7 @@ from   .configfile import find_config_dict, read_config_dict
 from   .contents   import WheelContents
 from   .errors     import UserInputError
 from   .filetree   import File
-from   .util       import bytes_signature, is_stubs_dir
+from   .util       import bytes_signature, comma_split, is_stubs_dir
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 
@@ -28,14 +28,31 @@ COMMON_NAMES = '''
     build data dist doc docs example examples src test tests venv
 '''.split()
 
-@attr.s
+@attr.s(auto_attribs=True)
 class WheelChecker:
     selected: Set[Check] = attr.ib()
+    toplevel: Optional[List[str]] = None
     options: Dict[str, Any] = attr.ib(factory=dict)
 
     @selected.default
     def _selected_default(self) -> Set[Check]:
         return set(Check)
+
+    def configure_options(
+        self,
+        configpath: Optional[str] = None,
+        select: Optional[Set[Check]] = None,
+        ignore: Optional[Set[Check]] = None,
+        toplevel: Optional[List[str]] = None,
+    ) -> None:
+        self.read_config_file(configpath)
+        if select is not None:
+            self.options["select"] = select
+        if ignore is not None:
+            self.options["ignore"] = ignore
+        if toplevel is not None:
+            self.options["toplevel"] = toplevel
+        self.finalize_options()
 
     def read_config_file(self, configpath: Optional[str] = None) -> None:
         if configpath is None:
@@ -53,16 +70,10 @@ class WheelChecker:
             if not isinstance(cfg["ignore"], str):
                 raise UserInputError('"ignore" config key must be a string')
             self.options["ignore"] = parse_checks_string(cfg["ignore"])
-
-    def load_command_options(
-        self,
-        select: Optional[Set[Check]] = None,
-        ignore: Optional[Set[Check]] = None,
-    ) -> None:
-        if select is not None:
-            self.options["select"] = select
-        if ignore is not None:
-            self.options["ignore"] = ignore
+        if "toplevel" in cfg:
+            if not isinstance(cfg["toplevel"], str):
+                raise UserInputError('"toplevel" config key must be a string')
+            self.options["toplevel"] = comma_split(cfg["toplevel"])
 
     def finalize_options(self) -> None:
         select = self.options.pop("select", None)
@@ -71,6 +82,9 @@ class WheelChecker:
         ignore = self.options.pop("ignore", None)
         if ignore is not None:
             self.selected -= ignore
+        toplevel = self.options.pop("toplevel", None)
+        if toplevel is not None:
+            self.toplevel = [tl.rstrip('/') for tl in toplevel]
 
     def check_contents(self, contents: WheelContents) -> List[FailedCheck]:
         failures = []
@@ -190,7 +204,9 @@ class WheelChecker:
         # Ignores the same files as W003 as well as files & directories
         # starting with an underscore
         # Checks the combination of purelib and platlib
-        # TODO: Not active when certain options given on command line
+        # Not active when --toplevel given
+        if self.toplevel is not None:
+            return []
         toplevels = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for name, entry in tree.entries.items():
@@ -220,21 +236,45 @@ class WheelChecker:
             return []
 
     def check_W101(self, contents: WheelContents) -> List[FailedCheck]:
-        #W101 = 'Wheel library contains files not in source tree'
+        #W101 = 'Wheel library is missing files in source tree'
         # Only active when certain option given on command line
         raise NotImplementedError
 
     def check_W102(self, contents: WheelContents) -> List[FailedCheck]:
-        #W102 = 'Wheel library is missing files in source tree'
+        #W102 = 'Wheel library contains files not in source tree'
         # Only active when certain option given on command line
         raise NotImplementedError
 
     def check_W201(self, contents: WheelContents) -> List[FailedCheck]:
         #W201 = 'Wheel library is missing specified toplevel entry'
-        # Only active when certain option given on command line
-        raise NotImplementedError
+        # Only active when --toplevel given
+        if self.toplevel is None:
+            return []
+        missing = []
+        for name in self.toplevel:
+            if name not in contents.purelib_tree \
+                    and name not in contents.platlib_tree:
+                missing.append(name)
+        if missing:
+            return [FailedCheck(Check.W201, missing)]
+        else:
+            return []
 
     def check_W202(self, contents: WheelContents) -> List[FailedCheck]:
         #W202 = 'Wheel library has undeclared toplevel entry'
-        # Only active when certain option given on command line
-        raise NotImplementedError
+        # Ignores *.pth files
+        # Only active when --toplevel given
+        if self.toplevel is None:
+            return []
+        expected = set(self.toplevel)
+        extra = []
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            for name, entry in tree.entries.items():
+                if name not in expected and not (
+                    isinstance(entry,File) and IGNORED_TOPLEVEL_RGX.search(name)
+                ):
+                    extra.append(entry.path)
+        if extra:
+            return [FailedCheck(Check.W202, extra)]
+        else:
+            return []
