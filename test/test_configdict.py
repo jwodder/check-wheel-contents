@@ -265,6 +265,18 @@ def faking_path(monkeypatch):
             data={"select": "W001"},
         ),
     ),
+
+    (
+        {
+            "/usr/src/setup.cfg":
+                '[tool:check-wheel-contents]\n'
+                'select = W003\n',
+        },
+        ConfigDict(
+            configpath=Path('/usr/src/setup.cfg'),
+            data={"select": "W003"},
+        ),
+    )
 ])
 def test_find_default(fs, files, cfgdict, faking_path):
     for path, text in files.items():

@@ -86,25 +86,19 @@ Configuration File
 
 If a configuration file is specified on the command line with the ``--config``
 option, ``check-wheel-contents`` reads its configuration from the given file.
-If the filename ends in ``.toml``, the file must be in TOML format, and the
-configuration is read from the ``tool.check-wheel-contents`` table; otherwise,
-the file must be in INI format, and the configuration is read from the
-``check-wheel-conents`` section.
+Files with a ``.toml`` extension are parsed as TOML files, and the
+configuration is read from the ``tool.check-wheel-contents`` table.  All other
+files are parsed as INI files, and their configuration is read from the
+``[check-wheel-contents]`` section (unless the file is named ``setup.cfg``, in
+which case the section ``[tool:check-wheel-contents]`` is used instead).
 
-If no ``--config`` option is specified, the program searches the current
-directory for the first file found in the below table that contains the given
-section.  If none of the listed files exist and have the proper section, the
-search recurses into the parent directory.
-
-=============================  ======  ===============================
-File                           Format  Section
-=============================  ======  ===============================
-``pyproject.toml``             TOML    ``[tool.check-wheel-contents]``
-``tox.ini``                    INI     ``[check-wheel-contents]``
-``setup.cfg``                  INI     ``[tool:check-wheel-contents]``
-``check-wheel-contents.cfg``   INI     ``[check-wheel-contents]``
-``.check-wheel-contents.cfg``  INI     ``[check-wheel-contents]``
-=============================  ======  ===============================
+If no configuration file is specified on the command line, the program begins
+searching for a file named ``pyproject.toml``, ``tox.ini``, ``setup.cfg``,
+``check-wheel-contents.cfg``, or ``.check-wheel-contents.cfg``, starting in the
+current directory and going up.  The files are read using the same rules as for
+the ``--config`` option, and the first file in the list that contains the
+appropriate section is used.  Searching stops once a directory containing any
+of the named files is found, even if none of them contain the relevant section.
 
 The following keys are read from the configuration file.  Unknown keys are
 ignored.  Settings given on the command line override those in the
