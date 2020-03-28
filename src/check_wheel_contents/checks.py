@@ -1,8 +1,10 @@
-from   enum    import Enum
-from   typing  import List, Optional, Set
+from   enum      import Enum
+from   functools import reduce
+from   operator  import or_
+from   typing    import List, Optional, Set
 import attr
-from   .errors import UserInputError
-from   .util   import comma_split
+from   .errors   import UserInputError
+from   .util     import comma_split
 
 class Check(Enum):
     W001 = 'Wheel contains .pyc/.pyo files'
@@ -43,10 +45,22 @@ def parse_checks_string(s: str) -> Set[Check]:
     Convert a string of comma-separated check names & check name prefixes to a
     set of `Check`\\ s
     """
-    checks = set()
-    for cs in comma_split(s):
-        new_checks = [chk for chk in Check if chk.name.startswith(cs)]
-        if not new_checks:
-            raise UserInputError(f'Unknown check prefix: {cs}')
-        checks.update(new_checks)
+    return parse_check_prefixes(comma_split(s))
+
+def parse_check_prefixes(prefixes: List[str]) -> Set[Check]:
+    """
+    Convert a list of check names & check name prefixes to a set of `Check`\\ s
+    """
+    return reduce(or_, map(parse_check_prefix, prefixes), set())
+
+def parse_check_prefix(s: str) -> Set[Check]:
+    """
+    Convert a check name or check name prefix to the set of `Check`\\ s that it
+    represents
+    """
+    if not s:
+        raise UserInputError(f'Unknown/invalid check prefix: {s!r}')
+    checks = {c for c in Check if c.name.startswith(s)}
+    if not checks:
+        raise UserInputError(f'Unknown/invalid check prefix: {s!r}')
     return checks
