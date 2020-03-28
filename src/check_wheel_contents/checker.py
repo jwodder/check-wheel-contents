@@ -1,12 +1,12 @@
-from   operator    import attrgetter
+from   operator  import attrgetter
 import re
-from   typing      import Any, List, Optional, Set, Tuple
+from   typing    import Any, List, Optional, Set, Tuple
 import attr
-from   .checks     import Check, FailedCheck
-from   .configfile import Configuration
-from   .contents   import WheelContents
-from   .filetree   import Directory, File
-from   .util       import bytes_signature, is_stubs_dir
+from   .checks   import Check, FailedCheck
+from   .config   import Configuration
+from   .contents import WheelContents
+from   .filetree import Directory, File
+from   .util     import bytes_signature, is_stubs_dir
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 

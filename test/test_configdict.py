@@ -1,11 +1,11 @@
 import json
-from   operator                        import attrgetter
-from   pathlib                         import Path
-from   pyfakefs.fake_pathlib           import FakePath
+from   operator                    import attrgetter
+from   pathlib                     import Path
+from   pyfakefs.fake_pathlib       import FakePath
 import pytest
-from   check_wheel_contents.checks     import Check
-from   check_wheel_contents.configfile import ConfigDict
-from   check_wheel_contents.errors     import UserInputError
+from   check_wheel_contents.checks import Check
+from   check_wheel_contents.config import ConfigDict
+from   check_wheel_contents.errors import UserInputError
 
 DATA_DIR = Path(__file__).with_name('data')
 
