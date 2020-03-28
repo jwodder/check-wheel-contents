@@ -3,6 +3,7 @@ from   operator                        import attrgetter
 from   pathlib                         import Path
 from   pyfakefs.fake_pathlib           import FakePath
 import pytest
+from   check_wheel_contents.checks     import Check
 from   check_wheel_contents.configfile import ConfigDict
 from   check_wheel_contents.errors     import UserInputError
 
@@ -304,3 +305,102 @@ def test_from_file_bad_tool_section():
         ConfigDict.from_file(path)
     assert str(excinfo.value) \
         == f'{path}: tool.check-wheel-contents: not a table'
+
+@pytest.mark.parametrize('data,expected', [
+    ({}, None),
+    ({"key": ""}, []),
+    ({"key": "foo"}, ["foo"]),
+    ({"key": "foo, bar,"}, ["foo", "bar"]),
+    ({"key": ["foo", "bar"]}, ["foo", "bar"]),
+    ({"key": ["foo, bar,"]}, ["foo, bar,"]),
+])
+def test_get_comma_list(data, expected):
+    cfgdict = ConfigDict(configpath=Path('foo.cfg'), data=data)
+    assert cfgdict.get_comma_list("key") == expected
+
+@pytest.mark.parametrize('value', [
+    None,
+    42,
+    True,
+    [42],
+    ["foo", 42],
+    ["foo", None],
+])
+def test_get_comma_list_error(value):
+    cfgdict = ConfigDict(configpath=Path('foo.cfg'), data={"key": value})
+    with pytest.raises(UserInputError) as excinfo:
+        cfgdict.get_comma_list("key")
+    assert str(excinfo.value) \
+        == 'foo.cfg: key: value must be comma-separated string or list of strings'
+
+@pytest.mark.parametrize('data,expected', [
+    ({}, None),
+    ({"key": ""}, set()),
+    ({"key": "W001"}, {Check.W001}),
+    ({"key": "W001, W002,"}, {Check.W001, Check.W002}),
+    ({"key": ["W001", "W002"]}, {Check.W001, Check.W002}),
+])
+def test_get_check_set(data, expected):
+    cfgdict = ConfigDict(configpath=Path('foo.cfg'), data=data)
+    assert cfgdict.get_check_set("key") == expected
+
+@pytest.mark.parametrize('value,badbit', [
+    (["W001, W002,"], "W001, W002,"),
+    (["W", ""], ""),
+    (["W9", ""], "W9"),
+])
+def test_get_check_set_value_error(value, badbit):
+    cfgdict = ConfigDict(configpath=Path('foo.cfg'), data={"key": value})
+    with pytest.raises(UserInputError) as excinfo:
+        cfgdict.get_check_set("key")
+    assert str(excinfo.value) \
+        == f'foo.cfg: key: Unknown/invalid check prefix: {badbit!r}'
+
+@pytest.mark.parametrize('value', [
+    None,
+    42,
+    True,
+    [42],
+    ["foo", 42],
+    ["foo", None],
+])
+def test_get_check_set_type_error(value):
+    cfgdict = ConfigDict(configpath=Path('foo.cfg'), data={"key": value})
+    with pytest.raises(UserInputError) as excinfo:
+        cfgdict.get_check_set("key")
+    assert str(excinfo.value) \
+        == 'foo.cfg: key: value must be comma-separated string or list of strings'
+
+BASE = Path('path/foo.cfg').resolve().parent
+
+@pytest.mark.parametrize('data,expected', [
+    ({}, None),
+    ({"key": ""}, []),
+    ({"key": "foo"}, [BASE / 'foo']),
+    (
+        {"key": "foo, bar/, test/data, /usr/src"},
+        [BASE / 'foo', BASE / 'bar', BASE / 'test' / 'data', Path('/usr/src')],
+    ),
+    (
+        {"key": ["foo", "bar,baz", "test/data", "/usr/src"]},
+        [BASE / 'foo', BASE / 'bar,baz', BASE / 'test' / 'data', Path('/usr/src')],
+    ),
+])
+def test_get_path_list(data, expected):
+    cfgdict = ConfigDict(configpath=Path('path/foo.cfg'), data=data)
+    assert cfgdict.get_path_list("key") == expected
+
+@pytest.mark.parametrize('value', [
+    None,
+    42,
+    True,
+    [42],
+    ["foo", 42],
+    ["foo", None],
+])
+def test_get_path_list_error(value):
+    cfgdict = ConfigDict(configpath=Path('path/foo.cfg'), data={"key": value})
+    with pytest.raises(UserInputError) as excinfo:
+        cfgdict.get_path_list("key")
+    assert str(excinfo.value) \
+        == 'path/foo.cfg: key: value must be comma-separated string or list of strings'
