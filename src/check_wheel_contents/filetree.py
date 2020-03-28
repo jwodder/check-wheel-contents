@@ -9,9 +9,9 @@ from   .util   import is_data_dir, is_dist_info_dir, pymodule_basename, \
 
 @attr.s(auto_attribs=True, frozen=True)
 class File:
-    parts:   Tuple[str, ...]    = attr.ib()
-    size:    Optional[int] = attr.ib()
-    hashsum: Optional[str] = attr.ib()
+    parts:   Tuple[str, ...]
+    size:    Optional[int]
+    hashsum: Optional[str]
 
     @classmethod
     def from_record_row(cls, row: List[str]) -> 'File':
