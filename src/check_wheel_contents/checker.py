@@ -1,13 +1,12 @@
 from   operator    import attrgetter
 import re
-from   typing      import Any, Dict, List, Mapping, Optional, Set
+from   typing      import Any, List, Optional, Set, Tuple
 import attr
-from   .checks     import Check, FailedCheck, parse_checks_string
-from   .configfile import find_config_dict, read_config_dict
+from   .checks     import Check, FailedCheck
+from   .configfile import Configuration
 from   .contents   import WheelContents
-from   .errors     import UserInputError
-from   .filetree   import File
-from   .util       import bytes_signature, comma_split, is_stubs_dir
+from   .filetree   import Directory, File
+from   .util       import bytes_signature, is_stubs_dir
 
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 
@@ -32,7 +31,7 @@ COMMON_NAMES = '''
 class WheelChecker:
     selected: Set[Check] = attr.ib()
     toplevel: Optional[List[str]] = None
-    options: Dict[str, Any] = attr.ib(factory=dict)
+    pkgtree:  Optional[Directory] = None
 
     @selected.default
     def _selected_default(self) -> Set[Check]:
@@ -40,51 +39,28 @@ class WheelChecker:
 
     def configure_options(
         self,
-        configpath: Optional[str] = None,
+        configpath: Any = attr.NOTHING,
         select: Optional[Set[Check]] = None,
         ignore: Optional[Set[Check]] = None,
         toplevel: Optional[List[str]] = None,
+        package: Tuple[str, ...] = (),
+        src_dir: Tuple[str, ...] = (),
     ) -> None:
-        self.read_config_file(configpath)
-        if select is not None:
-            self.options["select"] = select
-        if ignore is not None:
-            self.options["ignore"] = ignore
-        if toplevel is not None:
-            self.options["toplevel"] = toplevel
-        self.finalize_options()
-
-    def read_config_file(self, configpath: Optional[str] = None) -> None:
-        if configpath is None:
-            cfg = find_config_dict()
-        else:
-            cfg = read_config_dict(configpath)
-        self.load_config_dict(cfg)
-
-    def load_config_dict(self, cfg: Mapping[str, Any]) -> None:
-        if "select" in cfg:
-            if not isinstance(cfg["select"], str):
-                raise UserInputError('"select" config key must be a string')
-            self.options["select"] = parse_checks_string(cfg["select"])
-        if "ignore" in cfg:
-            if not isinstance(cfg["ignore"], str):
-                raise UserInputError('"ignore" config key must be a string')
-            self.options["ignore"] = parse_checks_string(cfg["ignore"])
-        if "toplevel" in cfg:
-            if not isinstance(cfg["toplevel"], str):
-                raise UserInputError('"toplevel" config key must be a string')
-            self.options["toplevel"] = comma_split(cfg["toplevel"])
-
-    def finalize_options(self) -> None:
-        select = self.options.pop("select", None)
-        if select is not None:
-            self.selected = select.copy()
-        ignore = self.options.pop("ignore", None)
-        if ignore is not None:
-            self.selected -= ignore
-        toplevel = self.options.pop("toplevel", None)
-        if toplevel is not None:
-            self.toplevel = [tl.rstrip('/') for tl in toplevel]
+        cfg = Configuration()
+        if configpath is not attr.NOTHING:
+            if configpath is not None and not isinstance(configpath, str):
+                raise TypeError('configpath must be None, str, or attr.NOTHING')
+            cfg.update(Configuration.from_config_file(configpath))
+        cfg.update(Configuration.from_command_options(
+            select   = select,
+            ignore   = ignore,
+            toplevel = toplevel,
+            package  = package,
+            src_dir  = src_dir,
+        ))
+        self.selected = cfg.get_selected_checks()
+        self.toplevel = cfg.toplevel
+        self.pkgtree = cfg.get_package_tree()
 
     def check_contents(self, contents: WheelContents) -> List[FailedCheck]:
         failures = []

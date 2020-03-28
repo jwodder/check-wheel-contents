@@ -1,5 +1,5 @@
 from   pathlib   import Path
-from   typing    import Iterable, List, Optional, Set
+from   typing    import Iterable, List, Optional, Set, Tuple
 import click
 from   .         import __version__
 from   .checker  import WheelChecker
@@ -41,10 +41,22 @@ class ChecksParamType(click.ParamType):
     metavar = 'CHECKS',
 )
 @click.option(
+    '--package',
+    type     = click.Path(exists=True),
+    multiple = True,
+    help     = 'Module or package to expect in wheel library'
+)
+@click.option(
     '--select',
     type    = ChecksParamType(),
     help    = 'Comma-separated list of checks to enable',
     metavar = 'CHECKS',
+)
+@click.option(
+    '--src-dir',
+    type     = click.Path(exists=True, file_okay=False),
+    multiple = True,
+    help     = 'Directory to expect contents of in wheel library'
 )
 @click.option(
     '--toplevel',
@@ -61,6 +73,8 @@ def main(
     select: Optional[Set[Check]],
     ignore: Optional[Set[Check]],
     toplevel: Optional[List[str]],
+    package: Tuple[str, ...],
+    src_dir: Tuple[str, ...],
 ) -> None:
     checker = WheelChecker()
     try:
@@ -69,6 +83,8 @@ def main(
             select     = select,
             ignore     = ignore,
             toplevel   = toplevel,
+            package    = package,
+            src_dir    = src_dir,
         )
     except UserInputError as e:
         ctx.fail(str(e))
