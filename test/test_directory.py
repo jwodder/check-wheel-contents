@@ -340,3 +340,9 @@ def test_from_local_tree_exclude(local_tree_fs):
             ),
         },
     )
+
+def test_from_local_tree_file(local_tree_fs):
+    assert Directory.from_local_tree(Path('/var/data/foo.py')) == Directory(
+        path=None,
+        entries={"foo.py": File(('foo.py',), None, None)},
+    )
