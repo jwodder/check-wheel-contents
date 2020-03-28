@@ -4,11 +4,11 @@ from   check_wheel_contents.contents import WheelContents
 from   check_wheel_contents.errors   import WheelValidationError
 from   check_wheel_contents.filetree import Directory, File
 
-DATA_DIR = Path(__file__).with_name('data')
+WHEEL_DIR = Path(__file__).with_name('data') / 'wheels'
 
 def test_from_wheel_purelib():
     whlcon = WheelContents.from_wheel(
-        DATA_DIR / 'ttyrec2video-0.1.0.dev1-py3-none-any.whl'
+        WHEEL_DIR / 'ttyrec2video-0.1.0.dev1-py3-none-any.whl'
     )
     assert whlcon.dist_info_dir == 'ttyrec2video-0.1.0.dev1.dist-info'
     assert whlcon.data_dir == 'ttyrec2video-0.1.0.dev1.data'
@@ -152,7 +152,7 @@ def test_trees_data_platlib():
     Test the ``purelib_tree`` and ``platlib_tree`` attributes of a purelib
     wheel containing an empty purelib and a nonempty platlib
     """
-    whlcon = WheelContents.from_wheel(DATA_DIR / 'MPC2860-0.3-py3-none-any.whl')
+    whlcon = WheelContents.from_wheel(WHEEL_DIR/'MPC2860-0.3-py3-none-any.whl')
     assert whlcon.dist_info_dir == 'MPC2860-0.3.dist-info'
     assert whlcon.data_dir == 'MPC2860-0.3.data'
     assert whlcon.root_is_purelib is True
@@ -214,7 +214,7 @@ def test_trees_data_purelib():
     wheel containing a nonempty purelib and an empty platlib
     """
     whlcon = WheelContents.from_wheel(
-        DATA_DIR / 'mxnet_coreml_converter-0.1.0a7-cp27-cp27m-macosx_10_7_x86_64.whl'
+        WHEEL_DIR / 'mxnet_coreml_converter-0.1.0a7-cp27-cp27m-macosx_10_7_x86_64.whl'
     )
     assert whlcon.dist_info_dir == 'mxnet_coreml_converter-0.1.0a7.dist-info'
     assert whlcon.data_dir == 'mxnet_coreml_converter-0.1.0a7.data'
@@ -267,7 +267,7 @@ def test_trees_platlib():
     wheel containing an empty purelib and a nonempty platlib
     """
     whlcon = WheelContents.from_wheel(
-        DATA_DIR / 'bcrypt-3.1.7-cp38-cp38-win_amd64.whl'
+        WHEEL_DIR / 'bcrypt-3.1.7-cp38-cp38-win_amd64.whl'
     )
     assert whlcon.dist_info_dir == 'bcrypt-3.1.7.dist-info'
     assert whlcon.data_dir == 'bcrypt-3.1.7.data'
@@ -554,7 +554,7 @@ def test_validate_tree_dir_rows(purelib):
 def test_from_wheel_no_purelib_line():
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
-            DATA_DIR / 'no_purelib_line-1.0.0-py3-none-any.whl'
+            WHEEL_DIR / 'no_purelib_line-1.0.0-py3-none-any.whl'
         )
     assert str(excinfo.value) \
         == 'Root-Is-Purelib header not found in WHEEL file'
@@ -562,7 +562,7 @@ def test_from_wheel_no_purelib_line():
 def test_from_wheel_empty_purelib_line():
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
-            DATA_DIR / 'empty_purelib_line-1.0.0-py3-none-any.whl'
+            WHEEL_DIR / 'empty_purelib_line-1.0.0-py3-none-any.whl'
         )
     assert str(excinfo.value) \
         == "Invalid Root-Is-Purelib value in WHEEL file: ''"
@@ -570,7 +570,7 @@ def test_from_wheel_empty_purelib_line():
 def test_from_wheel_bad_purelib_line():
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
-            DATA_DIR / 'bad_purelib_line-1.0.0-py3-none-any.whl'
+            WHEEL_DIR / 'bad_purelib_line-1.0.0-py3-none-any.whl'
         )
     assert str(excinfo.value) \
         == "Invalid Root-Is-Purelib value in WHEEL file: 'purelib'"
@@ -578,14 +578,14 @@ def test_from_wheel_bad_purelib_line():
 def test_from_wheel_no_record_file():
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
-            DATA_DIR / 'no_record-1.0.0-py3-none-any.whl'
+            WHEEL_DIR / 'no_record-1.0.0-py3-none-any.whl'
         )
     assert str(excinfo.value) == "No RECORD file in wheel"
 
 def test_from_wheel_no_wheel_file():
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
-            DATA_DIR / 'no_wheel_file-1.0.0-py3-none-any.whl'
+            WHEEL_DIR / 'no_wheel_file-1.0.0-py3-none-any.whl'
         )
     assert str(excinfo.value) == "No WHEEL file in wheel"
 

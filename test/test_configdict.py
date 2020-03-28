@@ -1,7 +1,12 @@
+import json
+from   operator                        import attrgetter
 from   pathlib                         import Path
 from   pyfakefs.fake_pathlib           import FakePath
 import pytest
 from   check_wheel_contents.configfile import ConfigDict
+from   check_wheel_contents.errors     import UserInputError
+
+DATA_DIR = Path(__file__).with_name('data')
 
 # Path somehow gets monkeypatched during testing, so in order to have access
 # to the original class we'll simply create an instance of it
@@ -266,3 +271,24 @@ def test_find_default(fs, files, cfgdict, faking_path):
         fs.create_file(path, contents=text)
     fs.cwd = '/usr/src/project'
     assert ConfigDict.find_default() == cfgdict
+
+@pytest.mark.parametrize('path', [
+    p for p in (DATA_DIR / 'configfiles').iterdir()
+      if p.suffix != '.json'
+], ids=attrgetter("name"))
+def test_from_file(path):
+    datafile = path.with_suffix('.json')
+    try:
+        data = json.loads(datafile.read_text())
+    except FileNotFoundError:
+        cfg = None
+    else:
+        cfg = ConfigDict(configpath=path, data=data)
+    assert ConfigDict.from_file(path) == cfg
+
+def test_from_file_bad_tool_section():
+    path = DATA_DIR / 'bad-tool-sect.toml'
+    with pytest.raises(UserInputError) as excinfo:
+        ConfigDict.from_file(path)
+    assert str(excinfo.value) \
+        == f'{path}: tool.check-wheel-contents: not a table'
