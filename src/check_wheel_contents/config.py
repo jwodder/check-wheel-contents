@@ -63,24 +63,24 @@ class Configuration:
 
     @classmethod
     def from_config_file(cls, path: Optional[str] = None) -> 'Configuration':
-        cfg: Optional[ConfigDict]
+        cfgdict: Optional[ConfigDict]
         if path is None:
-            cfg = ConfigDict.find_default()
+            cfgdict = ConfigDict.find_default()
         else:
-            cfg = ConfigDict.from_file(Path(path))
-        if cfg is None:
+            cfgdict = ConfigDict.from_file(Path(path))
+        if cfgdict is None:
             return cls()
         else:
-            return cls.from_config_dict(cfg)
+            return cls.from_config_dict(cfgdict)
 
     @classmethod
-    def from_config_dict(cls, cfg: 'ConfigDict') -> 'Configuration':
+    def from_config_dict(cls, cfgdict: 'ConfigDict') -> 'Configuration':
         return cls(
-            select        = cfg.get_check_set("select"),
-            ignore        = cfg.get_check_set("ignore"),
-            toplevel      = cfg.get_comma_list("toplevel"),
-            package_paths = cfg.get_path_list("package"),
-            src_dirs      = cfg.get_path_list("src_dir"),
+            select        = cfgdict.get_check_set("select"),
+            ignore        = cfgdict.get_check_set("ignore"),
+            toplevel      = cfgdict.get_comma_list("toplevel"),
+            package_paths = cfgdict.get_path_list("package"),
+            src_dirs      = cfgdict.get_path_list("src_dir"),
         )
 
     def update(self, cfg: 'Configuration') -> None:
@@ -142,9 +142,9 @@ class ConfigDict:
             found = [d / cf for cf in CONFIG_FILES if (d / cf).exists()]
             if found:
                 for p in found:
-                    cfg = cls.from_file(p)
-                    if cfg is not None:
-                        return cfg
+                    cfgdict = cls.from_file(p)
+                    if cfgdict is not None:
+                        return cfgdict
                 return None
         return None
 

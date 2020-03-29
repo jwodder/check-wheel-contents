@@ -294,10 +294,10 @@ def test_from_file(path):
     try:
         data = json.loads(datafile.read_text())
     except FileNotFoundError:
-        cfg = None
+        cfgdict = None
     else:
-        cfg = ConfigDict(configpath=path, data=data)
-    assert ConfigDict.from_file(path) == cfg
+        cfgdict = ConfigDict(configpath=path, data=data)
+    assert ConfigDict.from_file(path) == cfgdict
 
 def test_from_file_bad_tool_section():
     path = DATA_DIR / 'bad-tool-sect.toml'
