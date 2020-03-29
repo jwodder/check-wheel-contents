@@ -56,33 +56,23 @@ passes all checks, the program will print ``{path_to_wheel}: OK``.
 Options
 -------
 
+- ``-c <file>``, ``--config <file>`` — Read configuration from the given file;
+  see below for more information
+
 - ``-h``, ``--help`` — Display a usage message and exit
 
 - ``-V``, ``--version`` — Display the program version and exit
 
-- ``-c <file>``, ``--config <file>`` — Read configuration from the given file;
-  see below for more information
+The remaining options can be given either on the command line or in the
+configuration file; see "`Configuration Options <configuration_options_>`_" for
+more information.
 
-- ``--ignore <checks>`` — Ignore/skip the given checks.  ``<checks>`` must be a
-  comma-separated list of check IDs and/or check ID prefixes (to ignore all
-  checks beginning with the given prefixes).  By default, no checks are
-  ignored.
 
-- ``--select <checks>`` — Select/enable only the given checks.  ``<checks>``
-  must be a comma-separated list of check IDs and/or check ID prefixes (to
-  select all checks beginning with the given prefixes).  By default, all checks
-  are selected.
-
-- ``--toplevel <names>`` — Tell ``check-wheel-contents`` to check that the
-  toplevel library entries of the wheel equal the set of names in the
-  comma-separated list ``<names>``; e.g., ``--toplevel foo.py,bar/`` checks
-  that ``foo.py``, ``bar``, and nothing else is at the top level of your wheel.
-  Trailing slashes on directory names are optional.  This option disables check
-  W009 and enables checks W201 and W202.
-
+Configuration
+=============
 
 Configuration File
-==================
+------------------
 
 If a configuration file is specified on the command line with the ``--config``
 option, ``check-wheel-contents`` reads its configuration from the given file.
@@ -100,21 +90,66 @@ the ``--config`` option, and the first file in the list that contains the
 appropriate section is used.  Searching stops once a directory containing any
 of the named files is found, even if none of them contain the relevant section.
 
-The following keys are read from the configuration file.  Unknown keys are
-ignored.  Settings given on the command line override those in the
-configuration file.
+.. _configuration_options:
 
-``ignore``
-   A string with the same format & meaning as the ``--ignore`` command-line
-   option
+Configuration Options
+---------------------
 
-``select``
-   A string with the same format & meaning as the ``--select`` command-line
-   option
+The following options may be set either on the command line or in the
+configuration file.  Settings given on the command line override those in the
+configuration file.  Unknown keys in configuration files are ignored.
 
-``toplevel``
-   A string with the same format & meaning as the ``--toplevel`` command-line
-   option
+``--select <checks>`` / ``select = <checks>``
+   Select/enable only the given checks.  ``<checks>`` is a comma-separated list
+   of check IDs and/or check ID prefixes (to select all checks beginning with
+   the given prefixes).
+
+   In a TOML file, ``<checks>`` may alternatively be given as a list of
+   strings.
+
+   By default, all checks are selected (though some checks are no-ops when
+   certain other options are/aren't given).
+
+``--ignore <checks>`` / ``ignore = <checks>``
+   Ignore/skip the given checks.  ``<checks>`` is a comma-separated list of
+   check IDs and/or check ID prefixes (to ignore all checks beginning with the
+   given prefixes).
+
+   In a TOML file, ``<checks>`` may alternatively be given as a list of
+   strings.
+
+   By default, no checks are ignored.
+
+``--toplevel <names>`` / ``toplevel = <names>``
+   Tell ``check-wheel-contents`` to check that the toplevel library entries of
+   the wheel equal the set of names in the comma-separated list ``<names>``;
+   e.g., ``--toplevel foo.py,bar/`` checks that ``foo.py``, ``bar``, and
+   nothing else is at the top level of your wheel.  Trailing slashes on
+   directory names are optional.
+
+   In a TOML file, ``<names>`` may alternatively be given as a list of strings.
+
+   This option disables check W009 and enables checks W201 and W202.
+
+``--package <path>`` / ``package = <paths>``
+   Tell ``check-wheel-contents`` to check that the wheel's library sections
+   contain the file tree rooted at ``<path>``.
+
+   Paths given on the command line are resolved relative to the current working
+   directory.  Paths given in a configuration file are resolved relative to the
+   directory containing the configuration file.
+
+   On the command line, multiple paths can be specified by supplying
+   ``--package`` multiple times.  In a configuration file, multiple paths can
+   be specified by setting ``package`` to a comma-separated list of paths.  In
+   a TOML file, ``<paths>`` may alternatively be given as a list of strings.
+
+   This option disables check W009 and enables checks W101 and W102.
+
+``--src-dir <path>`` / ``src_dir = <paths>``
+   The same as ``--package``, except that only the contents of ``<path>``
+   (which must be a directory) and not ``<path>`` itself are checked against
+   the wheel's contents.
 
 
 Checks
@@ -334,8 +369,8 @@ directories that begin with an underscore.  This is generally a sign that
 something has gone wrong in packaging your project, as very few projects want
 to distribute code with multiple top-level modules or packages.
 
-This check is disabled if the ``--toplevel`` command line option or
-``toplevel`` configuration option is given.
+This check is disabled if the ``--toplevel``, ``--package``, or ``--src-dir``
+option is given either on the command line or in the configuration file.
 
 Common causes:
 
@@ -370,17 +405,82 @@ platlib section of the wheel contains no Python modules.  ``*-stubs``
 directories are excluded from this check.
 
 
-..
-    W101 — Wheel library is missing files in package tree
-    W102 — Wheel library contains files not in package tree
+W101 — Wheel library is missing files in package tree
+-----------------------------------------------------
+This check is only enabled if the ``--package`` or ``--src-dir`` option is set.
+This check fails if a path in a tree rooted at an argument to ``--package`` or
+inside an argument to ``--src-dir`` does not appear in the wheel's purelib or
+platlib section.  Empty directories and local files & directories named ``.*``,
+``CVS``, ``RCS``, ``*.pyc``, ``*.pyo``, or ``*.egg-info`` are excluded from
+this check.
+
+Note that this check only checks file paths, i.e., names of files &
+directories.  File contents are not examined.
+
+For example, given the below local tree::
+
+    /usr/src/project/
+    ├── foo/
+    │   ├── .gitignore
+    │   ├── __init__.py
+    │   └── foo.py
+    └── src/
+        ├── bar/
+        │   ├── __init__.py
+        │   ├── bar.py
+        │   ├── empty/
+        │   └── quux/
+        │       └── data.dat
+        └── bar.egg-info/
+            └── PKG-INFO
+
+If the options ``--package /usr/src/project/foo`` and ``--src-dir
+/usr/src/project/src`` are supplied, then ``check-wheel-contents`` will look
+for the following paths in the wheel, and the check will fail if any of them do
+not appear in either the purelib or platlib section::
+
+    foo/__init__.py
+    foo/foo.py
+    bar/__init__.py
+    bar/bar.py
+    bar/quux/data.dat
+
+Note that ``foo/.gitignore`` and ``src/bar.egg-info`` are omitted from this
+check (and if they do appear in the wheel, it will cause check W102 to fail).
+Empty directories are ignored altogether.
+
+
+W102 — Wheel library contains files not in package tree
+-------------------------------------------------------
+This check is only enabled if the ``--package`` or ``--src-dir`` option is set.
+This check fails if the purelib or platlib section of the wheel contains any
+files at paths that do not exist in any of the file trees specified with
+``--package`` or ``--src-dir``.
+
+Note that this check only checks file paths, i.e., names of files &
+directories.  File contents are not examined.
+
+For example, given the local tree and options shown in the example under W101,
+this check will fail if the wheel contains any files in its purelib or platlib
+section other than the following::
+
+    foo/__init__.py
+    foo/foo.py
+    bar/__init__.py
+    bar/bar.py
+    bar/quux/data.dat
+
+Note that files & directories named ``.*``, ``CVS``, ``RCS``, ``*.pyc``,
+``*.pyo``, or ``*.egg-info`` are ignored in local trees, and so any entries
+with those names in the wheel will cause this check to fail.  Empty directories
+are ignored.
 
 
 W201 — Wheel library is missing specified toplevel entry
 --------------------------------------------------------
-This check is only enabled if the ``--toplevel`` command line option or
-``toplevel`` configuration option is given.  This check fails if one or more of
-the names given in the ``toplevel`` option does not appear at the root of the
-purelib or platlib section of the wheel.
+This check is only enabled if the ``--toplevel`` option is set.  This check
+fails if one or more of the names given in the ``--toplevel`` option does not
+appear at the root of the purelib or platlib section of the wheel.
 
 
 W202 — Wheel library has undeclared toplevel entry

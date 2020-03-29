@@ -2644,6 +2644,48 @@ def test_check_W101(rows, failures):
         ],
         [FailedCheck(Check.W102, ['foo.pyc'])],
     ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'foo-1.0.data/scripts/quux.py',
+                'sha256=BdobLd1HvMLfPVg7de6NHrPKOpiOzrbK3R5hRBruWCs',
+                '1010',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'foo-1.0.dist-info/quux.py',
+                'sha256=BdobLd1HvMLfPVg7de6NHrPKOpiOzrbK3R5hRBruWCs',
+                '1010',
+            ],
+        ],
+        [],
+    ),
 ])
 def test_check_W102(rows, failures):
     whlcon = WheelContents(
