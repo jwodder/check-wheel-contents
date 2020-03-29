@@ -2,8 +2,11 @@ from   pathlib                     import Path
 from   unittest.mock               import sentinel
 import attr
 import pytest
-from   check_wheel_contents.checks import Check
-from   check_wheel_contents.config import ConfigDict, Configuration
+from   check_wheel_contents.checks   import Check
+from   check_wheel_contents.config   import ConfigDict, Configuration, \
+                                                TRAVERSAL_EXCLUSIONS
+from   check_wheel_contents.errors   import UserInputError
+from   check_wheel_contents.filetree import Directory, File
 
 @pytest.mark.parametrize('toplevel_in,toplevel_out', [
     (None, None),
@@ -229,3 +232,282 @@ def test_from_config_file_no_arg(mocker, cfgdict):
     cfg = Configuration.from_config_file()
     assert cfg == expected
     assert cdmock.method_calls == [mocker.call.find_default()]
+
+@pytest.mark.parametrize('left,right,expected', [
+    (Configuration(), Configuration(), Configuration()),
+    (
+        Configuration(
+            select={Check.W001, Check.W002},
+            ignore={Check.W003, Check.W004},
+            toplevel=['foo.py', 'bar'],
+            package_paths=[Path('foobar')],
+            src_dirs=[Path('src')],
+        ),
+        Configuration(
+            select={Check.W005, Check.W006},
+            ignore={Check.W007, Check.W008},
+            toplevel=["quux", "glarch.py"],
+            package_paths=[Path('baz.py')],
+            src_dirs=[Path('source')],
+        ),
+        Configuration(
+            select={Check.W005, Check.W006},
+            ignore={Check.W007, Check.W008},
+            toplevel=["quux", "glarch.py"],
+            package_paths=[Path('baz.py')],
+            src_dirs=[Path('source')],
+        ),
+    ),
+    (
+        Configuration(
+            select={Check.W001, Check.W002},
+            ignore={Check.W003, Check.W004},
+            toplevel=['foo.py', 'bar'],
+            package_paths=[Path('foobar')],
+            src_dirs=[Path('src')],
+        ),
+        Configuration(
+            select={},
+            ignore={},
+            toplevel=[],
+            package_paths=[],
+            src_dirs=[],
+        ),
+        Configuration(
+            select={},
+            ignore={},
+            toplevel=[],
+            package_paths=[],
+            src_dirs=[],
+        ),
+    ),
+    (
+        Configuration(
+            select={Check.W001, Check.W002},
+            ignore={Check.W003, Check.W004},
+            toplevel=['foo.py', 'bar'],
+            package_paths=[Path('foobar')],
+            src_dirs=[Path('src')],
+        ),
+        Configuration(
+            select=None,
+            ignore=None,
+            toplevel=None,
+            package_paths=None,
+            src_dirs=None,
+        ),
+        Configuration(
+            select={Check.W001, Check.W002},
+            ignore={Check.W003, Check.W004},
+            toplevel=['foo.py', 'bar'],
+            package_paths=[Path('foobar')],
+            src_dirs=[Path('src')],
+        ),
+    ),
+    (
+        Configuration(
+            select=None,
+            ignore=None,
+            toplevel=None,
+            package_paths=None,
+            src_dirs=None,
+        ),
+        Configuration(
+            select={Check.W005, Check.W006},
+            ignore={Check.W007, Check.W008},
+            toplevel=["quux", "glarch.py"],
+            package_paths=[Path('baz.py')],
+            src_dirs=[Path('source')],
+        ),
+        Configuration(
+            select={Check.W005, Check.W006},
+            ignore={Check.W007, Check.W008},
+            toplevel=["quux", "glarch.py"],
+            package_paths=[Path('baz.py')],
+            src_dirs=[Path('source')],
+        ),
+    ),
+])
+def test_update(left, right, expected):
+    left.update(right)
+    assert left == expected
+
+@pytest.mark.parametrize('select,ignore,expected', [
+    (None, None, set(Check)),
+    (None, {Check.W201, Check.W202}, set(Check) - {Check.W201, Check.W202}),
+    ({Check.W201, Check.W202}, None, {Check.W201, Check.W202}),
+    ({Check.W201, Check.W202}, {Check.W001, Check.W201}, {Check.W202}),
+])
+def test_get_selected_checks(select, ignore, expected):
+    select_copy = select and select.copy()
+    cfg = Configuration(select=select, ignore=ignore)
+    assert cfg.get_selected_checks() == expected
+    assert cfg.select == select_copy
+
+def test_get_package_tree_both_none():
+    cfg = Configuration(package_paths=None, src_dirs=None)
+    assert cfg.get_package_tree() is None
+
+def test_get_package_tree_package_path(mocker):
+    path = Path('foobar')
+    cfg = Configuration(package_paths=[path])
+    tree = Directory(
+        path=None,
+        entries={
+            "foobar": Directory(
+                path="foobar/",
+                entries={
+                    "__init__.py": File(
+                        ('foobar', '__init__.py'),
+                        None,
+                        None,
+                    ),
+                    "foo.py": File(
+                        ('foobar', 'foo.py'),
+                        None,
+                        None,
+                    ),
+                    "bar.py": File(
+                        ('foobar', 'bar.py'),
+                        None,
+                        None,
+                    ),
+                },
+            ),
+        },
+    )
+    fltmock = mocker.patch.object(Directory, 'from_local_tree', return_value=tree)
+    assert cfg.get_package_tree() == tree
+    fltmock.assert_called_once_with(path, exclude=TRAVERSAL_EXCLUSIONS)
+
+def test_get_package_tree_src_dir(mocker):
+    path = Path('src')
+    cfg = Configuration(src_dirs=[path])
+    tree = Directory(
+        path=None,
+        entries={
+            "foobar": Directory(
+                path="foobar/",
+                entries={
+                    "__init__.py": File(('foobar', '__init__.py'), None, None),
+                    "foo.py": File(('foobar', 'foo.py'), None, None),
+                    "bar.py": File(('foobar', 'bar.py'), None, None),
+                },
+            ),
+        },
+    )
+    fltmock = mocker.patch.object(Directory, 'from_local_tree', return_value=tree)
+    assert cfg.get_package_tree() == tree
+    fltmock.assert_called_once_with(
+        path,
+        exclude      = TRAVERSAL_EXCLUSIONS,
+        include_root = False,
+    )
+
+def test_get_package_tree_multiple_package_paths(fs):
+    fs.create_file('/usr/src/project/foo.py')
+    fs.create_file('/usr/src/project/bar/__init__.py')
+    fs.create_file('/usr/src/project/bar/quux.py')
+    fs.create_file('/usr/src/project/bar/glarch.py')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration(package_paths=[Path('foo.py'), Path('bar')])
+    assert cfg.get_package_tree() == Directory(
+        path=None,
+        entries={
+            "foo.py": File(('foo.py',), None, None),
+            "bar": Directory(
+                path='bar/',
+                entries={
+                    "__init__.py": File(('bar', '__init__.py'), None, None),
+                    "quux.py": File(('bar', 'quux.py'), None, None),
+                    "glarch.py": File(('bar', 'glarch.py'), None, None),
+                },
+            ),
+        },
+    )
+
+def test_get_package_tree_multiple_src_dirs(fs):
+    fs.create_file('/usr/src/project/src/foo.py')
+    fs.create_file('/usr/src/project/source/bar/__init__.py')
+    fs.create_file('/usr/src/project/source/bar/quux.py')
+    fs.create_file('/usr/src/project/source/bar/glarch.py')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration(src_dirs=[Path('src'), Path('source')])
+    assert cfg.get_package_tree() == Directory(
+        path=None,
+        entries={
+            "foo.py": File(('foo.py',), None, None),
+            "bar": Directory(
+                path='bar/',
+                entries={
+                    "__init__.py": File(('bar', '__init__.py'), None, None),
+                    "quux.py": File(('bar', 'quux.py'), None, None),
+                    "glarch.py": File(('bar', 'glarch.py'), None, None),
+                },
+            ),
+        },
+    )
+
+def test_get_package_tree_package_path_and_src_dir(fs):
+    fs.create_file('/usr/src/project/src/foo.py')
+    fs.create_file('/usr/src/project/bar/__init__.py')
+    fs.create_file('/usr/src/project/bar/quux.py')
+    fs.create_file('/usr/src/project/bar/glarch.py')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration(package_paths=[Path('bar')], src_dirs=[Path('src')])
+    assert cfg.get_package_tree() == Directory(
+        path=None,
+        entries={
+            "foo.py": File(('foo.py',), None, None),
+            "bar": Directory(
+                path='bar/',
+                entries={
+                    "__init__.py": File(('bar', '__init__.py'), None, None),
+                    "quux.py": File(('bar', 'quux.py'), None, None),
+                    "glarch.py": File(('bar', 'glarch.py'), None, None),
+                },
+            ),
+        },
+    )
+
+def test_get_package_tree_package_paths_conflict(fs):
+    fs.create_file('/usr/src/project/bar/__init__.py')
+    fs.create_file('/usr/src/project/bar/quux.py')
+    fs.create_file('/usr/src/project/bar/glarch.py')
+    fs.create_file('/usr/src/project/src/bar/gnusto.py')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration(package_paths=[Path('bar'), Path('src/bar')])
+    with pytest.raises(UserInputError) as excinfo:
+        cfg.get_package_tree()
+    assert str(excinfo.value) == (
+        "`--package src/bar` adds 'bar' to file tree, but it is already"
+        " present from prior --package option"
+    )
+
+def test_get_package_tree_src_dirs_conflict(fs):
+    fs.create_file('/usr/src/project/source/bar/__init__.py')
+    fs.create_file('/usr/src/project/source/bar/quux.py')
+    fs.create_file('/usr/src/project/source/bar/glarch.py')
+    fs.create_file('/usr/src/project/src/bar/gnusto.py')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration(src_dirs=[Path('source'), Path('src')])
+    with pytest.raises(UserInputError) as excinfo:
+        cfg.get_package_tree()
+    assert str(excinfo.value) == (
+        "`--src-dir src` adds 'bar' to file tree, but it is already present"
+        " from prior --package or --src-dir option"
+    )
+
+def test_get_package_tree_package_path_src_dir_conflict(fs):
+    fs.create_file('/usr/src/project/bar/__init__.py')
+    fs.create_file('/usr/src/project/bar/quux.py')
+    fs.create_file('/usr/src/project/bar/glarch.py')
+    fs.create_file('/usr/src/project/src/bar/gnusto.py')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration(package_paths=[Path('bar')], src_dirs=[Path('src')])
+    with pytest.raises(UserInputError) as excinfo:
+        cfg.get_package_tree()
+    assert str(excinfo.value) == (
+        "`--src-dir src` adds 'bar' to file tree, but it is already present"
+        " from prior --package or --src-dir option"
+    )
