@@ -473,7 +473,7 @@ section other than the following::
 Note that files & directories named ``.*``, ``CVS``, ``RCS``, ``*.pyc``,
 ``*.pyo``, or ``*.egg-info`` are ignored in local trees, and so any entries
 with those names in the wheel will cause this check to fail.  Empty directories
-are ignored.
+are ignored altogether.
 
 
 W201 — Wheel library is missing specified toplevel entry
@@ -485,8 +485,7 @@ appear at the root of the purelib or platlib section of the wheel.
 
 W202 — Wheel library has undeclared toplevel entry
 --------------------------------------------------
-This check is only enabled if the ``--toplevel`` command line option or
-``toplevel`` configuration option is given.  This check fails if there is a
-file or directory at the root of the purelib or platlib section of the wheel
-that is not listed in the ``toplevel`` option.  ``*.pth`` files are ignored for
-the purposes of this check.
+This check is only enabled if the ``--toplevel`` option is set.  This check
+fails if there is a file or directory at the root of the purelib or platlib
+section of the wheel that is not listed in the ``--toplevel`` option.
+``*.pth`` files are ignored for the purposes of this check.
