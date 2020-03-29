@@ -180,8 +180,8 @@ class WheelChecker:
         # Ignores the same files as W003 as well as files & directories
         # starting with an underscore
         # Checks the combination of purelib and platlib
-        # Not active when --toplevel given
-        if self.toplevel is not None:
+        # Not active when --toplevel, --package, or --src-dir given
+        if self.toplevel is not None or self.pkgtree is not None:
             return []
         toplevels = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
@@ -212,14 +212,36 @@ class WheelChecker:
             return []
 
     def check_W101(self, contents: WheelContents) -> List[FailedCheck]:
-        #W101 = 'Wheel library is missing files in source tree'
-        # Only active when certain option given on command line
-        raise NotImplementedError
+        #W101 = 'Wheel library is missing files in package tree'
+        # Checks all regular files in purelib and platlib combined
+        # Only active when --package or --src-dir given
+        if self.pkgtree is None:
+            return []
+        missing = {f.path for f in self.pkgtree.all_files()}
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            for f in tree.all_files():
+                missing.discard(f.libpath)
+        if missing:
+            return [FailedCheck(Check.W101, sorted(missing))]
+        else:
+            return []
 
     def check_W102(self, contents: WheelContents) -> List[FailedCheck]:
-        #W102 = 'Wheel library contains files not in source tree'
-        # Only active when certain option given on command line
-        raise NotImplementedError
+        #W102 = 'Wheel library contains files not in package tree'
+        # Checks all regular files in purelib and platlib combined
+        # Only active when --package or --src-dir given
+        if self.pkgtree is None:
+            return []
+        expected = {f.path for f in self.pkgtree.all_files()}
+        extra = []
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            for f in tree.all_files():
+                if f.libpath not in expected:
+                    extra.append(f.path)
+        if extra:
+            return [FailedCheck(Check.W102, extra)]
+        else:
+            return []
 
     def check_W201(self, contents: WheelContents) -> List[FailedCheck]:
         #W201 = 'Wheel library is missing specified toplevel entry'

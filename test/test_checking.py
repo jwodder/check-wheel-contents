@@ -2,6 +2,7 @@ import pytest
 from   check_wheel_contents.checker  import COMMON_NAMES, WheelChecker
 from   check_wheel_contents.checks   import Check, FailedCheck
 from   check_wheel_contents.contents import WheelContents
+from   check_wheel_contents.filetree import Directory, File
 
 @pytest.mark.parametrize('rows,failures', [
     (
@@ -1745,6 +1746,162 @@ def test_check_W009_toplevel_set(rows):
     checker.configure_options(toplevel=['foo.py', 'bar'])
     assert checker.check_W009(whlcon) == []
 
+@pytest.mark.parametrize('rows', [
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'bar/__init__.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'baz/__init__.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'foo-1.0.data/platlib/bar/__init__.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'bar/nonpython.txt',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            '_bar/__init__.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'bar.pth',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'bar.rst',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            '_foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'foo-1.0.data/platlib/bar.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+])
+def test_check_W009_pkgtree_set(rows):
+    whlcon = WheelContents(
+        dist_info_dir='foo-1.0.dist-info',
+        data_dir='foo-1.0.data',
+        root_is_purelib=True,
+    )
+    whlcon.add_record_rows(rows)
+    whlcon.validate_tree()
+    checker = WheelChecker(pkgtree=Directory())
+    assert checker.check_W009(whlcon) == []
+
 @pytest.mark.parametrize('rows,failures', [
     (
         [
@@ -1910,6 +2067,609 @@ def test_check_W010(rows, failures):
     whlcon.validate_tree()
     checker = WheelChecker()
     assert checker.check_W010(whlcon) == failures
+
+@pytest.mark.parametrize('rows', [
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'bar/__init__.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'baz/__init__.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'foo-1.0.data/platlib/bar/__init__.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'bar/nonpython.txt',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            '_bar/__init__.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'bar.pth',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            'foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'bar.rst',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+
+    [
+        [
+            'foo-1.0.dist-info/METADATA',
+            'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+            '950',
+        ],
+        [
+            '_foo.py',
+            'sha256=Kj8HcD01txI_5GMsyhQTJTvnmEecGbbCQ7_mW-DvQJw',
+            '1027',
+        ],
+        [
+            'foo-1.0.data/platlib/bar.py',
+            'sha256=zy4yNJt80A0p-wknpES1PtMEWN_QNZKPEhFDYcBrGBo',
+            '1038',
+        ],
+    ],
+])
+@pytest.mark.parametrize('check_method', [
+    WheelChecker.check_W101,
+    WheelChecker.check_W102,
+])
+def test_check_W1_pkgtree_not_set(rows, check_method):
+    whlcon = WheelContents(
+        dist_info_dir='foo-1.0.dist-info',
+        data_dir='foo-1.0.data',
+        root_is_purelib=True,
+    )
+    whlcon.add_record_rows(rows)
+    whlcon.validate_tree()
+    checker = WheelChecker()
+    assert check_method(checker, whlcon) == []
+
+@pytest.mark.parametrize('rows,failures', [
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+            [
+                'bar/empty/',
+                '',
+                '',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+            [
+                'extra.py',
+                'sha256=UUzLXZ7FFtG2L0HyM9lHdwf4WQfwdkinD8fTIEke5oI',
+                '1029',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+        ],
+        [FailedCheck(Check.W101, ['foo.py'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+        ],
+        [FailedCheck(Check.W101, ['bar/__init__.py', 'bar/bar.py'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'foo-1.0.data/platlib/bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'foo-1.0.data/platlib/bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'foo-1.0.data/platlib/bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo-1.0.data/platlib/foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'foo-1.0.data/platlib/bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'foo-1.0.data/platlib/bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+        ],
+        [],
+    ),
+])
+def test_check_W101(rows, failures):
+    whlcon = WheelContents(
+        dist_info_dir='foo-1.0.dist-info',
+        data_dir='foo-1.0.data',
+        root_is_purelib=True,
+    )
+    whlcon.add_record_rows(rows)
+    whlcon.validate_tree()
+    checker = WheelChecker(
+        pkgtree=Directory(
+            path=None,
+            entries={
+                "foo.py": File(('foo.py',), None, None),
+                "bar": Directory(
+                    path="bar/",
+                    entries={
+                        "__init__.py": File(('bar', '__init__.py'), None, None),
+                        "bar.py": File(('bar', 'bar.py'), None, None),
+                        "empty": Directory(path='bar/empty/'),
+                    }
+                ),
+            },
+        ),
+    )
+    assert checker.check_W101(whlcon) == failures
+
+@pytest.mark.parametrize('rows,failures', [
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+            [
+                'bar/empty/',
+                '',
+                '',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+            [
+                'empty/',
+                '',
+                '',
+            ],
+        ],
+        [],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+            [
+                'quux.py',
+                'sha256=LK6EWFtHm0hm07tshME9CVuC3kf14vdCbtKV99lhY3o',
+                '1047',
+            ],
+        ],
+        [FailedCheck(Check.W102, ['quux.py'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+            [
+                'bar/quux.py',
+                'sha256=LK6EWFtHm0hm07tshME9CVuC3kf14vdCbtKV99lhY3o',
+                '1047',
+            ],
+        ],
+        [FailedCheck(Check.W102, ['bar/quux.py'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+            [
+                'foo-1.0.data/platlib/quux.py',
+                'sha256=LK6EWFtHm0hm07tshME9CVuC3kf14vdCbtKV99lhY3o',
+                '1047',
+            ],
+        ],
+        [FailedCheck(Check.W102, ['foo-1.0.data/platlib/quux.py'])],
+    ),
+
+    (
+        [
+            [
+                'foo-1.0.dist-info/METADATA',
+                'sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk',
+                '950',
+            ],
+            [
+                'foo.py',
+                'sha256=yBBAl1_ftr9plr42R3XzaLNykb0avFp3t6zltkR0aEk',
+                '970',
+            ],
+            [
+                'bar/__init__.py',
+                'sha256=iHeh5vg23h3ZJ1rVp7dU735mOYUiawTzdrKYYIA6LaM',
+                '1031',
+            ],
+            [
+                'bar/bar.py',
+                'sha256=tomudU9PWF3CjEtEvpcYDIpLoxIbDfB4qFWqmbP079c',
+                '991',
+            ],
+            [
+                'foo.pyc',
+                'sha256=LK6EWFtHm0hm07tshME9CVuC3kf14vdCbtKV99lhY3o',
+                '1047',
+            ],
+        ],
+        [FailedCheck(Check.W102, ['foo.pyc'])],
+    ),
+])
+def test_check_W102(rows, failures):
+    whlcon = WheelContents(
+        dist_info_dir='foo-1.0.dist-info',
+        data_dir='foo-1.0.data',
+        root_is_purelib=True,
+    )
+    whlcon.add_record_rows(rows)
+    whlcon.validate_tree()
+    checker = WheelChecker(
+        pkgtree=Directory(
+            path=None,
+            entries={
+                "foo.py": File(('foo.py',), None, None),
+                "bar": Directory(
+                    path="bar/",
+                    entries={
+                        "__init__.py": File(('bar', '__init__.py'), None, None),
+                        "bar.py": File(('bar', 'bar.py'), None, None),
+                        "empty": Directory(path='bar/empty/'),
+                    }
+                ),
+            },
+        ),
+    )
+    assert checker.check_W102(whlcon) == failures
 
 @pytest.mark.parametrize('rows', [
     [

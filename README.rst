@@ -371,8 +371,8 @@ directories are excluded from this check.
 
 
 ..
-    W101 — Wheel library is missing files in source tree
-    W102 — Wheel library contains files not in source tree
+    W101 — Wheel library is missing files in package tree
+    W102 — Wheel library contains files not in package tree
 
 
 W201 — Wheel library is missing specified toplevel entry
