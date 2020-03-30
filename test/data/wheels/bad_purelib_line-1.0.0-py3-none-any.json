@@ -1,0 +1,5 @@
+{
+    "stdout": "",
+    "stderr": "bad_purelib_line-1.0.0-py3-none-any.whl: invalid wheel: Invalid Root-Is-Purelib value in WHEEL file: 'purelib'",
+    "rc": 1
+}

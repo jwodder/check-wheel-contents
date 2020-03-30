@@ -1,0 +1,5 @@
+{
+    "stdout": "MPC2860-0.3-py3-none-any.whl: W002: Wheel contains duplicate files:\n  MPC2860-0.3.data/platlib/_motion_2860.pyd\n  MPC2860-0.3.data/platlib/MPC2860/_motion_2860.pyd",
+    "stderr": "",
+    "rc": 1
+}

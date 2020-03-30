@@ -141,4 +141,4 @@ def args2wheelpaths(args: List[str]) -> Iterable[Path]:
             yield p
 
 if __name__ == '__main__':
-    main()
+    main()  # pragma: no cover

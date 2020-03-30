@@ -1,0 +1,5 @@
+{
+    "stdout": "",
+    "stderr": "no_purelib_line-1.0.0-py3-none-any.whl: invalid wheel: Root-Is-Purelib header not found in WHEEL file",
+    "rc": 1
+}

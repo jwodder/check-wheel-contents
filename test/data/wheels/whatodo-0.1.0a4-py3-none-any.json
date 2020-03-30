@@ -1,0 +1,5 @@
+{
+    "stdout": "whatodo-0.1.0a4-py3-none-any.whl: W001: Wheel contains .pyc/.pyo files:\n  src/__pycache__/__init__.cpython-34.pyc\n  src/__pycache__/test_todo.cpython-34-PYTEST.pyc\nwhatodo-0.1.0a4-py3-none-any.whl: W005: Wheel contains common toplevel name in library:\n  src/",
+    "stderr": "",
+    "rc": 1
+}

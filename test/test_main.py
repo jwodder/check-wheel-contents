@@ -1,9 +1,14 @@
+import json
+from   operator                      import attrgetter
+from   pathlib                       import Path
 from   traceback                     import format_exception
 from   click.testing                 import CliRunner
 import pytest
 from   check_wheel_contents.__main__ import main
 from   check_wheel_contents.checker  import NO_CONFIG
 from   check_wheel_contents.checks   import Check
+
+WHEEL_DIR = Path(__file__).with_name('data') / 'wheels'
 
 def show_result(r):
     if r.exception is not None:
@@ -121,3 +126,15 @@ def test_options2configargs(fs, mocker, options, configargs):
     assert r.exit_code == 0, show_result(r)
     assert mock_checker.method_calls \
         == [mocker.call().configure_options(**configargs)]
+
+@pytest.mark.parametrize('whlfile', [
+    p for p in WHEEL_DIR.iterdir() if p.suffix == '.whl'
+], ids=attrgetter("name"))
+def test_inspect_wheel(monkeypatch, whlfile):
+    with open(str(whlfile.with_suffix('.json'))) as fp:
+        expected = json.load(fp)
+    monkeypatch.chdir(str(WHEEL_DIR))
+    r = CliRunner(mix_stderr=False).invoke(main, ['--no-config', whlfile.name])
+    assert r.exit_code == expected["rc"], show_result(r)
+    assert r.stdout.rstrip() == expected["stdout"]
+    assert r.stderr.rstrip() == expected["stderr"]
