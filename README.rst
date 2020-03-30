@@ -449,6 +449,18 @@ Note that ``foo/.gitignore`` and ``src/bar.egg-info`` are omitted from this
 check (and if they do appear in the wheel, it will cause check W102 to fail).
 Empty directories are ignored altogether.
 
+Common causes:
+
+- For Python files: You failed to pass all of your project's packages &
+  subpackages to ``setup()``'s ``packages`` argument.  If you are using
+  ``setuptools.find_packages()``, all of your packages & subpackages need to
+  contain ``__init__.py`` files.
+
+- For non-Python files: You failed to declare your project's package data
+  appropriately.  `See the setuptools documentation for information on how to
+  do this
+  <https://setuptools.readthedocs.io/en/latest/setuptools.html#including-data-files>_`.
+
 
 W102 — Wheel library contains files not in package tree
 -------------------------------------------------------
@@ -475,12 +487,16 @@ Note that files & directories named ``.*``, ``CVS``, ``RCS``, ``*.pyc``,
 with those names in the wheel will cause this check to fail.  Empty directories
 are ignored altogether.
 
+Common causes: See common causes of W009
+
 
 W201 — Wheel library is missing specified toplevel entry
 --------------------------------------------------------
 This check is only enabled if the ``--toplevel`` option is set.  This check
 fails if one or more of the names given in the ``--toplevel`` option does not
 appear at the root of the purelib or platlib section of the wheel.
+
+Common causes: See common causes of W007
 
 
 W202 — Wheel library has undeclared toplevel entry
@@ -489,3 +505,5 @@ This check is only enabled if the ``--toplevel`` option is set.  This check
 fails if there is a file or directory at the root of the purelib or platlib
 section of the wheel that is not listed in the ``--toplevel`` option.
 ``*.pth`` files are ignored for the purposes of this check.
+
+Common causes: See common causes of W009
