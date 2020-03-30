@@ -1,7 +1,7 @@
 import os
 from   pathlib                       import Path
 import pytest
-from   check_wheel_contents.errors   import WheelValidationError
+from   check_wheel_contents.errors   import UserInputError, WheelValidationError
 from   check_wheel_contents.filetree import Directory, File
 
 def test_default_path():
@@ -249,6 +249,7 @@ def local_tree_fs(fs):
     fs.create_file('/var/data/foo.pyc')
     fs.create_file('/var/data/bar/__init__.py')
     fs.create_file('/var/data/bar/__pycache__/__init__.cpython-36.pyc')
+    fs.cwd = '/var/data'
 
 def test_from_local_tree(local_tree_fs):
     assert Directory.from_local_tree(Path('/var/data')) == Directory(
@@ -346,3 +347,8 @@ def test_from_local_tree_file(local_tree_fs):
         path=None,
         entries={"foo.py": File(('foo.py',), None, None)},
     )
+
+def test_from_local_tree_nonexistent(local_tree_fs):
+    with pytest.raises(UserInputError) as excinfo:
+        Directory.from_local_tree(Path('DNE'))
+    assert str(excinfo.value) == "No such file or directory: 'DNE'"
