@@ -230,11 +230,10 @@ class WheelChecker:
         # Only active when --package or --src-dir given
         if self.pkgtree is None:
             return []
-        expected = {f.path for f in self.pkgtree.all_files()}
         extra = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for f in tree.all_files():
-                if f.libpath not in expected:
+                if not self.pkgtree.contains_path(f.libpath):
                     extra.append(f.path)
         if extra:
             return [FailedCheck(Check.W102, extra)]

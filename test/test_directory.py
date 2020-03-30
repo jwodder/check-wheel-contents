@@ -352,3 +352,95 @@ def test_from_local_tree_nonexistent(local_tree_fs):
     with pytest.raises(UserInputError) as excinfo:
         Directory.from_local_tree(Path('DNE'))
     assert str(excinfo.value) == "No such file or directory: 'DNE'"
+
+@pytest.mark.parametrize('path,expected', [
+    ('foo.py', True),
+    ('bar.py', False),
+    ('bar', True),
+    ('bar/', True),
+    ('bar/foo.py', False),
+    ('bar/quux.py', False),
+    ('quux.py', False),
+    ('bar/bar.py', True),
+    ('bar/bar.py/glarch.py', False),
+    ('bar/empty', True),
+    ('bar/empty/', True),
+    ('bar/empty/gnusto', False),
+    ('bar/empty/gnusto/', False),
+    ('foo.py/', False),
+    ('bar.py/bar.py/', False),
+    ('project', False),
+    ('project/', False),
+    ('project/foo.py', False),
+    ('project/bar.py', False),
+    ('project/bar', False),
+])
+def test_contains_path(path, expected):
+    d = Directory(
+        path=None,
+        entries={
+            "foo.py": File(('foo.py',), None, None),
+            "bar": Directory(
+                path='bar/',
+                entries={
+                    "__init__.py": File(('bar', '__init__.py'), None, None),
+                    "bar.py": File(('bar', 'bar.py'), None, None),
+                    "empty": Directory(path='bar/empty/'),
+                },
+            ),
+        },
+    )
+    assert d.contains_path(path) is expected
+
+@pytest.mark.parametrize('path,expected', [
+    ('foo.py', False),
+    ('bar.py', False),
+    ('bar', False),
+    ('bar/', False),
+    ('bar/foo.py', False),
+    ('bar/quux.py', False),
+    ('quux.py', False),
+    ('bar/bar.py', False),
+    ('bar/bar.py/glarch.py', False),
+    ('bar/empty', False),
+    ('bar/empty/', False),
+    ('bar/empty/gnusto', False),
+    ('bar/empty/gnusto/', False),
+    ('foo.py/', False),
+    ('bar.py/bar.py/', False),
+    ('bar/bar.py/', False),
+    ('project', False),
+    ('project/', False),
+    ('project/foo.py', True),
+    ('project/bar.py', False),
+    ('project/bar', True),
+    ('project/bar/', True),
+    ('project/bar/foo.py', False),
+    ('project/bar/quux.py', False),
+    ('project/quux.py', False),
+    ('project/bar/bar.py', True),
+    ('project/bar/bar.py/glarch.py', False),
+    ('project/bar/empty', True),
+    ('project/bar/empty/', True),
+    ('project/bar/empty/gnusto', False),
+    ('project/bar/empty/gnusto/', False),
+    ('project/foo.py/', False),
+    ('project/bar.py/bar.py/', False),
+    ('project/bar/bar.py/', False),
+])
+def test_contains_path_non_none_root(path, expected):
+    d = Directory(
+        path='project/',
+        entries={
+            "foo.py": File(('project', 'foo.py'), None, None),
+            "bar": Directory(
+                path='project/bar/',
+                entries={
+                    "__init__.py": File(('project', 'bar', '__init__.py'), None, None),
+                    "bar.py": File(('project', 'bar', 'bar.py'), None, None),
+                    "empty": Directory(path='project/bar/empty/'),
+                },
+            ),
+        },
+    )
+    assert d.contains_path(path) is expected
