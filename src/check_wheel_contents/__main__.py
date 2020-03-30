@@ -1,9 +1,9 @@
 from   pathlib        import Path
-from   typing         import Iterable, List, Optional, Set, Tuple
+from   typing         import Any, Iterable, List, Optional, Set, Tuple
 import click
 from   wheel_filename import InvalidFilenameError
 from   .              import __version__
-from   .checker       import WheelChecker
+from   .checker       import NO_CONFIG, WheelChecker
 from   .checks        import Check, parse_checks_string
 from   .contents      import WheelContents
 from   .errors        import UserInputError, WheelValidationError
@@ -24,6 +24,22 @@ class ChecksParamType(click.ParamType):
             self.fail(str(e), param, ctx)
 
 
+class ConfigParamType(click.ParamType):
+    name = 'config'
+
+    def convert(
+        self,
+        value: Any,
+        param: Optional[click.Parameter],
+        ctx: Optional[click.Context],
+    ) -> Any:
+        if value is NO_CONFIG:
+            return value
+        else:
+            return click.Path(exists=True, dir_okay=False)\
+                        .convert(value, param, ctx)
+
+
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(
     __version__,
@@ -32,8 +48,14 @@ class ChecksParamType(click.ParamType):
 )
 @click.option(
     '-c', '--config',
-    type = click.Path(exists=True, dir_okay=False),
+    type = ConfigParamType(),
     help = 'Use the specified configuration file',
+)
+@click.option(
+    '--no-config',
+    'config',
+    flag_value = NO_CONFIG,
+    help       = 'Do not read from a configuration file',
 )
 @click.option(
     '--ignore',
@@ -70,7 +92,7 @@ class ChecksParamType(click.ParamType):
 def main(
     ctx: click.Context,
     wheel: List[str],
-    config: Optional[str],
+    config: Any,
     select: Optional[Set[Check]],
     ignore: Optional[Set[Check]],
     toplevel: Optional[List[str]],

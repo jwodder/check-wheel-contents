@@ -8,6 +8,8 @@ from   .contents import WheelContents
 from   .filetree import Directory, File
 from   .util     import bytes_signature, is_stubs_dir
 
+NO_CONFIG = object()
+
 BYTECODE_SUFFIXES = ('.pyc', '.pyo')
 
 ALLOWED_DUPLICATES = {
@@ -39,7 +41,7 @@ class WheelChecker:
 
     def configure_options(
         self,
-        configpath: Any = attr.NOTHING,
+        configpath: Any = NO_CONFIG,
         select: Optional[Set[Check]] = None,
         ignore: Optional[Set[Check]] = None,
         toplevel: Optional[List[str]] = None,
@@ -47,9 +49,9 @@ class WheelChecker:
         src_dir: Tuple[str, ...] = (),
     ) -> None:
         cfg = Configuration()
-        if configpath is not attr.NOTHING:
+        if configpath is not NO_CONFIG:
             if configpath is not None and not isinstance(configpath, str):
-                raise TypeError('configpath must be None, str, or attr.NOTHING')
+                raise TypeError('configpath must be None, str, or NO_CONFIG')
             cfg.update(Configuration.from_config_file(configpath))
         cfg.update(Configuration.from_command_options(
             select   = select,

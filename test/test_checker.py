@@ -1,6 +1,6 @@
 import attr
 import pytest
-from   check_wheel_contents.checker  import WheelChecker
+from   check_wheel_contents.checker  import NO_CONFIG, WheelChecker
 from   check_wheel_contents.checks   import Check
 from   check_wheel_contents.filetree import Directory, File
 
@@ -24,6 +24,10 @@ def test_defaults():
     (
         {"configpath": None},
         WheelChecker(selected={Check.W001, Check.W002})
+    ),
+    (
+        {"configpath": NO_CONFIG},
+        WheelChecker(),
     ),
     (
         {"toplevel": ["foo.py", "bar/"]},
@@ -128,7 +132,7 @@ def test_configure_options_error(value):
     checker = WheelChecker()
     with pytest.raises(TypeError) as excinfo:
         checker.configure_options(configpath=value)
-    assert str(excinfo.value) == 'configpath must be None, str, or attr.NOTHING'
+    assert str(excinfo.value) == 'configpath must be None, str, or NO_CONFIG'
 
 def test_check_contents(mocker):
     checker = WheelChecker()

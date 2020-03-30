@@ -59,6 +59,8 @@ Options
 - ``-c <file>``, ``--config <file>`` — Read configuration from the given file;
   see below for more information
 
+- ``--no-config`` — Disable reading from the configuration file
+
 - ``-h``, ``--help`` — Display a usage message and exit
 
 - ``-V``, ``--version`` — Display the program version and exit
