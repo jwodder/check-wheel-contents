@@ -129,3 +129,25 @@ def test_configure_options_error(value):
     with pytest.raises(TypeError) as excinfo:
         checker.configure_options(configpath=value)
     assert str(excinfo.value) == 'configpath must be None, str, or attr.NOTHING'
+
+def test_check_contents(mocker):
+    checker = WheelChecker()
+    check_mocks = {}
+    for c in Check:
+        check_mocks[c] = mocker.patch.object(
+            checker,
+            'check_' + c.name,
+            return_value=[getattr(mocker.sentinel, c.name)],
+        )
+    checker.selected = {Check.W001, Check.W002, Check.W003, Check.W005}
+    assert checker.check_contents(mocker.sentinel.CONTENTS) == [
+        mocker.sentinel.W001,
+        mocker.sentinel.W002,
+        mocker.sentinel.W003,
+        mocker.sentinel.W005,
+    ]
+    for c,m in check_mocks.items():
+        if c in checker.selected:
+            m.assert_called_once_with(mocker.sentinel.CONTENTS)
+        else:
+            m.assert_not_called()
