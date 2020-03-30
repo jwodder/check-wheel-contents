@@ -127,8 +127,6 @@ class WheelChecker:
         #W005 = 'Wheel contains common toplevel name in library'
         # Checks for COMMON_NAMES
         # Only checks purelib and platlib
-        # TODO: Add a configuration option for explicitly removing (or adding?)
-        # values from consideration?
         badpaths = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for common in COMMON_NAMES:
