@@ -215,10 +215,11 @@ class WheelChecker:
         # Only active when --package or --src-dir given
         if self.pkgtree is None:
             return []
-        missing = {f.path for f in self.pkgtree.all_files()}
-        for tree in (contents.purelib_tree, contents.platlib_tree):
-            for f in tree.all_files():
-                missing.discard(f.libpath)
+        missing = []
+        for f in self.pkgtree.all_files():
+            if not contents.purelib_tree.contains_path(f.path, relative=True) \
+                    and not contents.platlib_tree.contains_path(f.path, relative=True):
+                missing.append(f.path)
         if missing:
             return [FailedCheck(Check.W101, sorted(missing))]
         else:

@@ -215,17 +215,19 @@ class Directory:
             dir_root.add_entry(File((root.name,), None, None))
         return dir_root
 
-    def contains_path(self, path: str) -> bool:
+    def contains_path(self, path: str, relative: bool = False) -> bool:
         classes: Tuple[type, ...] = (File, Directory)
         if path.endswith('/'):
             path = path.rstrip('/')
             classes = (Directory,)
         myparts = self.parts
         parts = tuple(path.split('/'))
-        if not (len(myparts) < len(parts) and myparts == parts[:len(myparts)]):
-            return False
+        if not relative:
+            if not (len(myparts) < len(parts) and myparts == parts[:len(myparts)]):
+                return False
+            parts = parts[len(myparts):]
         current: Union[File, Directory] = self
-        for p in parts[len(myparts):]:
+        for p in parts:
             if not isinstance(current, Directory):
                 return False
             try:
