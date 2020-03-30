@@ -1,12 +1,13 @@
-from   pathlib   import Path
-from   typing    import Iterable, List, Optional, Set, Tuple
+from   pathlib        import Path
+from   typing         import Iterable, List, Optional, Set, Tuple
 import click
-from   .         import __version__
-from   .checker  import WheelChecker
-from   .checks   import Check, parse_checks_string
-from   .contents import WheelContents
-from   .errors   import UserInputError
-from   .util     import comma_split
+from   wheel_filename import InvalidFilenameError
+from   .              import __version__
+from   .checker       import WheelChecker
+from   .checks        import Check, parse_checks_string
+from   .contents      import WheelContents
+from   .errors        import UserInputError, WheelValidationError
+from   .util          import comma_split
 
 class ChecksParamType(click.ParamType):
     name = 'checks'
@@ -90,7 +91,16 @@ def main(
         ctx.fail(str(e))
     ok = True
     for w in args2wheelpaths(wheel):
-        contents = WheelContents.from_wheel(w)
+        try:
+            contents = WheelContents.from_wheel(w)
+        except InvalidFilenameError:
+            click.echo(f'{w}: wheel has invalid filename', err=True)
+            ok = False
+            continue
+        except WheelValidationError as e:
+            click.echo(f'{w}: invalid wheel: {e}', err=True)
+            ok = False
+            continue
         failures = checker.check_contents(contents)
         if failures:
             for f in failures:
