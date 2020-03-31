@@ -70,6 +70,12 @@ class ConfigParamType(click.ParamType):
     help     = 'Module or package to expect in wheel library'
 )
 @click.option(
+    '--package-omit',
+    type    = comma_split,
+    help    = 'Patterns in --package/--src-dir to ignore',
+    metavar = 'PATTERNS',
+)
+@click.option(
     '--select',
     type    = ChecksParamType(),
     help    = 'Comma-separated list of checks to enable',
@@ -98,16 +104,18 @@ def main(
     toplevel: Optional[List[str]],
     package: Tuple[str, ...],
     src_dir: Tuple[str, ...],
+    package_omit: Optional[List[str]],
 ) -> None:
     checker = WheelChecker()
     try:
         checker.configure_options(
-            configpath = config,
-            select     = select,
-            ignore     = ignore,
-            toplevel   = toplevel,
-            package    = package,
-            src_dir    = src_dir,
+            configpath   = config,
+            select       = select,
+            ignore       = ignore,
+            toplevel     = toplevel,
+            package      = package,
+            src_dir      = src_dir,
+            package_omit = package_omit,
         )
     except UserInputError as e:
         ctx.fail(str(e))

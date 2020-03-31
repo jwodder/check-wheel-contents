@@ -153,6 +153,19 @@ configuration file.  Unknown keys in configuration files are ignored.
    (which must be a directory) and not ``<path>`` itself are checked against
    the wheel's contents.
 
+``--package-omit <patterns>`` / ``package_omit = <patterns>``
+   Ignore files & directories inside ``--package`` or ``--src-dir`` arguments
+   that match any of the glob patterns in the comma-separated list
+   ``<patterns>``.  Ignored files will not be looked for in wheels for check
+   W101, and if any of them do show up in a wheel, it will cause check W102 to
+   fail.
+
+   In a TOML file, ``<patterns>`` may alternatively be given as a list of
+   strings.
+
+   The default set of ignored patterns is ``.*, CVS, RCS, *.pyc, *.pyo,
+   *.egg-info``.
+
 
 Checks
 ======
@@ -412,9 +425,9 @@ W101 — Wheel library is missing files in package tree
 This check is only enabled if the ``--package`` or ``--src-dir`` option is set.
 This check fails if a path in a tree rooted at an argument to ``--package`` or
 inside an argument to ``--src-dir`` does not appear in the wheel's purelib or
-platlib section.  Empty directories and local files & directories named ``.*``,
-``CVS``, ``RCS``, ``*.pyc``, ``*.pyo``, or ``*.egg-info`` are excluded from
-this check.
+platlib section.  Empty directories and local files & directories that match
+any of the patterns specified with ``--package-omit`` or its default value are
+excluded from this check.
 
 Note that this check only checks file paths, i.e., names of files &
 directories.  File contents are not examined.
@@ -437,9 +450,10 @@ For example, given the below local tree::
             └── PKG-INFO
 
 If the options ``--package /usr/src/project/foo`` and ``--src-dir
-/usr/src/project/src`` are supplied, then ``check-wheel-contents`` will look
-for the following paths in the wheel, and the check will fail if any of them do
-not appear in either the purelib or platlib section::
+/usr/src/project/src`` are supplied and ``--package-omit`` is left at its
+default value, then ``check-wheel-contents`` will look for the following paths
+in the wheel, and the check will fail if any of them do not appear in either
+the purelib or platlib section::
 
     foo/__init__.py
     foo/foo.py
@@ -484,10 +498,10 @@ section other than the following::
     bar/bar.py
     bar/quux/data.dat
 
-Note that files & directories named ``.*``, ``CVS``, ``RCS``, ``*.pyc``,
-``*.pyo``, or ``*.egg-info`` are ignored in local trees, and so any entries
-with those names in the wheel will cause this check to fail.  Empty directories
-are ignored altogether.
+Note that files & directories that match any of the patterns specified with
+``--package-omit`` or its default value are ignored in local trees, and so any
+entries with those names in the wheel will cause this check to fail.  Empty
+directories are ignored altogether.
 
 Common causes: See common causes of W009
 

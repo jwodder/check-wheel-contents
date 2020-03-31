@@ -47,6 +47,7 @@ class WheelChecker:
         toplevel: Optional[List[str]] = None,
         package: Tuple[str, ...] = (),
         src_dir: Tuple[str, ...] = (),
+        package_omit: Optional[List[str]] = None,
     ) -> None:
         cfg = Configuration()
         if configpath is not NO_CONFIG:
@@ -54,11 +55,12 @@ class WheelChecker:
                 raise TypeError('configpath must be None, str, or NO_CONFIG')
             cfg.update(Configuration.from_config_file(configpath))
         cfg.update(Configuration.from_command_options(
-            select   = select,
-            ignore   = ignore,
-            toplevel = toplevel,
-            package  = package,
-            src_dir  = src_dir,
+            select       = select,
+            ignore       = ignore,
+            toplevel     = toplevel,
+            package      = package,
+            src_dir      = src_dir,
+            package_omit = package_omit,
         ))
         self.selected = cfg.get_selected_checks()
         self.toplevel = cfg.toplevel

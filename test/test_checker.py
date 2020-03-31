@@ -71,6 +71,7 @@ def test_defaults():
             ),
         ),
     ),
+
     (
         {"package": ('foo.py', 'bar'), "src_dir": ('src',)},
         WheelChecker(
@@ -89,6 +90,33 @@ def test_defaults():
                         path="quux/",
                         entries={
                             "__init__.py": File(('quux', '__init__.py'), None, None),
+                            "quux.py": File(('quux', 'quux.py'), None, None),
+                        },
+                    ),
+                },
+            ),
+        ),
+    ),
+    (
+        {
+            "package": ('foo.py', 'bar'),
+            "src_dir": ('src',),
+            "package_omit": ["__init__.py"],
+        },
+        WheelChecker(
+            pkgtree=Directory(
+                path=None,
+                entries={
+                    "foo.py": File(('foo.py',), None, None),
+                    "bar": Directory(
+                        path="bar/",
+                        entries={
+                            "bar.py": File(('bar', 'bar.py'), None, None),
+                        },
+                    ),
+                    "quux": Directory(
+                        path="quux/",
+                        entries={
                             "quux.py": File(('quux', 'quux.py'), None, None),
                         },
                     ),

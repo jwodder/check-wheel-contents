@@ -33,6 +33,7 @@ class Configuration:
         = attr.ib(default=None, converter=convert_toplevel)
     package_paths: Optional[List[Path]] = None
     src_dirs: Optional[List[Path]] = None
+    package_omit: Optional[List[str]] = None
 
     @classmethod
     def from_command_options(
@@ -42,6 +43,7 @@ class Configuration:
         toplevel: Optional[List[str]] = None,
         package: Tuple[str, ...] = (),
         src_dir: Tuple[str, ...] = (),
+        package_omit: Optional[List[str]] = None,
     ) -> 'Configuration':
         package_paths: Optional[List[Path]]
         if package:
@@ -59,6 +61,7 @@ class Configuration:
             toplevel      = toplevel,
             package_paths = package_paths,
             src_dirs      = src_dirs,
+            package_omit  = package_omit,
         )
 
     @classmethod
@@ -81,6 +84,7 @@ class Configuration:
             toplevel      = cfgdict.get_comma_list("toplevel"),
             package_paths = cfgdict.get_path_list("package"),
             src_dirs      = cfgdict.get_path_list("src_dir"),
+            package_omit  = cfgdict.get_comma_list("package_omit"),
         )
 
     def update(self, cfg: 'Configuration') -> None:
@@ -101,9 +105,13 @@ class Configuration:
     def get_package_tree(self) -> Optional[Directory]:
         if self.package_paths is None and self.src_dirs is None:
             return None
+        if self.package_omit is None:
+            exclude = TRAVERSAL_EXCLUSIONS
+        else:
+            exclude = self.package_omit
         tree = Directory()
         for p in (self.package_paths or []):
-            subtree = Directory.from_local_tree(p, exclude=TRAVERSAL_EXCLUSIONS)
+            subtree = Directory.from_local_tree(p, exclude=exclude)
             ### TODO: Move the below logic to Directory?
             for name, entry in subtree.entries.items():
                 if name in tree:
@@ -115,7 +123,7 @@ class Configuration:
         for p in (self.src_dirs or []):
             subtree = Directory.from_local_tree(
                 p,
-                exclude      = TRAVERSAL_EXCLUSIONS,
+                exclude      = exclude,
                 include_root = False,
             )
             ### TODO: Move the below logic to Directory?

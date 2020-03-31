@@ -26,6 +26,7 @@ def show_result(r):
             "toplevel": None,
             "package": (),
             "src_dir": (),
+            "package_omit": None,
         },
     ),
 
@@ -38,6 +39,7 @@ def show_result(r):
             "toplevel": None,
             "package": (),
             "src_dir": (),
+            "package_omit": None,
         },
     ),
 
@@ -50,6 +52,7 @@ def show_result(r):
             "toplevel": None,
             "package": (),
             "src_dir": (),
+            "package_omit": None,
         },
     ),
 
@@ -62,6 +65,7 @@ def show_result(r):
             "toplevel": None,
             "package": (),
             "src_dir": (),
+            "package_omit": None,
         },
     ),
 
@@ -74,6 +78,7 @@ def show_result(r):
             "toplevel": None,
             "package": (),
             "src_dir": (),
+            "package_omit": None,
         },
     ),
 
@@ -86,6 +91,7 @@ def show_result(r):
             "toplevel": None,
             "package": (),
             "src_dir": (),
+            "package_omit": None,
         },
     ),
 
@@ -98,6 +104,7 @@ def show_result(r):
             "toplevel": ['foo', 'bar/'],
             "package": (),
             "src_dir": (),
+            "package_omit": None,
         },
     ),
 
@@ -110,6 +117,33 @@ def show_result(r):
             "toplevel": None,
             "package": ('foo',),
             "src_dir": ('src',),
+            "package_omit": None,
+        },
+    ),
+
+    (
+        ['--package-omit', '__*__, test/data'],
+        {
+            "configpath": None,
+            "select": None,
+            "ignore": None,
+            "toplevel": None,
+            "package": (),
+            "src_dir": (),
+            "package_omit": ["__*__", "test/data"],
+        },
+    ),
+
+    (
+        ['--package-omit', ''],
+        {
+            "configpath": None,
+            "select": None,
+            "ignore": None,
+            "toplevel": None,
+            "package": (),
+            "src_dir": (),
+            "package_omit": [],
         },
     ),
 ])
@@ -130,7 +164,7 @@ def test_options2configargs(fs, mocker, options, configargs):
 @pytest.mark.parametrize('whlfile', [
     p for p in WHEEL_DIR.iterdir() if p.suffix == '.whl'
 ], ids=attrgetter("name"))
-def test_inspect_wheel(monkeypatch, whlfile):
+def test_main(monkeypatch, whlfile):
     with open(str(whlfile.with_suffix('.json'))) as fp:
         expected = json.load(fp)
     monkeypatch.chdir(str(WHEEL_DIR))

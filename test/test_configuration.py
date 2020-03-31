@@ -21,14 +21,21 @@ from   check_wheel_contents.filetree import Directory, File
     ((), None),
     (('quux',), [Path('quux')]),
 ])
+@pytest.mark.parametrize('package_omit_in,package_omit_out', [
+    (None, None),
+    ([], []),
+    (['RCS', '*.pyc'], ['RCS', '*.pyc']),
+])
 def test_from_command_options(toplevel_in, toplevel_out, package_in,
-                              package_out, src_dir_in, src_dir_out):
+                              package_out, src_dir_in, src_dir_out,
+                              package_omit_in, package_omit_out):
     cfg = Configuration.from_command_options(
         select = sentinel.SELECT,
         ignore = sentinel.IGNORE,
         toplevel = toplevel_in,
         package = package_in,
         src_dir = src_dir_in,
+        package_omit = package_omit_in,
     )
     assert attr.asdict(cfg, retain_collection_types=True) == {
         "select": sentinel.SELECT,
@@ -36,6 +43,7 @@ def test_from_command_options(toplevel_in, toplevel_out, package_in,
         "toplevel": toplevel_out,
         "package_paths": package_out,
         "src_dirs": src_dir_out,
+        "package_omit": package_omit_out,
     }
 
 def test_from_command_options_default():
@@ -46,6 +54,7 @@ def test_from_command_options_default():
         "toplevel": None,
         "package_paths": None,
         "src_dirs": None,
+        "package_omit": None,
     }
 
 def test_from_config_dict_calls(mocker):
@@ -64,11 +73,14 @@ def test_from_config_dict_calls(mocker):
         "toplevel": ["foo.py", "bar"],
         "package_paths": sentinel.PATH_LIST,
         "src_dirs": sentinel.PATH_LIST,
+        "package_omit": ["foo.py", "bar/"],
     }
     assert cd.get_check_set.call_count == 2
     cd.get_check_set.assert_any_call("select")
     cd.get_check_set.assert_any_call("ignore")
-    cd.get_comma_list.assert_called_once_with("toplevel")
+    assert cd.get_comma_list.call_count == 2
+    cd.get_comma_list.assert_any_call("toplevel")
+    cd.get_comma_list.assert_any_call("package_omit")
     assert cd.get_path_list.call_count == 2
     cd.get_path_list.assert_any_call("package")
     cd.get_path_list.assert_any_call("src_dir")
@@ -82,6 +94,7 @@ def test_from_config_dict_calls(mocker):
             toplevel = None,
             package_paths = None,
             src_dirs = None,
+            package_omit = None,
         ),
     ),
     (
@@ -93,6 +106,7 @@ def test_from_config_dict_calls(mocker):
                 "toplevel": "foo.py,bar/",
                 "package": "foobar",
                 "src_dir": "src",
+                "package_omit": "__pycache__,test/data",
             },
         ),
         Configuration(
@@ -101,6 +115,7 @@ def test_from_config_dict_calls(mocker):
             toplevel = ["foo.py", "bar"],
             package_paths = [Path('/usr/src/project/foobar')],
             src_dirs = [Path('/usr/src/project/src')],
+            package_omit = ["__pycache__", "test/data"],
         ),
     ),
     (
@@ -112,6 +127,7 @@ def test_from_config_dict_calls(mocker):
                 "toplevel": ["foo.py", "bar/"],
                 "package": ["foobar"],
                 "src_dir": ["src"],
+                "package_omit": ["__pycache__", "test/data"],
             },
         ),
         Configuration(
@@ -120,6 +136,7 @@ def test_from_config_dict_calls(mocker):
             toplevel = ["foo.py", "bar"],
             package_paths = [Path('/usr/src/project/foobar')],
             src_dirs = [Path('/usr/src/project/src')],
+            package_omit = ["__pycache__", "test/data"],
         ),
     ),
     (
@@ -129,6 +146,7 @@ def test_from_config_dict_calls(mocker):
                 "toplevel": "",
                 "package": "",
                 "src_dir": "",
+                "package_omit": "",
             },
         ),
         Configuration(
@@ -137,6 +155,7 @@ def test_from_config_dict_calls(mocker):
             toplevel = [],
             package_paths = [],
             src_dirs = [],
+            package_omit = [],
         ),
     ),
     (
@@ -146,6 +165,7 @@ def test_from_config_dict_calls(mocker):
                 "toplevel": [],
                 "package": [],
                 "src_dir": [],
+                "package_omit": [],
             },
         ),
         Configuration(
@@ -154,6 +174,7 @@ def test_from_config_dict_calls(mocker):
             toplevel = [],
             package_paths = [],
             src_dirs = [],
+            package_omit = [],
         ),
     ),
 ])
@@ -242,6 +263,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=['foo.py', 'bar'],
             package_paths=[Path('foobar')],
             src_dirs=[Path('src')],
+            package_omit=['__pycache__', 'RCS'],
         ),
         Configuration(
             select={Check.W005, Check.W006},
@@ -249,6 +271,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=["quux", "glarch.py"],
             package_paths=[Path('baz.py')],
             src_dirs=[Path('source')],
+            package_omit=['*.pyc', 'CVS'],
         ),
         Configuration(
             select={Check.W005, Check.W006},
@@ -256,6 +279,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=["quux", "glarch.py"],
             package_paths=[Path('baz.py')],
             src_dirs=[Path('source')],
+            package_omit=['*.pyc', 'CVS'],
         ),
     ),
     (
@@ -265,6 +289,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=['foo.py', 'bar'],
             package_paths=[Path('foobar')],
             src_dirs=[Path('src')],
+            package_omit=['__pycache__', 'RCS'],
         ),
         Configuration(
             select={},
@@ -272,6 +297,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=[],
             package_paths=[],
             src_dirs=[],
+            package_omit=[],
         ),
         Configuration(
             select={},
@@ -279,6 +305,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=[],
             package_paths=[],
             src_dirs=[],
+            package_omit=[],
         ),
     ),
     (
@@ -288,6 +315,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=['foo.py', 'bar'],
             package_paths=[Path('foobar')],
             src_dirs=[Path('src')],
+            package_omit=['__pycache__', 'RCS'],
         ),
         Configuration(
             select=None,
@@ -295,6 +323,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=None,
             package_paths=None,
             src_dirs=None,
+            package_omit=None,
         ),
         Configuration(
             select={Check.W001, Check.W002},
@@ -302,6 +331,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=['foo.py', 'bar'],
             package_paths=[Path('foobar')],
             src_dirs=[Path('src')],
+            package_omit=['__pycache__', 'RCS'],
         ),
     ),
     (
@@ -311,6 +341,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=None,
             package_paths=None,
             src_dirs=None,
+            package_omit=None,
         ),
         Configuration(
             select={Check.W005, Check.W006},
@@ -318,6 +349,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=["quux", "glarch.py"],
             package_paths=[Path('baz.py')],
             src_dirs=[Path('source')],
+            package_omit=['__pycache__', 'RCS'],
         ),
         Configuration(
             select={Check.W005, Check.W006},
@@ -325,6 +357,7 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             toplevel=["quux", "glarch.py"],
             package_paths=[Path('baz.py')],
             src_dirs=[Path('source')],
+            package_omit=['__pycache__', 'RCS'],
         ),
     ),
 ])
@@ -348,9 +381,14 @@ def test_get_package_tree_both_none():
     cfg = Configuration(package_paths=None, src_dirs=None)
     assert cfg.get_package_tree() is None
 
-def test_get_package_tree_package_path(mocker):
+@pytest.mark.parametrize('package_omit,exclude', [
+    (None, TRAVERSAL_EXCLUSIONS),
+    ([], []),
+    (['__pycache__', 'RCS'], ['__pycache__', 'RCS']),
+])
+def test_get_package_tree_package_path(mocker, package_omit, exclude):
     path = Path('foobar')
-    cfg = Configuration(package_paths=[path])
+    cfg = Configuration(package_paths=[path], package_omit=package_omit)
     tree = Directory(
         path=None,
         entries={
@@ -378,11 +416,16 @@ def test_get_package_tree_package_path(mocker):
     )
     fltmock = mocker.patch.object(Directory, 'from_local_tree', return_value=tree)
     assert cfg.get_package_tree() == tree
-    fltmock.assert_called_once_with(path, exclude=TRAVERSAL_EXCLUSIONS)
+    fltmock.assert_called_once_with(path, exclude=exclude)
 
-def test_get_package_tree_src_dir(mocker):
+@pytest.mark.parametrize('package_omit,exclude', [
+    (None, TRAVERSAL_EXCLUSIONS),
+    ([], []),
+    (['__pycache__', 'RCS'], ['__pycache__', 'RCS']),
+])
+def test_get_package_tree_src_dir(mocker, package_omit, exclude):
     path = Path('src')
-    cfg = Configuration(src_dirs=[path])
+    cfg = Configuration(src_dirs=[path], package_omit=package_omit)
     tree = Directory(
         path=None,
         entries={
@@ -398,11 +441,7 @@ def test_get_package_tree_src_dir(mocker):
     )
     fltmock = mocker.patch.object(Directory, 'from_local_tree', return_value=tree)
     assert cfg.get_package_tree() == tree
-    fltmock.assert_called_once_with(
-        path,
-        exclude      = TRAVERSAL_EXCLUSIONS,
-        include_root = False,
-    )
+    fltmock.assert_called_once_with(path, exclude=exclude, include_root=False)
 
 def test_get_package_tree_multiple_package_paths(fs):
     fs.create_file('/usr/src/project/foo.py')
