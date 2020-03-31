@@ -1,5 +1,6 @@
 from   operator  import attrgetter
 import re
+import sys
 from   typing    import Any, List, Optional, Set, Tuple
 import attr
 from   .checks   import Check, FailedCheck
@@ -68,6 +69,10 @@ class WheelChecker:
         self.selected = cfg.get_selected_checks()
         self.toplevel = cfg.toplevel
         self.pkgtree = cfg.get_package_tree()
+        if self.toplevel is not None and self.pkgtree is not None \
+                and set(self.toplevel) != set(self.pkgtree.entries.keys()):
+            print('Warning: --toplevel value does not match top level of'
+                  ' --package/--src-dir file tree', file=sys.stderr)
 
     def check_contents(self, contents: WheelContents) -> List[FailedCheck]:
         failures = []

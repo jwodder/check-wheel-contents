@@ -1,9 +1,10 @@
 from   pathlib                      import Path
 import attr
 import pytest
-from   check_wheel_contents.checker import NO_CONFIG, WheelChecker
-from   check_wheel_contents.checks  import Check
-from   check_wheel_contents.config  import Configuration
+from   check_wheel_contents.checker  import NO_CONFIG, WheelChecker
+from   check_wheel_contents.checks   import Check
+from   check_wheel_contents.config   import Configuration
+from   check_wheel_contents.filetree import Directory, File
 
 def test_defaults():
     checker = WheelChecker()
@@ -95,21 +96,99 @@ def test_configure_options(fs, mocker, faking_path, kwargs, cfg):
     apply_mock.assert_called_once_with(cfg)
 
 def test_apply_config_calls(mocker):
+    pkgtree = Directory(
+        path=None,
+        entries={"TOPLEVEL": Directory(path='TOPLEVEL/')},
+    )
     cfg = mocker.Mock(
         Configuration,
         **{
             "get_selected_checks.return_value": mocker.sentinel.SELECTED,
-            "get_package_tree.return_value": mocker.sentinel.PKGTREE,
+            "get_package_tree.return_value": pkgtree,
         },
     )
-    cfg.toplevel = mocker.sentinel.TOPLEVEL
+    cfg.toplevel = ["TOPLEVEL"]
     checker = WheelChecker()
     checker.apply_config(cfg)
     assert attr.asdict(checker, recurse=False) == {
         "selected": mocker.sentinel.SELECTED,
-        "toplevel": mocker.sentinel.TOPLEVEL,
-        "pkgtree": mocker.sentinel.PKGTREE,
+        "toplevel": ["TOPLEVEL"],
+        "pkgtree": pkgtree,
     }
+
+def test_apply_config_toplevel_pkgtree_mismatch_warning(capsys, mocker):
+    pkgtree = Directory(
+        path=None,
+        entries={
+            "foo.py": File(('foo.py'), None, None),
+            "bar": Directory(path='bar/'),
+        },
+    )
+    cfg = mocker.Mock(
+        Configuration,
+        **{
+            "get_selected_checks.return_value": mocker.sentinel.SELECTED,
+            "get_package_tree.return_value": pkgtree,
+        },
+    )
+    cfg.toplevel = ["bar.py", "foo"]
+    checker = WheelChecker()
+    checker.apply_config(cfg)
+    assert attr.asdict(checker, recurse=False) == {
+        "selected": mocker.sentinel.SELECTED,
+        "toplevel": ["bar.py", "foo"],
+        "pkgtree": pkgtree,
+    }
+    captured = capsys.readouterr()
+    assert captured.out == ''
+    assert captured.err == (
+        'Warning: --toplevel value does not match top level of --package/'
+        '--src-dir file tree\n'
+    )
+
+@pytest.mark.parametrize('toplevel,pkgtree', [
+    (None, None),
+    (["foo.py", "bar"], None),
+    (
+        None,
+        Directory(
+            path=None,
+            entries={
+                "foo.py": File(('foo.py'), None, None),
+                "bar": Directory(path='bar/'),
+            },
+        ),
+    ),
+    (
+        ["foo.py", "bar"],
+        Directory(
+            path=None,
+            entries={
+                "foo.py": File(('foo.py'), None, None),
+                "bar": Directory(path='bar/'),
+            },
+        ),
+    ),
+])
+def test_apply_config_no_warning(capsys, mocker, toplevel, pkgtree):
+    cfg = mocker.Mock(
+        Configuration,
+        **{
+            "get_selected_checks.return_value": mocker.sentinel.SELECTED,
+            "get_package_tree.return_value": pkgtree,
+        },
+    )
+    cfg.toplevel = toplevel
+    checker = WheelChecker()
+    checker.apply_config(cfg)
+    assert attr.asdict(checker, recurse=False) == {
+        "selected": mocker.sentinel.SELECTED,
+        "toplevel": toplevel,
+        "pkgtree": pkgtree,
+    }
+    captured = capsys.readouterr()
+    assert captured.out == ''
+    assert captured.err == ''
 
 @pytest.mark.parametrize('value', [
     42,
