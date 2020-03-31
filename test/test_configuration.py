@@ -37,7 +37,7 @@ def test_from_command_options(toplevel_in, toplevel_out, package_in,
         src_dir = src_dir_in,
         package_omit = package_omit_in,
     )
-    assert attr.asdict(cfg, retain_collection_types=True) == {
+    assert attr.asdict(cfg, recurse=False) == {
         "select": sentinel.SELECT,
         "ignore": sentinel.IGNORE,
         "toplevel": toplevel_out,
@@ -48,7 +48,7 @@ def test_from_command_options(toplevel_in, toplevel_out, package_in,
 
 def test_from_command_options_default():
     cfg = Configuration.from_command_options()
-    assert attr.asdict(cfg, retain_collection_types=True) == {
+    assert attr.asdict(cfg, recurse=False) == {
         "select": None,
         "ignore": None,
         "toplevel": None,
@@ -67,7 +67,7 @@ def test_from_config_dict_calls(mocker):
         },
     )
     cfg = Configuration.from_config_dict(cd)
-    assert attr.asdict(cfg, retain_collection_types=True) == {
+    assert attr.asdict(cfg, recurse=False) == {
         "select": sentinel.CHECK_SET,
         "ignore": sentinel.CHECK_SET,
         "toplevel": ["foo.py", "bar"],

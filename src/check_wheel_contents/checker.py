@@ -62,6 +62,9 @@ class WheelChecker:
             src_dir      = src_dir,
             package_omit = package_omit,
         ))
+        self.apply_config(cfg)
+
+    def apply_config(self, cfg: Configuration) -> None:
         self.selected = cfg.get_selected_checks()
         self.toplevel = cfg.toplevel
         self.pkgtree = cfg.get_package_tree()

@@ -1,100 +1,63 @@
+from   pathlib                      import Path
 import attr
 import pytest
-from   check_wheel_contents.checker  import NO_CONFIG, WheelChecker
-from   check_wheel_contents.checks   import Check
-from   check_wheel_contents.filetree import Directory, File
+from   check_wheel_contents.checker import NO_CONFIG, WheelChecker
+from   check_wheel_contents.checks  import Check
+from   check_wheel_contents.config  import Configuration
 
 def test_defaults():
     checker = WheelChecker()
-    assert attr.asdict(checker, retain_collection_types=True) == {
+    assert attr.asdict(checker, recurse=False) == {
         "selected": set(Check),
         "toplevel": None,
         "pkgtree": None,
     }
 
-@pytest.mark.parametrize('kwargs,expected', [
-    ({}, WheelChecker()),
+@pytest.mark.parametrize('kwargs,cfg', [
+    ({}, Configuration()),
     (
         {
             "configpath": "custom.cfg",
             "select": {Check.W001, Check.W002, Check.W003, Check.W004},
         },
-        WheelChecker(selected={Check.W003, Check.W004})
+        Configuration(
+            select={Check.W001, Check.W002, Check.W003, Check.W004},
+            ignore={Check.W001, Check.W002},
+        ),
     ),
     (
         {"configpath": None},
-        WheelChecker(selected={Check.W001, Check.W002})
+        Configuration(select={Check.W001, Check.W002}),
+    ),
+    (
+        {"configpath": None, "select": {Check.W003, Check.W004}},
+        Configuration(select={Check.W003, Check.W004}),
     ),
     (
         {"configpath": NO_CONFIG},
-        WheelChecker(),
+        Configuration(),
     ),
     (
         {"toplevel": ["foo.py", "bar/"]},
-        WheelChecker(toplevel=["foo.py", "bar"]),
+        Configuration(toplevel=["foo.py", "bar"]),
     ),
     (
         {"package": (), "src_dir": ()},
-        WheelChecker(),
+        Configuration(),
     ),
     (
         {"package": ('bar/',)},
-        WheelChecker(
-            pkgtree=Directory(
-                path=None,
-                entries={
-                    "bar": Directory(
-                        path="bar/",
-                        entries={
-                            "__init__.py": File(('bar', '__init__.py'), None, None),
-                            "bar.py": File(('bar', 'bar.py'), None, None),
-                        },
-                    ),
-                },
-            ),
-        ),
+        Configuration(package_paths=[Path('bar')]),
     ),
     (
         {"src_dir": ('src/',)},
-        WheelChecker(
-            pkgtree=Directory(
-                path=None,
-                entries={
-                    "quux": Directory(
-                        path="quux/",
-                        entries={
-                            "__init__.py": File(('quux', '__init__.py'), None, None),
-                            "quux.py": File(('quux', 'quux.py'), None, None),
-                        },
-                    ),
-                },
-            ),
-        ),
+        Configuration(src_dirs=[Path('src')]),
     ),
-
     (
         {"package": ('foo.py', 'bar'), "src_dir": ('src',)},
-        WheelChecker(
-            pkgtree=Directory(
-                path=None,
-                entries={
-                    "foo.py": File(('foo.py',), None, None),
-                    "bar": Directory(
-                        path="bar/",
-                        entries={
-                            "__init__.py": File(('bar', '__init__.py'), None, None),
-                            "bar.py": File(('bar', 'bar.py'), None, None),
-                        },
-                    ),
-                    "quux": Directory(
-                        path="quux/",
-                        entries={
-                            "__init__.py": File(('quux', '__init__.py'), None, None),
-                            "quux.py": File(('quux', 'quux.py'), None, None),
-                        },
-                    ),
-                },
-            ),
+        Configuration(
+            package_paths=[Path('foo.py'), Path('bar')],
+            src_dirs=[Path('src')],
         ),
     ),
     (
@@ -103,34 +66,14 @@ def test_defaults():
             "src_dir": ('src',),
             "package_omit": ["__init__.py"],
         },
-        WheelChecker(
-            pkgtree=Directory(
-                path=None,
-                entries={
-                    "foo.py": File(('foo.py',), None, None),
-                    "bar": Directory(
-                        path="bar/",
-                        entries={
-                            "bar.py": File(('bar', 'bar.py'), None, None),
-                        },
-                    ),
-                    "quux": Directory(
-                        path="quux/",
-                        entries={
-                            "quux.py": File(('quux', 'quux.py'), None, None),
-                        },
-                    ),
-                },
-            ),
+        Configuration(
+            package_paths=[Path('foo.py'), Path('bar')],
+            src_dirs=[Path('src')],
+            package_omit=["__init__.py"],
         ),
     ),
 ])
-def test_configure_options(fs, kwargs, expected):
-    fs.create_file('/usr/src/project/foo.py')
-    fs.create_file('/usr/src/project/bar/__init__.py')
-    fs.create_file('/usr/src/project/bar/bar.py')
-    fs.create_file('/usr/src/project/src/quux/__init__.py')
-    fs.create_file('/usr/src/project/src/quux/quux.py')
+def test_configure_options(fs, mocker, faking_path, kwargs, cfg):
     fs.create_file(
         '/usr/src/project/check-wheel-contents.cfg',
         contents=(
@@ -147,8 +90,26 @@ def test_configure_options(fs, kwargs, expected):
     )
     fs.cwd = '/usr/src/project'
     checker = WheelChecker()
+    apply_mock = mocker.patch.object(checker, 'apply_config')
     checker.configure_options(**kwargs)
-    assert checker == expected
+    apply_mock.assert_called_once_with(cfg)
+
+def test_apply_config_calls(mocker):
+    cfg = mocker.Mock(
+        Configuration,
+        **{
+            "get_selected_checks.return_value": mocker.sentinel.SELECTED,
+            "get_package_tree.return_value": mocker.sentinel.PKGTREE,
+        },
+    )
+    cfg.toplevel = mocker.sentinel.TOPLEVEL
+    checker = WheelChecker()
+    checker.apply_config(cfg)
+    assert attr.asdict(checker, recurse=False) == {
+        "selected": mocker.sentinel.SELECTED,
+        "toplevel": mocker.sentinel.TOPLEVEL,
+        "pkgtree": mocker.sentinel.PKGTREE,
+    }
 
 @pytest.mark.parametrize('value', [
     42,
