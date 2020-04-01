@@ -2,7 +2,6 @@ from   collections      import defaultdict
 import csv
 from   io               import TextIOWrapper
 import os
-from   os.path          import basename
 import re
 from   typing           import DefaultDict, Iterable, List, Optional, TextIO, \
                                     Tuple, Union
@@ -65,7 +64,7 @@ class WheelContents:
 
     @classmethod
     def from_wheel(cls, path: Union[str, os.PathLike]) -> 'WheelContents':
-        whlname = parse_wheel_filename(basename(path))
+        whlname = parse_wheel_filename(path)
         dist_info_dir = f'{whlname.project}-{whlname.version}.dist-info'
         data_dir = f'{whlname.project}-{whlname.version}.data'
         wc = cls(dist_info_dir=dist_info_dir, data_dir=data_dir)

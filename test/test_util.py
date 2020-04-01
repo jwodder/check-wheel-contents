@@ -79,6 +79,3 @@ def test_is_data_dir(name, expected):
 ])
 def test_is_stubs_dir(name, expected):
     assert is_stubs_dir(name) is expected
-
-# Test bytes_signature()
-# Test urlsafe_b64encode_nopad
