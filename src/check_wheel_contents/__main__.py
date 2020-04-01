@@ -106,6 +106,12 @@ def main(
     src_dir: Tuple[str, ...],
     package_omit: Optional[List[str]],
 ) -> None:
+    """
+    Check that your wheels have the right contents.
+
+    Visit <https://github.com/jwodder/check-wheel-contents> for more
+    information.
+    """
     checker = WheelChecker()
     try:
         checker.configure_options(
