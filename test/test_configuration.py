@@ -85,6 +85,8 @@ def test_from_config_dict_calls(mocker):
     cd.get_path_list.assert_any_call("package")
     cd.get_path_list.assert_any_call("src_dir")
 
+BASE = Path(__file__).with_name('data') / 'project-trees' / 'from-config-dict'
+
 @pytest.mark.parametrize('cfgdict,expected', [
     (
         ConfigDict(configpath=Path('foo.cfg'), data={}),
@@ -99,7 +101,7 @@ def test_from_config_dict_calls(mocker):
     ),
     (
         ConfigDict(
-            configpath=Path('/usr/src/project/cfg.ini'),
+            configpath=BASE / 'cfg.ini',
             data={
                 "select": "W001,W002",
                 "ignore": "W003,W004",
@@ -113,14 +115,14 @@ def test_from_config_dict_calls(mocker):
             select = {Check.W001, Check.W002},
             ignore = {Check.W003, Check.W004},
             toplevel = ["foo.py", "bar"],
-            package_paths = [Path('/usr/src/project/foobar')],
-            src_dirs = [Path('/usr/src/project/src')],
+            package_paths = [BASE / 'foobar'],
+            src_dirs = [BASE / 'src'],
             package_omit = ["__pycache__", "test/data"],
         ),
     ),
     (
         ConfigDict(
-            configpath=Path('/usr/src/project/cfg.ini'),
+            configpath=BASE / 'cfg.ini',
             data={
                 "select": ["W001", "W002"],
                 "ignore": ["W003", "W004"],
@@ -134,8 +136,8 @@ def test_from_config_dict_calls(mocker):
             select = {Check.W001, Check.W002},
             ignore = {Check.W003, Check.W004},
             toplevel = ["foo.py", "bar"],
-            package_paths = [Path('/usr/src/project/foobar')],
-            src_dirs = [Path('/usr/src/project/src')],
+            package_paths = [BASE / 'foobar'],
+            src_dirs = [BASE / 'src'],
             package_omit = ["__pycache__", "test/data"],
         ),
     ),
@@ -184,7 +186,7 @@ def test_from_config_dict(cfgdict, expected):
 @pytest.mark.parametrize('cfgdict', [
     None,
     ConfigDict(
-        configpath=Path('/usr/src/project/cfg.ini'),
+        configpath=BASE / 'cfg.ini',
         data={
             "select": "W001,W002",
             "ignore": "W003,W004",
@@ -209,7 +211,7 @@ def test_from_config_file(mocker, cfgdict):
 @pytest.mark.parametrize('cfgdict', [
     None,
     ConfigDict(
-        configpath=Path('/usr/src/project/cfg.ini'),
+        configpath=BASE / 'cfg.ini',
         data={
             "select": "W001,W002",
             "ignore": "W003,W004",
@@ -233,7 +235,7 @@ def test_from_config_file_none_path(mocker, cfgdict):
 @pytest.mark.parametrize('cfgdict', [
     None,
     ConfigDict(
-        configpath=Path('/usr/src/project/cfg.ini'),
+        configpath=BASE / 'cfg.ini',
         data={
             "select": "W001,W002",
             "ignore": "W003,W004",

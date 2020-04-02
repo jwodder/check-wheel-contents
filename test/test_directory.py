@@ -1,7 +1,7 @@
 import os
 from   pathlib                       import Path
 import pytest
-from   check_wheel_contents.errors   import UserInputError, WheelValidationError
+from   check_wheel_contents.errors   import WheelValidationError
 from   check_wheel_contents.filetree import Directory, File
 
 def test_default_path():
@@ -396,9 +396,9 @@ def test_from_local_tree_file(local_tree_fs):
     )
 
 def test_from_local_tree_nonexistent(local_tree_fs):
-    with pytest.raises(UserInputError) as excinfo:
+    with pytest.raises(FileNotFoundError) as excinfo:
         Directory.from_local_tree(Path('DNE'))
-    assert str(excinfo.value) == "No such file or directory: 'DNE'"
+    assert excinfo.value.filename == 'DNE'
 
 def test_from_local_tree_directory_excluded(local_tree_fs):
     assert Directory.from_local_tree(Path('/var/data/bar'), exclude=['bar']) == Directory(

@@ -299,10 +299,21 @@ class ConfigDict:
         `UserInputError` is raised.
 
         If the key is not present, `None` is returned.
+
+        If a given path does not exist, a `UserInputError` is raised.
         """
         value = self.get_comma_list(key)
         if value is not None:
             base = self.configpath.resolve().parent
-            return [base / p for p in value]
+            paths = []
+            for p in value:
+                q = base / p
+                if not q.exists():
+                    raise UserInputError(
+                        f'{self.configpath}: {key}: no such file or directory:'
+                        f' {str(q)!r}'
+                    )
+                paths.append(q)
+            return paths
         else:
             return None

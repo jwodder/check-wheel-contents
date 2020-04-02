@@ -1,9 +1,11 @@
+import errno
 from   keyword import iskeyword
+import os
 from   os.path import splitext
 from   pathlib import Path
 from   typing  import Dict, Iterator, List, Optional, Tuple, Union
 import attr
-from   .errors import UserInputError, WheelValidationError
+from   .errors import WheelValidationError
 from   .util   import is_data_dir, is_dist_info_dir, pymodule_basename, \
                         validate_path
 
@@ -261,7 +263,7 @@ class Directory:
         File & directories within root (but not ``root`` itself) that match any
         of the patterns in ``exclude`` will be omitted from the resulting tree.
 
-        :raises UserInputError: if ``root`` does not exist
+        :raises FileNotFoundError: if ``root`` does not exist
         """
         if exclude is None:
             exclude_list = []
@@ -269,10 +271,12 @@ class Directory:
             exclude_list = exclude
         dir_root = cls()
         if not root.exists():
-            ### TODO: Should this instead raise a FileNotFoundError that is
-            ### then converted by Configuration.get_package_tree() to a
-            ### UserInputError?
-            raise UserInputError(f'No such file or directory: {str(root)!r}')
+            # <https://stackoverflow.com/a/36077407>
+            raise FileNotFoundError(
+                errno.ENOENT,
+                os.strerror(errno.ENOENT),
+                str(root),
+            )
         root = root.resolve()
         if root.is_dir():
             if include_root:

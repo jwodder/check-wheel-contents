@@ -354,7 +354,7 @@ def test_get_check_set_type_error(value):
     assert str(excinfo.value) \
         == 'foo.cfg: key: value must be comma-separated string or list of strings'
 
-BASE = Path('path/foo.cfg').resolve().parent
+BASE = Path('/usr/src/project/path')
 
 @pytest.mark.parametrize('data,expected', [
     ({}, None),
@@ -369,7 +369,12 @@ BASE = Path('path/foo.cfg').resolve().parent
         [BASE / 'foo', BASE / 'bar,baz', BASE / 'test' / 'data', Path('/usr/src')],
     ),
 ])
-def test_get_path_list(data, expected):
+def test_get_path_list(fs, faking_path, data, expected):
+    fs.create_file('/usr/src/project/path/foo')
+    fs.create_file('/usr/src/project/path/bar')
+    fs.create_file('/usr/src/project/path/bar,baz')
+    fs.create_file('/usr/src/project/path/test/data')
+    fs.cwd = '/usr/src/project'
     cfgdict = ConfigDict(configpath=Path('path/foo.cfg'), data=data)
     assert cfgdict.get_path_list("key") == expected
 
@@ -387,3 +392,16 @@ def test_get_path_list_error(value):
         cfgdict.get_path_list("key")
     assert str(excinfo.value) \
         == 'path/foo.cfg: key: value must be comma-separated string or list of strings'
+
+def test_get_path_list_nonexistent(fs):
+    fs.create_file('/usr/src/project/path/foo')
+    fs.create_file('/usr/src/project/path/bar')
+    fs.cwd = '/usr/src/project'
+    cfgdict = ConfigDict(
+        configpath=Path('path/foo.cfg'),
+        data={"key": "foo,bar,quux"},
+    )
+    with pytest.raises(UserInputError) as excinfo:
+        cfgdict.get_path_list("key")
+    assert str(excinfo.value) \
+        == "path/foo.cfg: key: no such file or directory: '/usr/src/project/path/quux'"
