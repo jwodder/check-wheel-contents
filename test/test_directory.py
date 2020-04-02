@@ -13,8 +13,7 @@ def test_default_path():
 def test_constructor_nondir_path_error(path):
     with pytest.raises(ValueError) as excinfo:
         Directory(path)
-    assert str(excinfo.value) \
-        == f"Invalid directory path passed as Directory.path: {path!r}"
+    assert str(excinfo.value) == f"Invalid Directory.path value: {path!r}"
 
 @pytest.mark.parametrize('path,errmsg', [
     ('/', "Absolute path in RECORD: '/'"),

@@ -17,15 +17,30 @@ ROOT_IS_PURELIB_RGX = re.compile(r'Root-Is-Purelib\s*:\s*(.*?)\s*', flags=re.I)
 
 @attr.s(auto_attribs=True)
 class WheelContents:
+    """ Representation of the contents of a wheel """
+
+    #: The name of the wheel's ``.dist-info`` directory
     dist_info_dir: str = attr.ib()
+    #: The name of the wheel's ``.data`` directory, if any
     data_dir: str = attr.ib()
+    #: The value of the :mailheader:`Root-Is-Purelib` field in the
+    #: :file:`WHEEL` file
     root_is_purelib: bool = attr.ib(default=True)
+    #: A mapping from ``File.signature`` values to lists of the `File` objects
+    #: with those values
     by_signature: DefaultDict[Tuple[Optional[int], Optional[str]], List[File]] \
         = attr.ib(factory=lambda: defaultdict(list))
+    #: The wheel's file tree
     filetree: Directory = attr.ib(factory=Directory)
 
     @cached_property
     def purelib_tree(self) -> Directory:
+        """
+        The subtree of the wheel's file tree corresponding to the purelib
+        section.  The returned `Directory`'s ``path`` is `None` if
+        ``root_is_purelib`` is true; otherwise, the ``path`` is
+        ``{self.data_dir}/purelib/``.
+        """
         if self.root_is_purelib:
             return Directory(
                 path=None,
@@ -45,6 +60,12 @@ class WheelContents:
 
     @cached_property
     def platlib_tree(self) -> Directory:
+        """
+        The subtree of the wheel's file tree corresponding to the platlib
+        section.  The returned `Directory`'s ``path`` is `None` if
+        ``root_is_purelib`` is false; otherwise, the ``path`` is
+        ``{self.data_dir}/platlib/``.
+        """
         if not self.root_is_purelib:
             return Directory(
                 path=None,
@@ -64,6 +85,7 @@ class WheelContents:
 
     @classmethod
     def from_wheel(cls, path: Union[str, os.PathLike]) -> 'WheelContents':
+        """ Construct a `WheelContents` from the wheel at the given path """
         whlname = parse_wheel_filename(path)
         dist_info_dir = f'{whlname.project}-{whlname.version}.dist-info'
         data_dir = f'{whlname.project}-{whlname.version}.data'
@@ -102,9 +124,17 @@ class WheelContents:
         return wc
 
     def add_record_file(self, fp: TextIO) -> None:
+        """
+        Add the files & directories described by the given :file:`RECORD` file
+        to the `WheelContents`
+        """
         self.add_record_rows(csv.reader(fp, delimiter=',', quotechar='"'))
 
     def add_record_rows(self, rows: Iterable[List[str]]) -> None:
+        """
+        Add the files & directories described by the rows of fields read from a
+        wheel's :file:`RECORD` file to the `WheelContents`
+        """
         for row in rows:
             entry: Union[File, Directory]
             if row and row[0].endswith('/'):
@@ -114,6 +144,7 @@ class WheelContents:
             self.add_entry(entry)
 
     def add_entry(self, entry: Union['File', 'Directory']) -> None:
+        """ Add a `File` or `Directory` to the `WheelContents`' file tree """
         self.filetree.add_entry(entry)
         if isinstance(entry, File):
             self.by_signature[entry.signature].append(entry)
@@ -122,6 +153,10 @@ class WheelContents:
         del self.platlib_tree
 
     def validate_tree(self) -> None:
+        """
+        Check that various assumptions about the `WheelContents` hold, raising
+        a `WheelValidationError` if any of them fail
+        """
         # The discussion at <https://discuss.python.org/t/3764> says that it's
         # OK to expect no more than one .dist-info or .data directory in a
         # wheel.

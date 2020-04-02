@@ -61,7 +61,7 @@ def validate_path(path: str) -> None:
         raise WheelValidationError(
             f'Non-normalized path in RECORD: {path!r}'
         )
-    parts = tuple(path.split('/'))
+    parts = path.split('/')
     if '.' in parts or '..' in parts:
         raise WheelValidationError(
             f'Non-normalized path in RECORD: {path!r}'

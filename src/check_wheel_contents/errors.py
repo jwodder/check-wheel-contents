@@ -7,4 +7,5 @@ class UserInputError(ValueError):
 
 
 class WheelValidationError(Exception):
+    """ Error raised when a given wheel proves to be invalid or malformed """
     pass

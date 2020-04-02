@@ -7,6 +7,9 @@ from   .errors   import UserInputError
 from   .util     import comma_split
 
 class Check(Enum):
+    """
+    A enumeration of the various checks and their corresponding error messages
+    """
     W001 = 'Wheel contains .pyc/.pyo files'
     W002 = 'Wheel contains duplicate files'
     W003 = 'Wheel contains non-module at library toplevel'
@@ -25,10 +28,20 @@ class Check(Enum):
 
 @attr.s(auto_attribs=True)
 class FailedCheck:
+    """ A check that has failed """
+
+    #: The check that failed
     check: Check
+    #: The relevant filepaths, if any
     args:  List[str] = attr.Factory(list)
 
     def show(self, filename: Optional[str] = None) -> str:
+        """
+        Return a string showing the check name, error message, and file paths
+        (if any).  If ``filename`` is specified, it is taken to be the name of
+        the wheel that was being checked, and it is placed at the beginning of
+        the string.
+        """
         s = ''
         if filename is not None:
             s = f'{filename}: '

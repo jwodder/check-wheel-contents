@@ -25,6 +25,11 @@ class ChecksParamType(click.ParamType):
 
 
 class ConfigParamType(click.ParamType):
+    """
+    Like ``click.Path(exists=True, dir_okay=False)``, except that `NO_CONFIG`
+    is also allowed as a value
+    """
+
     name = 'config'
 
     def convert(
@@ -147,6 +152,10 @@ def main(
     ctx.exit(0 if ok else 1)
 
 def args2wheelpaths(args: List[str]) -> Iterable[Path]:
+    """
+    Convert a list of paths to `Path` objects and, if a given path is a
+    directory, replace it with `Path`\\s to all wheels underneath it
+    """
     for a in args:
         p = Path(a)
         if p.is_dir():
