@@ -1,13 +1,16 @@
-.. image:: http://www.repostatus.org/badges/latest/wip.svg
-    :target: http://www.repostatus.org/#wip
-    :alt: Project Status: WIP — Initial development is in progress, but there
-          has not yet been a stable, usable release suitable for the public.
+.. image:: http://www.repostatus.org/badges/latest/active.svg
+    :target: http://www.repostatus.org/#active
+    :alt: Project Status: Active — The project has reached a stable, usable
+          state and is being actively developed.
 
 .. image:: https://travis-ci.com/jwodder/check-wheel-contents.svg?branch=master
     :target: https://travis-ci.com/jwodder/check-wheel-contents
 
 .. image:: https://codecov.io/gh/jwodder/check-wheel-contents/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/jwodder/check-wheel-contents
+
+.. image:: https://img.shields.io/pypi/pyversions/check-wheel-contents.svg
+    :target: https://pypi.org/project/check-wheel-contents/
 
 .. image:: https://img.shields.io/github/license/jwodder/check-wheel-contents.svg
     :target: https://opensource.org/licenses/MIT
@@ -17,6 +20,7 @@
     :target: https://saythanks.io/to/jwodder
 
 `GitHub <https://github.com/jwodder/check-wheel-contents>`_
+| `PyPI <https://pypi.org/project/check-wheel-contents/>`_
 | `Issues <https://github.com/jwodder/check-wheel-contents/issues>`_
 
 Getting the right files into your wheel is tricky, and sometimes we mess up and
@@ -33,7 +37,7 @@ Installation
 <https://pip.pypa.io>`_ for Python 3 (You have pip, right?) to install
 ``check-wheel-contents`` and its dependencies::
 
-    python3 -m pip install git+https://github.com/jwodder/check-wheel-contents.git
+    python3 -m pip install check-wheel-contents
 
 
 Usage
