@@ -161,6 +161,20 @@ def test_options2configargs(fs, mocker, options, configargs):
     assert mock_checker.method_calls \
         == [mocker.call().configure_options(**configargs)]
 
+@pytest.mark.parametrize('options', [
+    ['--select=W9999'],
+    ['--ignore', 'W9999'],
+])
+def test_bad_checks_option_error(fs, mocker, options):
+    mock_checker = mocker.patch(
+        'check_wheel_contents.__main__.WheelChecker',
+        autospec=True,
+    )
+    r = CliRunner().invoke(main, options)
+    assert r.exit_code != 0, show_result(r)
+    assert "Unknown/invalid check prefix: 'W9999'" in r.output
+    mock_checker.assert_not_called()
+
 @pytest.mark.parametrize('whlfile', [
     p for p in WHEEL_DIR.iterdir() if p.suffix == '.whl'
 ], ids=attrgetter("name"))
