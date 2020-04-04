@@ -83,7 +83,7 @@ def test_from_config_dict_calls(mocker):
     cd.get_comma_list.assert_any_call("package_omit")
     assert cd.get_path_list.call_count == 2
     cd.get_path_list.assert_any_call("package")
-    cd.get_path_list.assert_any_call("src_dir")
+    cd.get_path_list.assert_any_call("src_dir", require_dir=True)
 
 BASE = Path(__file__).with_name('data') / 'project-trees' / 'from-config-dict'
 

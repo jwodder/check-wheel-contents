@@ -118,7 +118,7 @@ class Configuration:
             ignore        = cfgdict.get_check_set("ignore"),
             toplevel      = cfgdict.get_comma_list("toplevel"),
             package_paths = cfgdict.get_path_list("package"),
-            src_dirs      = cfgdict.get_path_list("src_dir"),
+            src_dirs      = cfgdict.get_path_list("src_dir", require_dir=True),
             package_omit  = cfgdict.get_comma_list("package_omit"),
         )
 
@@ -289,7 +289,8 @@ class ConfigDict:
         else:
             return None
 
-    def get_path_list(self, key: str) -> Optional[List[Path]]:
+    def get_path_list(self, key: str, require_dir: bool = False) \
+            -> Optional[List[Path]]:
         """
         Retrieve the value of the given key from the data, converting it from
         either a comma-separated string or list of strings to a list of `Path`
@@ -312,6 +313,10 @@ class ConfigDict:
                     raise UserInputError(
                         f'{self.configpath}: {key}: no such file or directory:'
                         f' {str(q)!r}'
+                    )
+                elif require_dir and not q.is_dir():
+                    raise UserInputError(
+                        f'{self.configpath}: {key}: not a directory: {str(q)!r}'
                     )
                 paths.append(q)
             return paths

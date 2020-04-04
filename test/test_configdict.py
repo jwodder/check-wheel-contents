@@ -405,3 +405,16 @@ def test_get_path_list_nonexistent(fs):
         cfgdict.get_path_list("key")
     assert str(excinfo.value) \
         == "path/foo.cfg: key: no such file or directory: '/usr/src/project/path/quux'"
+
+def test_get_path_list_require_dir_not_a_dir(fs):
+    fs.create_file('/usr/src/project/path/foo')
+    fs.create_file('/usr/src/project/path/bar')
+    fs.cwd = '/usr/src/project'
+    cfgdict = ConfigDict(
+        configpath=Path('path/foo.cfg'),
+        data={"key": "foo,bar,quux"},
+    )
+    with pytest.raises(UserInputError) as excinfo:
+        cfgdict.get_path_list("key", require_dir=True)
+    assert str(excinfo.value) \
+        == "path/foo.cfg: key: not a directory: '/usr/src/project/path/foo'"
