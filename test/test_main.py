@@ -165,7 +165,7 @@ def test_options2configargs(fs, mocker, options, configargs):
     ['--select=W9999'],
     ['--ignore', 'W9999'],
 ])
-def test_bad_checks_option_error(fs, mocker, options):
+def test_bad_checks_option_error(mocker, options):
     mock_checker = mocker.patch(
         'check_wheel_contents.__main__.WheelChecker',
         autospec=True,

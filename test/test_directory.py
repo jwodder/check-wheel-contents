@@ -4,6 +4,8 @@ import pytest
 from   check_wheel_contents.errors   import WheelValidationError
 from   check_wheel_contents.filetree import Directory, File
 
+PROJECT_TREE = Path(__file__).with_name('data') / 'project-tree'
+
 def test_default_path():
     d = Directory()
     assert d.path is None
@@ -241,37 +243,28 @@ def test_all_files():
     assert list(d["bar"].entries.keys()) == ["glarch.py", "cleesh.py"]
     assert list(d.all_files()) == [foo, bar_glarch, bar_cleesh, quux]
 
-@pytest.fixture
-def local_tree_fs(fs):
-    # fs is from pyfakefs
-    fs.create_file('/var/data/foo.py')
-    fs.create_file('/var/data/foo.pyc')
-    fs.create_file('/var/data/bar/__init__.py')
-    fs.create_file('/var/data/bar/__pycache__/__init__.cpython-36.pyc')
-    fs.cwd = '/var/data'
-
-def test_from_local_tree(local_tree_fs):
-    assert Directory.from_local_tree(Path('/var/data')) == Directory(
+def test_from_local_tree():
+    assert Directory.from_local_tree(PROJECT_TREE) == Directory(
         path=None,
         entries={
-            "data": Directory(
-                path='data/',
+            "project-tree": Directory(
+                path='project-tree/',
                 entries={
-                    "foo.py": File(('data', 'foo.py'), None, None),
-                    "foo.pyc": File(('data', 'foo.pyc'), None, None),
+                    "foo.py": File(('project-tree', 'foo.py'), None, None),
+                    "foo.pyc": File(('project-tree', 'foo.pyc'), None, None),
                     "bar": Directory(
-                        path='data/bar/',
+                        path='project-tree/bar/',
                         entries={
                             "__init__.py": File(
-                                ('data', 'bar', '__init__.py'),
+                                ('project-tree', 'bar', '__init__.py'),
                                 None,
                                 None,
                             ),
                             "__pycache__": Directory(
-                                path='data/bar/__pycache__/',
+                                path='project-tree/bar/__pycache__/',
                                 entries={
                                     "__init__.cpython-36.pyc": File(
-                                        ('data', 'bar', '__pycache__',
+                                        ('project-tree', 'bar', '__pycache__',
                                          '__init__.cpython-36.pyc'),
                                         None,
                                         None,
@@ -280,13 +273,23 @@ def test_from_local_tree(local_tree_fs):
                             ),
                         },
                     ),
+                    "src": Directory(
+                        path='project-tree/src/',
+                        entries={
+                            ".placeholder": File(
+                                ('project-tree', 'src', '.placeholder'),
+                                None,
+                                None,
+                            ),
+                        },
+                    ),
                 },
             ),
         },
     )
 
-def test_from_local_tree_no_include_root(local_tree_fs):
-    assert Directory.from_local_tree(Path('/var/data'), include_root=False) == Directory(
+def test_from_local_tree_no_include_root():
+    assert Directory.from_local_tree(PROJECT_TREE, include_root=False) == Directory(
         path=None,
         entries={
             "foo.py": File(('foo.py',), None, None),
@@ -311,50 +314,70 @@ def test_from_local_tree_no_include_root(local_tree_fs):
                     ),
                 },
             ),
+            "src": Directory(
+                path='src/',
+                entries={
+                    ".placeholder": File(('src', '.placeholder'), None, None),
+                },
+            ),
         },
     )
 
-def test_from_local_tree_exclude_glob(local_tree_fs):
-    assert Directory.from_local_tree(Path('/var/data'), exclude=['*.pyc']) == Directory(
+def test_from_local_tree_exclude_glob():
+    assert Directory.from_local_tree(PROJECT_TREE, exclude=['*.pyc', '.*']) == Directory(
         path=None,
         entries={
-            "data": Directory(
-                path='data/',
+            "project-tree": Directory(
+                path='project-tree/',
                 entries={
-                    "foo.py": File(('data', 'foo.py'), None, None),
+                    "foo.py": File(('project-tree', 'foo.py'), None, None),
                     "bar": Directory(
-                        path='data/bar/',
+                        path='project-tree/bar/',
                         entries={
                             "__init__.py": File(
-                                ('data', 'bar', '__init__.py'),
+                                ('project-tree', 'bar', '__init__.py'),
                                 None,
                                 None,
                             ),
                             "__pycache__": Directory(
-                                path='data/bar/__pycache__/',
+                                path='project-tree/bar/__pycache__/',
                                 entries={},
                             ),
                         },
                     ),
+                    "src": Directory(
+                        path='project-tree/src/',
+                        entries={},
+                    ),
                 },
             ),
         },
     )
 
-def test_from_local_tree_exclude_name(local_tree_fs):
-    assert Directory.from_local_tree(Path('/var/data'), exclude=['__pycache__']) == Directory(
+def test_from_local_tree_exclude_name():
+    assert Directory.from_local_tree(PROJECT_TREE, exclude=['__pycache__']) == Directory(
         path=None,
         entries={
-            "data": Directory(
-                path='data/',
+            "project-tree": Directory(
+                path='project-tree/',
                 entries={
-                    "foo.py": File(('data', 'foo.py'), None, None),
-                    "foo.pyc": File(('data', 'foo.pyc'), None, None),
+                    "foo.py": File(('project-tree', 'foo.py'), None, None),
+                    "foo.pyc": File(('project-tree', 'foo.pyc'), None, None),
                     "bar": Directory(
-                        path='data/bar/',
+                        path='project-tree/bar/',
                         entries={
                             "__init__.py": File(
-                                ('data', 'bar', '__init__.py'),
+                                ('project-tree', 'bar', '__init__.py'),
+                                None,
+                                None,
+                            ),
+                        },
+                    ),
+                    "src": Directory(
+                        path='project-tree/src/',
+                        entries={
+                            ".placeholder": File(
+                                ('project-tree', 'src', '.placeholder'),
                                 None,
                                 None,
                             ),
@@ -365,20 +388,30 @@ def test_from_local_tree_exclude_name(local_tree_fs):
         },
     )
 
-def test_from_local_tree_exclude_multilevel_name(local_tree_fs):
-    assert Directory.from_local_tree(Path('/var/data'), exclude=['bar/__pycache__']) == Directory(
+def test_from_local_tree_exclude_multilevel_name():
+    assert Directory.from_local_tree(PROJECT_TREE, exclude=['bar/__pycache__']) == Directory(
         path=None,
         entries={
-            "data": Directory(
-                path='data/',
+            "project-tree": Directory(
+                path='project-tree/',
                 entries={
-                    "foo.py": File(('data', 'foo.py'), None, None),
-                    "foo.pyc": File(('data', 'foo.pyc'), None, None),
+                    "foo.py": File(('project-tree', 'foo.py'), None, None),
+                    "foo.pyc": File(('project-tree', 'foo.pyc'), None, None),
                     "bar": Directory(
-                        path='data/bar/',
+                        path='project-tree/bar/',
                         entries={
                             "__init__.py": File(
-                                ('data', 'bar', '__init__.py'),
+                                ('project-tree', 'bar', '__init__.py'),
+                                None,
+                                None,
+                            ),
+                        },
+                    ),
+                    "src": Directory(
+                        path='project-tree/src/',
+                        entries={
+                            ".placeholder": File(
+                                ('project-tree', 'src', '.placeholder'),
                                 None,
                                 None,
                             ),
@@ -389,19 +422,20 @@ def test_from_local_tree_exclude_multilevel_name(local_tree_fs):
         },
     )
 
-def test_from_local_tree_file(local_tree_fs):
-    assert Directory.from_local_tree(Path('/var/data/foo.py')) == Directory(
+def test_from_local_tree_file():
+    assert Directory.from_local_tree(PROJECT_TREE / 'foo.py') == Directory(
         path=None,
         entries={"foo.py": File(('foo.py',), None, None)},
     )
 
-def test_from_local_tree_nonexistent(local_tree_fs):
+def test_from_local_tree_nonexistent(monkeypatch):
+    monkeypatch.chdir(str(PROJECT_TREE))
     with pytest.raises(FileNotFoundError) as excinfo:
         Directory.from_local_tree(Path('DNE'))
     assert excinfo.value.filename == 'DNE'
 
-def test_from_local_tree_directory_excluded(local_tree_fs):
-    assert Directory.from_local_tree(Path('/var/data/bar'), exclude=['bar']) == Directory(
+def test_from_local_tree_directory_excluded():
+    assert Directory.from_local_tree(PROJECT_TREE / 'bar', exclude=['bar']) == Directory(
         path=None,
         entries={
             "bar": Directory(
@@ -428,8 +462,8 @@ def test_from_local_tree_directory_excluded(local_tree_fs):
         },
     )
 
-def test_from_local_tree_file_excluded(local_tree_fs):
-    assert Directory.from_local_tree(Path('/var/data/foo.pyc'), exclude=['*.pyc']) == Directory(
+def test_from_local_tree_file_excluded():
+    assert Directory.from_local_tree(PROJECT_TREE / 'foo.pyc', exclude=['*.pyc']) == Directory(
         path=None,
         entries={"foo.pyc": File(('foo.pyc',), None, None)},
     )

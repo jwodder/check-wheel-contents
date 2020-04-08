@@ -8,6 +8,8 @@ from   check_wheel_contents.config   import ConfigDict, Configuration, \
 from   check_wheel_contents.errors   import UserInputError
 from   check_wheel_contents.filetree import Directory, File
 
+PROJECT_TREE = Path(__file__).with_name('data') / 'project-tree'
+
 @pytest.mark.parametrize('toplevel_in,toplevel_out', [
     (None, None),
     (['foo.py', 'bar'], ['foo.py', 'bar']),
@@ -85,8 +87,6 @@ def test_from_config_dict_calls(mocker):
     cd.get_path_list.assert_any_call("package")
     cd.get_path_list.assert_any_call("src_dir", require_dir=True)
 
-BASE = Path(__file__).with_name('data') / 'project-trees' / 'from-config-dict'
-
 @pytest.mark.parametrize('cfgdict,expected', [
     (
         ConfigDict(configpath=Path('foo.cfg'), data={}),
@@ -101,12 +101,12 @@ BASE = Path(__file__).with_name('data') / 'project-trees' / 'from-config-dict'
     ),
     (
         ConfigDict(
-            configpath=BASE / 'cfg.ini',
+            configpath=PROJECT_TREE / 'cfg.ini',
             data={
                 "select": "W001,W002",
                 "ignore": "W003,W004",
-                "toplevel": "foo.py,bar/",
-                "package": "foobar",
+                "toplevel": "foo.py,quux/",
+                "package": "bar",
                 "src_dir": "src",
                 "package_omit": "__pycache__,test/data",
             },
@@ -114,20 +114,20 @@ BASE = Path(__file__).with_name('data') / 'project-trees' / 'from-config-dict'
         Configuration(
             select = {Check.W001, Check.W002},
             ignore = {Check.W003, Check.W004},
-            toplevel = ["foo.py", "bar"],
-            package_paths = [BASE / 'foobar'],
-            src_dirs = [BASE / 'src'],
+            toplevel = ["foo.py", "quux"],
+            package_paths = [PROJECT_TREE / 'bar'],
+            src_dirs = [PROJECT_TREE / 'src'],
             package_omit = ["__pycache__", "test/data"],
         ),
     ),
     (
         ConfigDict(
-            configpath=BASE / 'cfg.ini',
+            configpath=PROJECT_TREE / 'cfg.ini',
             data={
                 "select": ["W001", "W002"],
                 "ignore": ["W003", "W004"],
-                "toplevel": ["foo.py", "bar/"],
-                "package": ["foobar"],
+                "toplevel": ["foo.py", "quux/"],
+                "package": ["bar"],
                 "src_dir": ["src"],
                 "package_omit": ["__pycache__", "test/data"],
             },
@@ -135,9 +135,9 @@ BASE = Path(__file__).with_name('data') / 'project-trees' / 'from-config-dict'
         Configuration(
             select = {Check.W001, Check.W002},
             ignore = {Check.W003, Check.W004},
-            toplevel = ["foo.py", "bar"],
-            package_paths = [BASE / 'foobar'],
-            src_dirs = [BASE / 'src'],
+            toplevel = ["foo.py", "quux"],
+            package_paths = [PROJECT_TREE / 'bar'],
+            src_dirs = [PROJECT_TREE / 'src'],
             package_omit = ["__pycache__", "test/data"],
         ),
     ),
@@ -186,12 +186,12 @@ def test_from_config_dict(cfgdict, expected):
 @pytest.mark.parametrize('cfgdict', [
     None,
     ConfigDict(
-        configpath=BASE / 'cfg.ini',
+        configpath=PROJECT_TREE / 'cfg.ini',
         data={
             "select": "W001,W002",
             "ignore": "W003,W004",
-            "toplevel": "foo.py,bar/",
-            "package": "foobar",
+            "toplevel": "foo.py,quux/",
+            "package": "bar",
             "src_dir": "src",
         },
     ),
@@ -211,12 +211,12 @@ def test_from_config_file(mocker, cfgdict):
 @pytest.mark.parametrize('cfgdict', [
     None,
     ConfigDict(
-        configpath=BASE / 'cfg.ini',
+        configpath=PROJECT_TREE / 'cfg.ini',
         data={
             "select": "W001,W002",
             "ignore": "W003,W004",
-            "toplevel": "foo.py,bar/",
-            "package": "foobar",
+            "toplevel": "foo.py,quux/",
+            "package": "bar",
             "src_dir": "src",
         },
     ),
@@ -235,12 +235,12 @@ def test_from_config_file_none_path(mocker, cfgdict):
 @pytest.mark.parametrize('cfgdict', [
     None,
     ConfigDict(
-        configpath=BASE / 'cfg.ini',
+        configpath=PROJECT_TREE / 'cfg.ini',
         data={
             "select": "W001,W002",
             "ignore": "W003,W004",
-            "toplevel": "foo.py,bar/",
-            "package": "foobar",
+            "toplevel": "foo.py,quux/",
+            "package": "bar",
             "src_dir": "src",
         },
     ),
