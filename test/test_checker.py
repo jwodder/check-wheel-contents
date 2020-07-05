@@ -101,7 +101,6 @@ def test_apply_config_calls(mocker):
         entries={"TOPLEVEL": Directory(path='TOPLEVEL/')},
     )
     cfg = mocker.Mock(
-        Configuration,
         **{
             "get_selected_checks.return_value": mocker.sentinel.SELECTED,
             "get_package_tree.return_value": pkgtree,
@@ -125,7 +124,6 @@ def test_apply_config_toplevel_pkgtree_mismatch_warning(capsys, mocker):
         },
     )
     cfg = mocker.Mock(
-        Configuration,
         **{
             "get_selected_checks.return_value": mocker.sentinel.SELECTED,
             "get_package_tree.return_value": pkgtree,
@@ -172,7 +170,6 @@ def test_apply_config_toplevel_pkgtree_mismatch_warning(capsys, mocker):
 ])
 def test_apply_config_no_warning(capsys, mocker, toplevel, pkgtree):
     cfg = mocker.Mock(
-        Configuration,
         **{
             "get_selected_checks.return_value": mocker.sentinel.SELECTED,
             "get_package_tree.return_value": pkgtree,

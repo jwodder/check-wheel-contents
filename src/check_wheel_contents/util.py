@@ -56,16 +56,12 @@ def validate_path(path: str) -> None:
     if path.startswith('/'):
         raise WheelValidationError(f'Absolute path in RECORD: {path!r}')
     elif path == '':
-        raise WheelValidationError(f'Empty path in RECORD')
+        raise WheelValidationError('Empty path in RECORD')
     elif '//' in path:
-        raise WheelValidationError(
-            f'Non-normalized path in RECORD: {path!r}'
-        )
+        raise WheelValidationError(f'Non-normalized path in RECORD: {path!r}')
     parts = path.split('/')
     if '.' in parts or '..' in parts:
-        raise WheelValidationError(
-            f'Non-normalized path in RECORD: {path!r}'
-        )
+        raise WheelValidationError(f'Non-normalized path in RECORD: {path!r}')
 
 def is_stubs_dir(name: str) -> bool:
     if not name.endswith('-stubs'):

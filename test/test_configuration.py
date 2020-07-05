@@ -61,7 +61,6 @@ def test_from_command_options_default():
 
 def test_from_config_dict_calls(mocker):
     cd = mocker.Mock(
-        ConfigDict,
         **{
             "get_comma_list.return_value": ["foo.py", "bar/"],
             "get_check_set.return_value": sentinel.CHECK_SET,
