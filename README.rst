@@ -68,8 +68,7 @@ Options
 - ``-V``, ``--version`` — Display the program version and exit
 
 The remaining options can be given either on the command line or in the
-configuration file; see "`Configuration Options <configuration_options_>`_" for
-more information.
+configuration file; see "`Configuration Options`_" for more information.
 
 
 Configuration
@@ -93,8 +92,6 @@ current directory and going up.  The files are read using the same rules as for
 the ``--config`` option, and the first file in the list that contains the
 appropriate section is used.  Searching stops once a directory containing any
 of the named files is found, even if none of them contain the relevant section.
-
-.. _configuration_options:
 
 Configuration Options
 ---------------------
