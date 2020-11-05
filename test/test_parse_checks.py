@@ -17,6 +17,13 @@ from   check_wheel_contents.errors import UserInputError
     ('W004, W', set(Check)),
 ])
 def test_parse_checks_string(s, checks):
+    """
+    Parse a string of checksum.
+
+    Args:
+        s: (str): write your description
+        checks: (bool): write your description
+    """
     assert parse_checks_string(s) == checks
 
 @pytest.mark.parametrize('s,badbit', [
@@ -29,6 +36,13 @@ def test_parse_checks_string(s, checks):
     ('W999', 'W999'),
 ])
 def test_parse_checks_string_error(s, badbit):
+    """
+    Parse a string and produce a string.
+
+    Args:
+        s: (todo): write your description
+        badbit: (str): write your description
+    """
     with pytest.raises(UserInputError) as excinfo:
         parse_checks_string(s)
     assert str(excinfo.value) == f'Unknown/invalid check prefix: {badbit!r}'
@@ -41,6 +55,13 @@ def test_parse_checks_string_error(s, badbit):
     ('W', set(Check)),
 ])
 def test_parse_check_prefix(s, checks):
+    """
+    Parse a string is a valid check string.
+
+    Args:
+        s: (todo): write your description
+        checks: (list): write your description
+    """
     assert parse_check_prefix(s) == checks
 
 @pytest.mark.parametrize('s', [
@@ -55,6 +76,12 @@ def test_parse_check_prefix(s, checks):
     'W999',
 ])
 def test_parse_check_prefix_error(s):
+    """
+    Parse the given string into a string.
+
+    Args:
+        s: (todo): write your description
+    """
     with pytest.raises(UserInputError) as excinfo:
         parse_check_prefix(s)
     assert str(excinfo.value) == f'Unknown/invalid check prefix: {s!r}'
@@ -70,6 +97,13 @@ def test_parse_check_prefix_error(s):
     (['W004', 'W'], set(Check)),
 ])
 def test_parse_check_prefixes(lst, checks):
+    """
+    Check if a check_prefix.
+
+    Args:
+        lst: (todo): write your description
+        checks: (list): write your description
+    """
     assert parse_check_prefixes(lst) == checks
 
 @pytest.mark.parametrize('lst,badbit', [
@@ -84,6 +118,13 @@ def test_parse_check_prefixes(lst, checks):
     (['W', 'W9'], 'W9'),
 ])
 def test_parse_check_prefixes_error(lst, badbit):
+    """
+    Check if the lst and lst.
+
+    Args:
+        lst: (todo): write your description
+        badbit: (todo): write your description
+    """
     with pytest.raises(UserInputError) as excinfo:
         parse_check_prefixes(lst)
     assert str(excinfo.value) == f'Unknown/invalid check prefix: {badbit!r}'

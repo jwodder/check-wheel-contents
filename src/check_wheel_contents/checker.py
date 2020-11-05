@@ -49,6 +49,12 @@ class WheelChecker:
 
     @selected.default
     def _selected_default(self) -> Set[Check]:
+        """
+        Return the default set of default values.
+
+        Args:
+            self: (todo): write your description
+        """
         return set(Check)
 
     def configure_options(

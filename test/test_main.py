@@ -11,6 +11,12 @@ from   check_wheel_contents.checks   import Check
 WHEEL_DIR = Path(__file__).with_name('data') / 'wheels'
 
 def show_result(r):
+    """
+    Show the result of the exception.
+
+    Args:
+        r: (todo): write your description
+    """
     if r.exception is not None:
         return ''.join(format_exception(*r.exc_info))
     else:
@@ -148,6 +154,15 @@ def show_result(r):
     ),
 ])
 def test_options2configargs(fs, mocker, options, configargs):
+    """
+    Configure the options.
+
+    Args:
+        fs: (todo): write your description
+        mocker: (todo): write your description
+        options: (todo): write your description
+        configargs: (dict): write your description
+    """
     fs.create_dir('/usr/src/project/foo')
     fs.create_dir('/usr/src/project/src')
     fs.create_file('/usr/src/project/foo.cfg')
@@ -166,6 +181,13 @@ def test_options2configargs(fs, mocker, options, configargs):
     ['--ignore', 'W9999'],
 ])
 def test_bad_checks_option_error(mocker, options):
+    """
+    Check that the checkser for the checksum.
+
+    Args:
+        mocker: (todo): write your description
+        options: (todo): write your description
+    """
     mock_checker = mocker.patch(
         'check_wheel_contents.__main__.WheelChecker',
         autospec=True,
@@ -179,6 +201,13 @@ def test_bad_checks_option_error(mocker, options):
     p for p in WHEEL_DIR.iterdir() if p.suffix == '.whl'
 ], ids=attrgetter("name"))
 def test_main(monkeypatch, whlfile):
+    """
+    Main entry point in a - place.
+
+    Args:
+        monkeypatch: (todo): write your description
+        whlfile: (str): write your description
+    """
     with open(str(whlfile.with_suffix('.json'))) as fp:
         expected = json.load(fp)
     monkeypatch.chdir(str(WHEEL_DIR))

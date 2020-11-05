@@ -18,6 +18,21 @@ class ChecksParamType(click.ParamType):
         param: Optional[click.Parameter],
         ctx: Optional[click.Context],
     ) -> Set[Check]:
+        """
+        Convert parameter value.
+
+        Args:
+            self: (todo): write your description
+            value: (float): write your description
+            param: (todo): write your description
+            Optional: (todo): write your description
+            click: (todo): write your description
+            Parameter: (todo): write your description
+            ctx: (todo): write your description
+            Optional: (todo): write your description
+            click: (todo): write your description
+            Context: (dict): write your description
+        """
         try:
             return parse_checks_string(value)
         except UserInputError as e:
@@ -38,6 +53,21 @@ class ConfigParamType(click.ParamType):
         param: Optional[click.Parameter],
         ctx: Optional[click.Context],
     ) -> Any:
+        """
+        Convert a value.
+
+        Args:
+            self: (todo): write your description
+            value: (float): write your description
+            param: (todo): write your description
+            Optional: (todo): write your description
+            click: (todo): write your description
+            Parameter: (todo): write your description
+            ctx: (todo): write your description
+            Optional: (todo): write your description
+            click: (todo): write your description
+            Context: (dict): write your description
+        """
         if value is NO_CONFIG:
             return value
         else:

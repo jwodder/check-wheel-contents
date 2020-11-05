@@ -46,6 +46,12 @@ class File:
         )
 
     def __str__(self) -> str:
+        """
+        The string representation of the path
+
+        Args:
+            self: (todo): write your description
+        """
         return self.path
 
     @property
@@ -133,6 +139,16 @@ class Directory:
     @path.validator
     def _validate_path(self, attribute: attr.Attribute, value: Optional[str]) \
             -> None:
+        """
+        Validate that the given attribute is a valid path.
+
+        Args:
+            self: (todo): write your description
+            attribute: (str): write your description
+            attr: (todo): write your description
+            Attribute: (str): write your description
+            value: (str): write your description
+        """
         if value is not None:
             if not value.endswith('/'):
                 # This is a ValueError, not a WheelValidationError, because it

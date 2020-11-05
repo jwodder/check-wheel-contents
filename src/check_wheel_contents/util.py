@@ -26,12 +26,24 @@ def comma_split(s: str) -> List[str]:
     return [k for k in map(str.strip, s.split(',')) if k]
 
 def bytes_signature(b: bytes) -> Tuple[int, str]:
+    """
+    Returns the signature of the given bytes.
+
+    Args:
+        b: (todo): write your description
+    """
     return (
         len(b),
         'sha256=' + urlsafe_b64encode_nopad(hashlib.sha256(b).digest()),
     )
 
 def urlsafe_b64encode_nopad(data: bytes) -> str:
+    """
+    Encode a base64 encoded bytestring.
+
+    Args:
+        data: (array): write your description
+    """
     return base64.urlsafe_b64encode(data).rstrip(b'=').decode('us-ascii')
 
 def pymodule_basename(filename: str) -> Optional[str]:
@@ -47,12 +59,30 @@ def pymodule_basename(filename: str) -> Optional[str]:
         return None
 
 def is_dist_info_dir(name: str) -> bool:
+    """
+    Return true if the given name is a dist_info directory.
+
+    Args:
+        name: (str): write your description
+    """
     return DIST_INFO_DIR_RGX.fullmatch(name) is not None
 
 def is_data_dir(name: str) -> bool:
+    """
+    Return true if the given data directory is a directory.
+
+    Args:
+        name: (str): write your description
+    """
     return DATA_DIR_RGX.fullmatch(name) is not None
 
 def validate_path(path: str) -> None:
+    """
+    Validate path.
+
+    Args:
+        path: (str): write your description
+    """
     if path.startswith('/'):
         raise WheelValidationError(f'Absolute path in RECORD: {path!r}')
     elif path == '':
@@ -64,6 +94,12 @@ def validate_path(path: str) -> None:
         raise WheelValidationError(f'Non-normalized path in RECORD: {path!r}')
 
 def is_stubs_dir(name: str) -> bool:
+    """
+    Return true if the given name is a directory.
+
+    Args:
+        name: (str): write your description
+    """
     if not name.endswith('-stubs'):
         return False
     basename = name[:-6]

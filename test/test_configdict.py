@@ -263,6 +263,15 @@ DATA_DIR = Path(__file__).with_name('data')
     )
 ])
 def test_find_default(fs, files, cfgdict, faking_path):
+    """
+    Find the default test files.
+
+    Args:
+        fs: (todo): write your description
+        files: (dict): write your description
+        cfgdict: (dict): write your description
+        faking_path: (str): write your description
+    """
     for path, text in files.items():
         fs.create_file(path, contents=text)
     fs.cwd = '/usr/src/project'
@@ -273,6 +282,12 @@ def test_find_default(fs, files, cfgdict, faking_path):
       if p.suffix != '.json'
 ], ids=attrgetter("name"))
 def test_from_file(path):
+    """
+    Read config file.
+
+    Args:
+        path: (str): write your description
+    """
     datafile = path.with_suffix('.json')
     try:
         data = json.loads(datafile.read_text())
@@ -283,6 +298,11 @@ def test_from_file(path):
     assert ConfigDict.from_file(path) == cfgdict
 
 def test_from_file_bad_tool_section():
+    """
+    Reads the configuration file is not ini file.
+
+    Args:
+    """
     path = DATA_DIR / 'bad-tool-sect.toml'
     with pytest.raises(UserInputError) as excinfo:
         ConfigDict.from_file(path)
@@ -298,6 +318,13 @@ def test_from_file_bad_tool_section():
     ({"key": ["foo, bar,"]}, ["foo, bar,"]),
 ])
 def test_get_comma_list(data, expected):
+    """
+    Get list of all config files in config file.
+
+    Args:
+        data: (todo): write your description
+        expected: (str): write your description
+    """
     cfgdict = ConfigDict(configpath=Path('foo.cfg'), data=data)
     assert cfgdict.get_comma_list("key") == expected
 
@@ -310,6 +337,12 @@ def test_get_comma_list(data, expected):
     ["foo", None],
 ])
 def test_get_comma_list_error(value):
+    """
+    Get list value from config value.
+
+    Args:
+        value: (str): write your description
+    """
     cfgdict = ConfigDict(configpath=Path('foo.cfg'), data={"key": value})
     with pytest.raises(UserInputError) as excinfo:
         cfgdict.get_comma_list("key")
@@ -324,6 +357,13 @@ def test_get_comma_list_error(value):
     ({"key": ["W001", "W002"]}, {Check.W001, Check.W002}),
 ])
 def test_get_check_set(data, expected):
+    """
+    Get the test set. test set.
+
+    Args:
+        data: (todo): write your description
+        expected: (todo): write your description
+    """
     cfgdict = ConfigDict(configpath=Path('foo.cfg'), data=data)
     assert cfgdict.get_check_set("key") == expected
 
@@ -333,6 +373,13 @@ def test_get_check_set(data, expected):
     (["W9", ""], "W9"),
 ])
 def test_get_check_set_value_error(value, badbit):
+    """
+    Get the value of the value in the configuration file.
+
+    Args:
+        value: (todo): write your description
+        badbit: (str): write your description
+    """
     cfgdict = ConfigDict(configpath=Path('foo.cfg'), data={"key": value})
     with pytest.raises(UserInputError) as excinfo:
         cfgdict.get_check_set("key")
@@ -348,6 +395,12 @@ def test_get_check_set_value_error(value, badbit):
     ["foo", None],
 ])
 def test_get_check_set_type_error(value):
+    """
+    Get the value is_get_get_error value
+
+    Args:
+        value: (todo): write your description
+    """
     cfgdict = ConfigDict(configpath=Path('foo.cfg'), data={"key": value})
     with pytest.raises(UserInputError) as excinfo:
         cfgdict.get_check_set("key")
@@ -370,6 +423,15 @@ BASE = Path('/usr/src/project/path')
     ),
 ])
 def test_get_path_list(fs, faking_path, data, expected):
+    """
+    Get a list of test for a list.
+
+    Args:
+        fs: (todo): write your description
+        faking_path: (str): write your description
+        data: (str): write your description
+        expected: (todo): write your description
+    """
     fs.create_file('/usr/src/project/path/foo')
     fs.create_file('/usr/src/project/path/bar')
     fs.create_file('/usr/src/project/path/bar,baz')
@@ -387,6 +449,12 @@ def test_get_path_list(fs, faking_path, data, expected):
     ["foo", None],
 ])
 def test_get_path_list_error(value):
+    """
+    Get a list of value pairs.
+
+    Args:
+        value: (todo): write your description
+    """
     cfgdict = ConfigDict(configpath=Path('path/foo.cfg'), data={"key": value})
     with pytest.raises(UserInputError) as excinfo:
         cfgdict.get_path_list("key")
@@ -394,6 +462,12 @@ def test_get_path_list_error(value):
         == 'path/foo.cfg: key: value must be comma-separated string or list of strings'
 
 def test_get_path_list_nonexistent(fs):
+    """
+    Get list of lists of the list lists.
+
+    Args:
+        fs: (todo): write your description
+    """
     fs.create_file('/usr/src/project/path/foo')
     fs.create_file('/usr/src/project/path/bar')
     fs.cwd = '/usr/src/project'
@@ -407,6 +481,12 @@ def test_get_path_list_nonexistent(fs):
         == "path/foo.cfg: key: no such file or directory: '/usr/src/project/path/quux'"
 
 def test_get_path_list_require_dir_not_a_dir(fs):
+    """
+    Return a list of all path directories.
+
+    Args:
+        fs: (todo): write your description
+    """
     fs.create_file('/usr/src/project/path/foo')
     fs.create_file('/usr/src/project/path/bar')
     fs.cwd = '/usr/src/project'

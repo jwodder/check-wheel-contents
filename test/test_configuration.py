@@ -31,6 +31,19 @@ PROJECT_TREE = Path(__file__).with_name('data') / 'project-tree'
 def test_from_command_options(toplevel_in, toplevel_out, package_in,
                               package_out, src_dir_in, src_dir_out,
                               package_omit_in, package_omit_out):
+    """
+    Test for test command.
+
+    Args:
+        toplevel_in: (todo): write your description
+        toplevel_out: (todo): write your description
+        package_in: (str): write your description
+        package_out: (todo): write your description
+        src_dir_in: (str): write your description
+        src_dir_out: (str): write your description
+        package_omit_in: (todo): write your description
+        package_omit_out: (todo): write your description
+    """
     cfg = Configuration.from_command_options(
         select = sentinel.SELECT,
         ignore = sentinel.IGNORE,
@@ -49,6 +62,11 @@ def test_from_command_options(toplevel_in, toplevel_out, package_in,
     }
 
 def test_from_command_options_default():
+    """
+    Test if test test options.
+
+    Args:
+    """
     cfg = Configuration.from_command_options()
     assert attr.asdict(cfg, recurse=False) == {
         "select": None,
@@ -60,6 +78,12 @@ def test_from_command_options_default():
     }
 
 def test_from_config_dict_calls(mocker):
+    """
+    Test if the test from a test config file exists.
+
+    Args:
+        mocker: (todo): write your description
+    """
     cd = mocker.Mock(
         **{
             "get_comma_list.return_value": ["foo.py", "bar/"],
@@ -180,6 +204,13 @@ def test_from_config_dict_calls(mocker):
     ),
 ])
 def test_from_config_dict(cfgdict, expected):
+    """
+    : parameter is_dict is expected values.
+
+    Args:
+        cfgdict: (dict): write your description
+        expected: (str): write your description
+    """
     assert Configuration.from_config_dict(cfgdict) == expected
 
 @pytest.mark.parametrize('cfgdict', [
@@ -196,6 +227,13 @@ def test_from_config_dict(cfgdict, expected):
     ),
 ])
 def test_from_config_file(mocker, cfgdict):
+    """
+    Test if config file exists.
+
+    Args:
+        mocker: (str): write your description
+        cfgdict: (dict): write your description
+    """
     cdmock = mocker.patch('check_wheel_contents.config.ConfigDict', autospec=True)
     cdmock.from_file.return_value = cfgdict
     if cfgdict is None:
@@ -221,6 +259,13 @@ def test_from_config_file(mocker, cfgdict):
     ),
 ])
 def test_from_config_file_none_path(mocker, cfgdict):
+    """
+    Get the test config file from the given config file.
+
+    Args:
+        mocker: (str): write your description
+        cfgdict: (dict): write your description
+    """
     cdmock = mocker.patch('check_wheel_contents.config.ConfigDict', autospec=True)
     cdmock.find_default.return_value = cfgdict
     if cfgdict is None:
@@ -245,6 +290,13 @@ def test_from_config_file_none_path(mocker, cfgdict):
     ),
 ])
 def test_from_config_file_no_arg(mocker, cfgdict):
+    """
+    Test if the test config file.
+
+    Args:
+        mocker: (str): write your description
+        cfgdict: (dict): write your description
+    """
     cdmock = mocker.patch('check_wheel_contents.config.ConfigDict', autospec=True)
     cdmock.find_default.return_value = cfgdict
     if cfgdict is None:
@@ -363,6 +415,14 @@ def test_from_config_file_no_arg(mocker, cfgdict):
     ),
 ])
 def test_update(left, right, expected):
+    """
+    Test if two elements.
+
+    Args:
+        left: (todo): write your description
+        right: (todo): write your description
+        expected: (bool): write your description
+    """
     left.update(right)
     assert left == expected
 
@@ -373,12 +433,25 @@ def test_update(left, right, expected):
     ({Check.W201, Check.W202}, {Check.W001, Check.W201}, {Check.W202}),
 ])
 def test_get_selected_checks(select, ignore, expected):
+    """
+    Get the test checks that checks.
+
+    Args:
+        select: (array): write your description
+        ignore: (str): write your description
+        expected: (todo): write your description
+    """
     select_copy = select and select.copy()
     cfg = Configuration(select=select, ignore=ignore)
     assert cfg.get_selected_checks() == expected
     assert cfg.select == select_copy
 
 def test_get_package_tree_both_none():
+    """
+    Returns the package package package package packages.
+
+    Args:
+    """
     cfg = Configuration(package_paths=None, src_dirs=None)
     assert cfg.get_package_tree() is None
 
@@ -388,6 +461,14 @@ def test_get_package_tree_both_none():
     (['__pycache__', 'RCS'], ['__pycache__', 'RCS']),
 ])
 def test_get_package_tree_package_path(mocker, package_omit, exclude):
+    """
+    Get the path to see https : pypi.
+
+    Args:
+        mocker: (str): write your description
+        package_omit: (str): write your description
+        exclude: (str): write your description
+    """
     path = Path('foobar')
     cfg = Configuration(package_paths=[path], package_omit=package_omit)
     tree = Directory(
@@ -425,6 +506,14 @@ def test_get_package_tree_package_path(mocker, package_omit, exclude):
     (['__pycache__', 'RCS'], ['__pycache__', 'RCS']),
 ])
 def test_get_package_tree_src_dir(mocker, package_omit, exclude):
+    """
+    Return a package package dir.
+
+    Args:
+        mocker: (todo): write your description
+        package_omit: (todo): write your description
+        exclude: (str): write your description
+    """
     path = Path('src')
     cfg = Configuration(src_dirs=[path], package_omit=package_omit)
     tree = Directory(
@@ -445,6 +534,12 @@ def test_get_package_tree_src_dir(mocker, package_omit, exclude):
     fltmock.assert_called_once_with(path, exclude=exclude, include_root=False)
 
 def test_get_package_tree_multiple_package_paths(fs):
+    """
+    Create a list of directories in the given folder.
+
+    Args:
+        fs: (todo): write your description
+    """
     fs.create_file('/usr/src/project/foo.py')
     fs.create_file('/usr/src/project/bar/__init__.py')
     fs.create_file('/usr/src/project/bar/quux.py')
@@ -467,6 +562,12 @@ def test_get_package_tree_multiple_package_paths(fs):
     )
 
 def test_get_package_tree_multiple_src_dirs(fs):
+    """
+    Create a list of directories and bcbio.
+
+    Args:
+        fs: (todo): write your description
+    """
     fs.create_file('/usr/src/project/src/foo.py')
     fs.create_file('/usr/src/project/source/bar/__init__.py')
     fs.create_file('/usr/src/project/source/bar/quux.py')
@@ -489,6 +590,12 @@ def test_get_package_tree_multiple_src_dirs(fs):
     )
 
 def test_get_package_tree_package_path_and_src_dir(fs):
+    """
+    Gets a package dir dir dir.
+
+    Args:
+        fs: (todo): write your description
+    """
     fs.create_file('/usr/src/project/src/foo.py')
     fs.create_file('/usr/src/project/bar/__init__.py')
     fs.create_file('/usr/src/project/bar/quux.py')
@@ -511,6 +618,12 @@ def test_get_package_tree_package_path_and_src_dir(fs):
     )
 
 def test_get_package_tree_package_paths_conflict(fs):
+    """
+    Get the package paths to the package.
+
+    Args:
+        fs: (todo): write your description
+    """
     fs.create_file('/usr/src/project/bar/__init__.py')
     fs.create_file('/usr/src/project/bar/quux.py')
     fs.create_file('/usr/src/project/bar/glarch.py')
@@ -525,6 +638,12 @@ def test_get_package_tree_package_paths_conflict(fs):
     )
 
 def test_get_package_tree_src_dirs_conflict(fs):
+    """
+    Get the package dir dir dir.
+
+    Args:
+        fs: (todo): write your description
+    """
     fs.create_file('/usr/src/project/source/bar/__init__.py')
     fs.create_file('/usr/src/project/source/bar/quux.py')
     fs.create_file('/usr/src/project/source/bar/glarch.py')
@@ -539,6 +658,12 @@ def test_get_package_tree_src_dirs_conflict(fs):
     )
 
 def test_get_package_tree_package_path_src_dir_conflict(fs):
+    """
+    Create the path to a package directory.
+
+    Args:
+        fs: (todo): write your description
+    """
     fs.create_file('/usr/src/project/bar/__init__.py')
     fs.create_file('/usr/src/project/bar/quux.py')
     fs.create_file('/usr/src/project/bar/glarch.py')

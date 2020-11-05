@@ -7,6 +7,11 @@ from   check_wheel_contents.filetree import Directory, File
 WHEEL_DIR = Path(__file__).with_name('data') / 'wheels'
 
 def test_from_wheel_purelib():
+    """
+    Test to generate a wheel.
+
+    Args:
+    """
     whlcon = WheelContents.from_wheel(
         WHEEL_DIR / 'ttyrec2video-0.1.0.dev1-py3-none-any.whl'
     )
@@ -367,6 +372,14 @@ def test_trees_platlib():
 ])
 @pytest.mark.parametrize('purelib', [True, False])
 def test_validate_tree_error(rows, errmsg, purelib):
+    """
+    Validate the error.
+
+    Args:
+        rows: (todo): write your description
+        errmsg: (str): write your description
+        purelib: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -425,6 +438,13 @@ def test_validate_tree_error(rows, errmsg, purelib):
     ),
 ])
 def test_validate_tree_error_purelib(rows, errmsg):
+    """
+    Validate the error message and test errors.
+
+    Args:
+        rows: (todo): write your description
+        errmsg: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -483,6 +503,13 @@ def test_validate_tree_error_purelib(rows, errmsg):
     ),
 ])
 def test_validate_tree_error_platlib(rows, errmsg):
+    """
+    Test if the test set is validators.
+
+    Args:
+        rows: (todo): write your description
+        errmsg: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -495,6 +522,12 @@ def test_validate_tree_error_platlib(rows, errmsg):
 
 @pytest.mark.parametrize('purelib', [True, False])
 def test_validate_tree_data_no_datalib(purelib):
+    """
+    Generate the test data.
+
+    Args:
+        purelib: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -516,6 +549,12 @@ def test_validate_tree_data_no_datalib(purelib):
 
 @pytest.mark.parametrize('purelib', [True, False])
 def test_validate_tree_dir_rows(purelib):
+    """
+    Generate a test set of the test data.
+
+    Args:
+        purelib: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -552,6 +591,11 @@ def test_validate_tree_dir_rows(purelib):
     }
 
 def test_from_wheel_no_purelib_line():
+    """
+    Test if the wheel from the wheel.
+
+    Args:
+    """
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
             WHEEL_DIR / 'no_purelib_line-1.0.0-py3-none-any.whl'
@@ -560,6 +604,11 @@ def test_from_wheel_no_purelib_line():
         == 'Root-Is-Purelib header not found in WHEEL file'
 
 def test_from_wheel_empty_purelib_line():
+    """
+    Takes a wheel line is in the wheel.
+
+    Args:
+    """
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
             WHEEL_DIR / 'empty_purelib_line-1.0.0-py3-none-any.whl'
@@ -568,6 +617,11 @@ def test_from_wheel_empty_purelib_line():
         == "Invalid Root-Is-Purelib value in WHEEL file: ''"
 
 def test_from_wheel_bad_purelib_line():
+    """
+    Test for bad bad bad bad bad bad bad from_wheel_pure.
+
+    Args:
+    """
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
             WHEEL_DIR / 'bad_purelib_line-1.0.0-py3-none-any.whl'
@@ -576,6 +630,11 @@ def test_from_wheel_bad_purelib_line():
         == "Invalid Root-Is-Purelib value in WHEEL file: 'purelib'"
 
 def test_from_wheel_no_record_file():
+    """
+    Test if a test test record from a test file.
+
+    Args:
+    """
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
             WHEEL_DIR / 'no_record-1.0.0-py3-none-any.whl'
@@ -583,6 +642,11 @@ def test_from_wheel_no_record_file():
     assert str(excinfo.value) == "No RECORD file in wheel"
 
 def test_from_wheel_no_wheel_file():
+    """
+    Reads : attr : wheel is a wheel.
+
+    Args:
+    """
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
             WHEEL_DIR / 'no_wheel_file-1.0.0-py3-none-any.whl'
@@ -590,6 +654,11 @@ def test_from_wheel_no_wheel_file():
     assert str(excinfo.value) == "No WHEEL file in wheel"
 
 def test_by_signature_dup_files():
+    """
+    Test for duplicate duplicate files.
+
+    Args:
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',

@@ -19,6 +19,13 @@ from   check_wheel_contents.filetree import File
     ),
 ])
 def test_from_record_row(row, expected):
+    """
+    : param row : : param row : param record.
+
+    Args:
+        row: (todo): write your description
+        expected: (todo): write your description
+    """
     assert File.from_record_row(row) == expected
 
 @pytest.mark.parametrize('row', [
@@ -30,11 +37,22 @@ def test_from_record_row(row, expected):
     ['foo.py', 'sha256=...', '42a'],
 ])
 def test_from_record_row_bad_row(row):
+    """
+    Test for bad bad bad row from a test row.
+
+    Args:
+        row: (todo): write your description
+    """
     with pytest.raises(WheelValidationError) as excinfo:
         File.from_record_row(row)
     assert str(excinfo.value) == f'Invalid RECORD entry: {row!r}'
 
 def test_from_record_row_dirpath_error():
+    """
+    Test if a test for test record_row.
+
+    Args:
+    """
     with pytest.raises(ValueError) as excinfo:
         File.from_record_row(['foo/', '', ''])
     assert str(excinfo.value) \
@@ -52,6 +70,13 @@ def test_from_record_row_dirpath_error():
     ('foo/..', "Non-normalized path in RECORD: 'foo/..'"),
 ])
 def test_from_record_row_path_validation_error(path, errmsg):
+    """
+    Test if a test record from a test record.
+
+    Args:
+        path: (str): write your description
+        errmsg: (str): write your description
+    """
     with pytest.raises(WheelValidationError) as excinfo:
         File.from_record_row([path, '', ''])
     assert str(excinfo.value) == errmsg
@@ -94,6 +119,13 @@ def test_from_record_row_path_validation_error(path, errmsg):
     ),
 ])
 def test_libparts(path, expected):
+    """
+    Test for a test_lib test_row exists.
+
+    Args:
+        path: (str): write your description
+        expected: (list): write your description
+    """
     assert File.from_record_row([path, '', '']).libparts == expected
 
 @pytest.mark.parametrize('path,expected', [
@@ -134,6 +166,13 @@ def test_libparts(path, expected):
     ),
 ])
 def test_libpath(path, expected):
+    """
+    Test if a test test file exists.
+
+    Args:
+        path: (str): write your description
+        expected: (todo): write your description
+    """
     assert File.from_record_row([path, '', '']).libpath == expected
 
 @pytest.mark.parametrize('path,expected', [
@@ -157,6 +196,13 @@ def test_libpath(path, expected):
     ('_ffi.abi3.so', True),
 ])
 def test_has_module_ext(path, expected):
+    """
+    Check if a test file has a test extension.
+
+    Args:
+        path: (str): write your description
+        expected: (list): write your description
+    """
     assert File.from_record_row([path, '', '']).has_module_ext() is expected
 
 @pytest.mark.parametrize('prefix,prebool', [
@@ -183,6 +229,15 @@ def test_has_module_ext(path, expected):
     ('foo-bar/baz.py', False),
 ])
 def test_is_valid_module_path(prefix, path, prebool, pathbool):
+    """
+    Check if the given path is a valid
+
+    Args:
+        prefix: (str): write your description
+        path: (str): write your description
+        prebool: (todo): write your description
+        pathbool: (str): write your description
+    """
     f = File.from_record_row([prefix+path, '', ''])
     assert f.is_valid_module_path() is (prebool and pathbool)
 
@@ -205,9 +260,21 @@ def test_is_valid_module_path(prefix, path, prebool, pathbool):
     ('_ffi.abi3.so', '.so'),
 ])
 def test_extension(path, ext):
+    """
+    Test if a file exists.
+
+    Args:
+        path: (str): write your description
+        ext: (str): write your description
+    """
     assert File.from_record_row([path, '', '']).extension == ext
 
 def test_signature():
+    """
+    Determine the signature of a test file.
+
+    Args:
+    """
     assert File.from_record_row(['foo.py', 'sha256=abc', '42']).signature \
         == (42, 'sha256=abc')
 
@@ -218,6 +285,13 @@ def test_signature():
     ('foo/bar/baz', ('foo', 'bar', 'baz')),
 ])
 def test_str_path_parts(path, parts):
+    """
+    Test if a file path exists in - like object.
+
+    Args:
+        path: (str): write your description
+        parts: (todo): write your description
+    """
     f = File.from_record_row([path, '', ''])
     assert str(f) == path
     assert f.path == path

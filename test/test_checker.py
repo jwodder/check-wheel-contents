@@ -7,6 +7,11 @@ from   check_wheel_contents.config   import Configuration
 from   check_wheel_contents.filetree import Directory, File
 
 def test_defaults():
+    """
+    Test the default test defaults.
+
+    Args:
+    """
     checker = WheelChecker()
     assert attr.asdict(checker, recurse=False) == {
         "selected": set(Check),
@@ -75,6 +80,15 @@ def test_defaults():
     ),
 ])
 def test_configure_options(fs, mocker, faking_path, kwargs, cfg):
+    """
+    Configure the test options.
+
+    Args:
+        fs: (todo): write your description
+        mocker: (todo): write your description
+        faking_path: (str): write your description
+        cfg: (todo): write your description
+    """
     fs.create_file(
         '/usr/src/project/check-wheel-contents.cfg',
         contents=(
@@ -96,6 +110,12 @@ def test_configure_options(fs, mocker, faking_path, kwargs, cfg):
     apply_mock.assert_called_once_with(cfg)
 
 def test_apply_config_calls(mocker):
+    """
+    Generate the return on the current.
+
+    Args:
+        mocker: (todo): write your description
+    """
     pkgtree = Directory(
         path=None,
         entries={"TOPLEVEL": Directory(path='TOPLEVEL/')},
@@ -116,6 +136,13 @@ def test_apply_config_calls(mocker):
     }
 
 def test_apply_config_toplevel_pkgtree_mismatch_warning(capsys, mocker):
+    """
+    .. versionadded :: 2015. 8. 0
+
+    Args:
+        capsys: (todo): write your description
+        mocker: (todo): write your description
+    """
     pkgtree = Directory(
         path=None,
         entries={
@@ -169,6 +196,15 @@ def test_apply_config_toplevel_pkgtree_mismatch_warning(capsys, mocker):
     ),
 ])
 def test_apply_config_no_warning(capsys, mocker, toplevel, pkgtree):
+    """
+    Applies the configuration of the global config.
+
+    Args:
+        capsys: (todo): write your description
+        mocker: (todo): write your description
+        toplevel: (todo): write your description
+        pkgtree: (todo): write your description
+    """
     cfg = mocker.Mock(
         **{
             "get_selected_checks.return_value": mocker.sentinel.SELECTED,
@@ -194,12 +230,24 @@ def test_apply_config_no_warning(capsys, mocker, toplevel, pkgtree):
     [None],
 ])
 def test_configure_options_error(value):
+    """
+    Configure the test options.
+
+    Args:
+        value: (str): write your description
+    """
     checker = WheelChecker()
     with pytest.raises(TypeError) as excinfo:
         checker.configure_options(configpath=value)
     assert str(excinfo.value) == 'configpath must be None, str, or NO_CONFIG'
 
 def test_check_contents(mocker):
+    """
+    Check if the contents of a checker.
+
+    Args:
+        mocker: (todo): write your description
+    """
     checker = WheelChecker()
     check_mocks = {}
     for c in Check:

@@ -22,6 +22,13 @@ from   check_wheel_contents.util import comma_split, is_data_dir, \
     ('_ffi.abi3.so', '_ffi'),
 ])
 def test_pymodule_basename(filename, expected):
+    """
+    Check that the given filename.
+
+    Args:
+        filename: (str): write your description
+        expected: (str): write your description
+    """
     assert pymodule_basename(filename) == expected
 
 @pytest.mark.parametrize('sin,lout', [
@@ -42,6 +49,13 @@ def test_pymodule_basename(filename, expected):
     ('foo,', ['foo']),
 ])
 def test_comma_split(sin, lout):
+    """
+    Split a tuple containing the two ).
+
+    Args:
+        sin: (todo): write your description
+        lout: (array): write your description
+    """
     assert comma_split(sin) == lout
 
 @pytest.mark.parametrize('name,expected', [
@@ -54,6 +68,13 @@ def test_comma_split(sin, lout):
     ('foo-1_2_local.dist-info', True),
 ])
 def test_is_dist_info_dir(name, expected):
+    """
+    Return true if the given name is a info directory.
+
+    Args:
+        name: (str): write your description
+        expected: (bool): write your description
+    """
     assert is_dist_info_dir(name) is expected
 
 @pytest.mark.parametrize('name,expected', [
@@ -66,6 +87,13 @@ def test_is_dist_info_dir(name, expected):
     ('foo-1_2_local.data', True),
 ])
 def test_is_data_dir(name, expected):
+    """
+    Check if the given name exists.
+
+    Args:
+        name: (str): write your description
+        expected: (bool): write your description
+    """
     assert is_data_dir(name) is expected
 
 @pytest.mark.parametrize('name,expected', [
@@ -78,4 +106,11 @@ def test_is_data_dir(name, expected):
     ('has.period-stubs', False),
 ])
 def test_is_stubs_dir(name, expected):
+    """
+    Determine if a given path.
+
+    Args:
+        name: (str): write your description
+        expected: (bool): write your description
+    """
     assert is_stubs_dir(name) is expected

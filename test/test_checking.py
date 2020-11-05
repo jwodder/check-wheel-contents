@@ -217,6 +217,13 @@ from   check_wheel_contents.filetree import Directory, File
     ),
 ])
 def test_check_W001(rows, failures):
+    """
+    Check if the test tasks.
+
+    Args:
+        rows: (int): write your description
+        failures: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -443,6 +450,13 @@ def test_check_W001(rows, failures):
     ),
 ])
 def test_check_W002(rows, failures):
+    """
+    Check that all tasks have the same wayures have the same.
+
+    Args:
+        rows: (int): write your description
+        failures: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -790,6 +804,13 @@ def test_check_W002(rows, failures):
     ),
 ])
 def test_check_W003(rows, failures):
+    """
+    Create a test test test test.
+
+    Args:
+        rows: (int): write your description
+        failures: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -1030,6 +1051,13 @@ def test_check_W003(rows, failures):
     ),
 ])
 def test_check_W004(rows, failures):
+    """
+    Check that the test test set.
+
+    Args:
+        rows: (int): write your description
+        failures: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -1133,6 +1161,14 @@ def test_check_W004(rows, failures):
     ),
 ])
 def test_check_W005(name, rows, failures):
+    """
+    Check that a set of the given tasks have the same as_dir.
+
+    Args:
+        name: (str): write your description
+        rows: (int): write your description
+        failures: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -1230,6 +1266,13 @@ def test_check_W005(name, rows, failures):
     ),
 ])
 def test_check_W006(rows, failures):
+    """
+    Check that all tasks in the same as tasks.
+
+    Args:
+        rows: (int): write your description
+        failures: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -1317,6 +1360,13 @@ def test_check_W006(rows, failures):
     ),
 ])
 def test_check_W007(rows, failures):
+    """
+    Check if the test versions.
+
+    Args:
+        rows: (int): write your description
+        failures: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -1420,6 +1470,13 @@ def test_check_W007(rows, failures):
     ),
 ])
 def test_check_W008(rows, failures):
+    """
+    Check that all the rows.
+
+    Args:
+        rows: (int): write your description
+        failures: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -1579,6 +1636,13 @@ def test_check_W008(rows, failures):
     ),
 ])
 def test_check_W009(rows, failures):
+    """
+    Check that the test set.
+
+    Args:
+        rows: (int): write your description
+        failures: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -1735,6 +1799,12 @@ def test_check_W009(rows, failures):
     ],
 ])
 def test_check_W009_toplevel_set(rows):
+    """
+    Determine the set.
+
+    Args:
+        rows: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -1892,6 +1962,12 @@ def test_check_W009_toplevel_set(rows):
     ],
 ])
 def test_check_W009_pkgtree_set(rows):
+    """
+    Check if the package packages have a package set.
+
+    Args:
+        rows: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -2058,6 +2134,13 @@ def test_check_W009_pkgtree_set(rows):
     ),
 ])
 def test_check_W010(rows, failures):
+    """
+    Check that the test set.
+
+    Args:
+        rows: (int): write your description
+        failures: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -2218,6 +2301,13 @@ def test_check_W010(rows, failures):
     WheelChecker.check_W102,
 ])
 def test_check_W1_pkgtree_not_set(rows, check_method):
+    """
+    Check if the set of packages have the same packages.
+
+    Args:
+        rows: (todo): write your description
+        check_method: (bool): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -2433,6 +2523,13 @@ def test_check_W1_pkgtree_not_set(rows, check_method):
     ),
 ])
 def test_check_W101(rows, failures):
+    """
+    Check that the test files.
+
+    Args:
+        rows: (int): write your description
+        failures: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -2688,6 +2785,13 @@ def test_check_W101(rows, failures):
     ),
 ])
 def test_check_W102(rows, failures):
+    """
+    Create a checker package.
+
+    Args:
+        rows: (int): write your description
+        failures: (str): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -2863,6 +2967,13 @@ def test_check_W102(rows, failures):
     WheelChecker.check_W202,
 ])
 def test_check_W2_toplevel_not_set(rows, check_method):
+    """
+    Determine the set of 2nd set.
+
+    Args:
+        rows: (todo): write your description
+        check_method: (bool): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -3186,6 +3297,14 @@ def test_check_W2_toplevel_not_set(rows, check_method):
 ])
 @pytest.mark.parametrize('toplevel', [['foo.py', 'bar'], ['foo.py', 'bar/']])
 def test_check_W201(rows, failures, toplevel):
+    """
+    Check that the test set.
+
+    Args:
+        rows: (int): write your description
+        failures: (todo): write your description
+        toplevel: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',
@@ -3582,6 +3701,14 @@ def test_check_W201(rows, failures, toplevel):
 ])
 @pytest.mark.parametrize('toplevel', [['foo.py', 'bar'], ['foo.py', 'bar/']])
 def test_check_W202(rows, failures, toplevel):
+    """
+    Check the test test test.
+
+    Args:
+        rows: (int): write your description
+        failures: (todo): write your description
+        toplevel: (todo): write your description
+    """
     whlcon = WheelContents(
         dist_info_dir='foo-1.0.dist-info',
         data_dir='foo-1.0.data',

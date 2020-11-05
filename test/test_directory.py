@@ -7,12 +7,23 @@ from   check_wheel_contents.filetree import Directory, File
 PROJECT_TREE = Path(__file__).with_name('data') / 'project-tree'
 
 def test_default_path():
+    """
+    Return the default path exists.
+
+    Args:
+    """
     d = Directory()
     assert d.path is None
     assert d.parts == ()
 
 @pytest.mark.parametrize('path', ['foo', '', os.curdir, os.pardir])
 def test_constructor_nondir_path_error(path):
+    """
+    Test if the given path exists.
+
+    Args:
+        path: (str): write your description
+    """
     with pytest.raises(ValueError) as excinfo:
         Directory(path)
     assert str(excinfo.value) == f"Invalid Directory.path value: {path!r}"
@@ -29,6 +40,13 @@ def test_constructor_nondir_path_error(path):
     ('foo/../', "Non-normalized path in RECORD: 'foo/../'"),
 ])
 def test_constructor_invalid_path(path, errmsg):
+    """
+    Validate that the given path exists.
+
+    Args:
+        path: (str): write your description
+        errmsg: (str): write your description
+    """
     with pytest.raises(WheelValidationError) as excinfo:
         Directory(path)
     assert str(excinfo.value) == errmsg
@@ -39,9 +57,21 @@ def test_constructor_invalid_path(path, errmsg):
     ('foo/bar/', ('foo', 'bar')),
 ])
 def test_parts(path, expected):
+    """
+    Check if the given path exists.
+
+    Args:
+        path: (str): write your description
+        expected: (list): write your description
+    """
     assert Directory(path).parts == expected
 
 def test_add_entry_1level_file():
+    """
+    Add a single test test files exist.
+
+    Args:
+    """
     d = Directory()
     assert not bool(d)
     assert d.entries == {}
@@ -58,6 +88,11 @@ def test_add_entry_1level_file():
     assert "foo.py" in d
 
 def test_add_entry_two_1level_files():
+    """
+    Test if two files.
+
+    Args:
+    """
     d = Directory()
     assert not bool(d)
     assert d.entries == {}
@@ -77,6 +112,11 @@ def test_add_entry_two_1level_files():
     assert list(d.entries.keys()) == ["foo.py", "bar.py"]
 
 def test_add_entry_1level_dir():
+    """
+    Add a directory directories exist.
+
+    Args:
+    """
     d = Directory()
     assert not bool(d)
     assert d.entries == {}
@@ -94,6 +134,11 @@ def test_add_entry_1level_dir():
     assert sd.entries == {}
 
 def test_add_entry_2level_file():
+    """
+    Add a test entry to test record.
+
+    Args:
+    """
     d = Directory()
     assert not bool(d)
     assert d.entries == {}
@@ -110,6 +155,11 @@ def test_add_entry_2level_file():
     assert "bar.py" in d["foo"]
 
 def test_add_entry_known_dir():
+    """
+    Adds a set of directories to the test folder.
+
+    Args:
+    """
     d = Directory()
     f = File.from_record_row(['foo/bar.py', '', ''])
     d.add_entry(f)
@@ -122,6 +172,11 @@ def test_add_entry_known_dir():
     assert d["foo"]["bar.py"] is f
 
 def test_add_entry_in_known_dir():
+    """
+    Add a set of directories in a set of directories.
+
+    Args:
+    """
     d = Directory()
     f = File.from_record_row(['foo/bar.py', '', ''])
     d.add_entry(f)
@@ -135,6 +190,11 @@ def test_add_entry_in_known_dir():
     assert list(d["foo"].entries.keys()) == ["bar.py", "glarch.py"]
 
 def test_add_entry_descendant():
+    """
+    Add a test row to the database.
+
+    Args:
+    """
     foo = Directory("foo/")
     assert not bool(foo)
     assert foo.entries == {}
@@ -157,6 +217,12 @@ def test_add_entry_descendant():
     'foo',
 ])
 def test_add_entry_not_descendant(path):
+    """
+    Adds a test test results file to database.
+
+    Args:
+        path: (str): write your description
+    """
     foo = Directory("foo/")
     f = File.from_record_row([path, '', ''])
     with pytest.raises(ValueError) as excinfo:
@@ -164,6 +230,11 @@ def test_add_entry_not_descendant(path):
     assert str(excinfo.value) == f"Path {path!r} is not a descendant of 'foo/'"
 
 def test_add_entry_nonempty_dir():
+    """
+    Add a nonempty test test record to the test directory.
+
+    Args:
+    """
     d = Directory()
     foo = Directory('foo/')
     foo.add_entry(File.from_record_row(['foo/bar.py', '', '']))
@@ -215,6 +286,14 @@ def test_add_entry_nonempty_dir():
     ),
 ])
 def test_add_entry_conflicting(entry1, entry2, errpath):
+    """
+    Test if the two directories exist.
+
+    Args:
+        entry1: (todo): write your description
+        entry2: (todo): write your description
+        errpath: (str): write your description
+    """
     d = Directory()
     d.add_entry(entry1)
     with pytest.raises(WheelValidationError) as excinfo:
@@ -222,6 +301,11 @@ def test_add_entry_conflicting(entry1, entry2, errpath):
     assert str(excinfo.value) == f'Conflicting occurrences of path {errpath!r}'
 
 def test_all_files():
+    """
+    Test for all files.
+
+    Args:
+    """
     d = Directory()
     foo = File.from_record_row(['foo.py', '', ''])
     d.add_entry(foo)
@@ -244,6 +328,11 @@ def test_all_files():
     assert list(d.all_files()) == [foo, bar_glarch, bar_cleesh, quux]
 
 def test_from_local_tree():
+    """
+    Gets a local directory.
+
+    Args:
+    """
     assert Directory.from_local_tree(PROJECT_TREE) == Directory(
         path=None,
         entries={
@@ -289,6 +378,11 @@ def test_from_local_tree():
     )
 
 def test_from_local_tree_no_include_root():
+    """
+    Gets the local file to a local.
+
+    Args:
+    """
     assert Directory.from_local_tree(PROJECT_TREE, include_root=False) == Directory(
         path=None,
         entries={
@@ -324,6 +418,11 @@ def test_from_local_tree_no_include_root():
     )
 
 def test_from_local_tree_exclude_glob():
+    """
+    Exclude local files in local directory.
+
+    Args:
+    """
     assert Directory.from_local_tree(PROJECT_TREE, exclude=['*.pyc', '.*']) == Directory(
         path=None,
         entries={
@@ -355,6 +454,11 @@ def test_from_local_tree_exclude_glob():
     )
 
 def test_from_local_tree_exclude_name():
+    """
+    Exclude local_from_exclude.
+
+    Args:
+    """
     assert Directory.from_local_tree(PROJECT_TREE, exclude=['__pycache__']) == Directory(
         path=None,
         entries={
@@ -389,6 +493,11 @@ def test_from_local_tree_exclude_name():
     )
 
 def test_from_local_tree_exclude_multilevel_name():
+    """
+    Test for local_from local_tree_name is a local directory.
+
+    Args:
+    """
     assert Directory.from_local_tree(PROJECT_TREE, exclude=['bar/__pycache__']) == Directory(
         path=None,
         entries={
@@ -423,18 +532,34 @@ def test_from_local_tree_exclude_multilevel_name():
     )
 
 def test_from_local_tree_file():
+    """
+    Create a local file from local directory.
+
+    Args:
+    """
     assert Directory.from_local_tree(PROJECT_TREE / 'foo.py') == Directory(
         path=None,
         entries={"foo.py": File(('foo.py',), None, None)},
     )
 
 def test_from_local_tree_nonexistent(monkeypatch):
+    """
+    Test if the given local dir.
+
+    Args:
+        monkeypatch: (todo): write your description
+    """
     monkeypatch.chdir(str(PROJECT_TREE))
     with pytest.raises(FileNotFoundError) as excinfo:
         Directory.from_local_tree(Path('DNE'))
     assert excinfo.value.filename == 'DNE'
 
 def test_from_local_tree_directory_excluded():
+    """
+    Gets a directory.
+
+    Args:
+    """
     assert Directory.from_local_tree(PROJECT_TREE / 'bar', exclude=['bar']) == Directory(
         path=None,
         entries={
@@ -463,6 +588,11 @@ def test_from_local_tree_directory_excluded():
     )
 
 def test_from_local_tree_file_excluded():
+    """
+    Create a local folder exists.
+
+    Args:
+    """
     assert Directory.from_local_tree(PROJECT_TREE / 'foo.pyc', exclude=['*.pyc']) == Directory(
         path=None,
         entries={"foo.pyc": File(('foo.pyc',), None, None)},
