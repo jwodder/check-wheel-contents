@@ -147,6 +147,95 @@ def test_from_wheel_purelib():
         entries={},
     )
 
+def test_from_wheel_normalized_dist_info():
+    whlcon = WheelContents.from_wheel(
+        WHEEL_DIR / 'NLPTriples-0.1.7-py3-none-any.whl'
+    )
+    assert whlcon.dist_info_dir == 'nlptriples-0.1.7.dist-info'
+    assert whlcon.data_dir == 'NLPTriples-0.1.7.data'
+    assert whlcon.root_is_purelib is True
+    assert whlcon.filetree == Directory(
+        path=None,
+        entries={
+            "nlptriples": Directory(
+                path='nlptriples/',
+                entries={
+                    "__init__.py": File(
+                        ('nlptriples', '__init__.py'),
+                        22,
+                        'sha256=ls1camlIoMxEZz9gSkZ1OJo-MXqHWwKPtdPbZJmwp7E',
+                    ),
+                    "parse_tree.py": File(
+                        ('nlptriples', 'parse_tree.py'),
+                        1344,
+                        'sha256=EVaZLOTa-2K88oXy105KFitx1nrkxW5Kj7bNABp_JH4',
+                    ),
+                    "setup.py": File(
+                        ('nlptriples', 'setup.py'),
+                        58,
+                        'sha256=vYdNPB1dWAxaP0dZzTxFxYHCaeZ2EICCJWsIY26UpOc',
+                    ),
+                    "triples.py": File(
+                        ('nlptriples', 'triples.py'),
+                        7765,
+                        'sha256=dmwUnDeO9z0nuF3oDiFlKXTjj0XlH9gG3cfo0Z-ylrE',
+                    ),
+                },
+            ),
+            "nlptriples-0.1.7.dist-info": Directory(
+                path="nlptriples-0.1.7.dist-info/",
+                entries={
+                    "LICENSE": File(
+                        ("nlptriples-0.1.7.dist-info", 'LICENSE'),
+                        1070,
+                        'sha256=VC7YIze9O5Ts59woVlji8eLn1GDvQCbCAXhG66uWFrE',
+                    ),
+                    "WHEEL": File(
+                        ("nlptriples-0.1.7.dist-info", "WHEEL"),
+                        84,
+                        'sha256=Q99itqWYDhV793oHzqzi24q7L7Kdiz6cb55YDfTXphE',
+                    ),
+                    "METADATA": File(
+                        ("nlptriples-0.1.7.dist-info", "METADATA"),
+                        1603,
+                        'sha256=dZ2YtcY8Gx3QiUFNjxqfQ4KRJAydb6-vCb2V0QYGe2U',
+                    ),
+                    "RECORD": File(
+                        ("nlptriples-0.1.7.dist-info", "RECORD"),
+                        None,
+                        None,
+                    ),
+                },
+            ),
+        }
+    )
+    assert whlcon.by_signature == {
+        (22, 'sha256=ls1camlIoMxEZz9gSkZ1OJo-MXqHWwKPtdPbZJmwp7E'):
+            [whlcon.filetree["nlptriples"]["__init__.py"]],
+        (1344, 'sha256=EVaZLOTa-2K88oXy105KFitx1nrkxW5Kj7bNABp_JH4'):
+            [whlcon.filetree["nlptriples"]["parse_tree.py"]],
+        (58, 'sha256=vYdNPB1dWAxaP0dZzTxFxYHCaeZ2EICCJWsIY26UpOc'):
+            [whlcon.filetree["nlptriples"]["setup.py"]],
+        (7765, 'sha256=dmwUnDeO9z0nuF3oDiFlKXTjj0XlH9gG3cfo0Z-ylrE'):
+            [whlcon.filetree["nlptriples"]["triples.py"]],
+        (1070, 'sha256=VC7YIze9O5Ts59woVlji8eLn1GDvQCbCAXhG66uWFrE'):
+            [whlcon.filetree["nlptriples-0.1.7.dist-info"]["LICENSE"]],
+        (84, 'sha256=Q99itqWYDhV793oHzqzi24q7L7Kdiz6cb55YDfTXphE'):
+            [whlcon.filetree["nlptriples-0.1.7.dist-info"]["WHEEL"]],
+        (1603, 'sha256=dZ2YtcY8Gx3QiUFNjxqfQ4KRJAydb6-vCb2V0QYGe2U'):
+            [whlcon.filetree["nlptriples-0.1.7.dist-info"]["METADATA"]],
+        (None, None):
+            [whlcon.filetree["nlptriples-0.1.7.dist-info"]["RECORD"]],
+    }
+    assert whlcon.purelib_tree == Directory(
+        path=None,
+        entries={"nlptriples": whlcon.filetree["nlptriples"]},
+    )
+    assert whlcon.platlib_tree == Directory(
+        path='NLPTriples-0.1.7.data/platlib/',
+        entries={},
+    )
+
 def test_trees_data_platlib():
     """
     Test the ``purelib_tree`` and ``platlib_tree`` attributes of a purelib
@@ -316,7 +405,7 @@ def test_trees_platlib():
                 '1036',
             ],
         ],
-        'Wheel contains multiple .dist-info directories',
+        'Wheel contains multiple .dist-info directories in RECORD',
     ),
     (
         [
@@ -326,9 +415,10 @@ def test_trees_platlib():
                 '1036',
             ],
         ],
-        "Wheel's .dist-info directory has invalid name: 'bar-2.1.dist-info'",
+        ".dist-info directory in RECORD ('bar-2.1.dist-info') does not match"
+        " actual directory name ('foo-1.0.dist-info')",
     ),
-    ([], 'No .dist-info directory in wheel'),
+    ([], 'No .dist-info directory in RECORD'),
     (
         [
             [
@@ -347,7 +437,7 @@ def test_trees_platlib():
                 '993',
             ],
         ],
-        'Wheel contains multiple .data directories',
+        'Wheel contains multiple .data directories in RECORD',
     ),
     (
         [
@@ -362,7 +452,8 @@ def test_trees_platlib():
                 '993',
             ],
         ],
-        "Wheel's .data directory has invalid name: 'bar-1.0.data'",
+        ".data directory in RECORD ('bar-1.0.data') does not match actual"
+        " directory name ('foo-1.0.data')",
     ),
 ])
 @pytest.mark.parametrize('purelib', [True, False])

@@ -11,7 +11,7 @@ from   property_manager import cached_property
 from   wheel_filename   import parse_wheel_filename
 from   .errors          import WheelValidationError
 from   .filetree        import Directory, File
-from   .util            import is_data_dir, is_dist_info_dir
+from   .util            import find_wheel_dirs, is_data_dir, is_dist_info_dir
 
 ROOT_IS_PURELIB_RGX = re.compile(r'Root-Is-Purelib\s*:\s*(.*?)\s*', flags=re.I)
 
@@ -87,10 +87,15 @@ class WheelContents:
     def from_wheel(cls, path: Union[str, os.PathLike]) -> 'WheelContents':
         """ Construct a `WheelContents` from the wheel at the given path """
         whlname = parse_wheel_filename(path)
-        dist_info_dir = f'{whlname.project}-{whlname.version}.dist-info'
-        data_dir = f'{whlname.project}-{whlname.version}.data'
-        wc = cls(dist_info_dir=dist_info_dir, data_dir=data_dir)
         with open(path, 'rb') as fp, ZipFile(fp) as zf:
+            dist_info_dir, data_dir = find_wheel_dirs(
+                zf.namelist(),
+                whlname.project,
+                whlname.version,
+            )
+            if data_dir is None:
+                data_dir = f'{whlname.project}-{whlname.version}.data'
+            wc = cls(dist_info_dir=dist_info_dir, data_dir=data_dir)
             try:
                 wheel_info = zf.getinfo(f'{dist_info_dir}/WHEEL')
             except KeyError:
@@ -166,27 +171,28 @@ class WheelContents:
         ]
         if len(dist_info_dirs) > 1:
             raise WheelValidationError(
-                'Wheel contains multiple .dist-info directories'
+                'Wheel contains multiple .dist-info directories in RECORD'
             )
         elif len(dist_info_dirs) == 1 \
                 and dist_info_dirs[0] != self.dist_info_dir:
             raise WheelValidationError(
-                f"Wheel's .dist-info directory has invalid name:"
-                f" {dist_info_dirs[0]!r}"
+                f".dist-info directory in RECORD ({dist_info_dirs[0]!r}) does"
+                f" not match actual directory name ({self.dist_info_dir!r})"
             )
         elif not dist_info_dirs:
-            raise WheelValidationError('No .dist-info directory in wheel')
+            raise WheelValidationError('No .dist-info directory in RECORD')
         data_dirs = [
             name for name in self.filetree.subdirectories.keys()
                  if is_data_dir(name)
         ]
         if len(data_dirs) > 1:
             raise WheelValidationError(
-                'Wheel contains multiple .data directories'
+                'Wheel contains multiple .data directories in RECORD'
             )
         elif len(data_dirs) == 1 and data_dirs[0] != self.data_dir:
             raise WheelValidationError(
-                f"Wheel's .data directory has invalid name: {data_dirs[0]!r}"
+                f".data directory in RECORD ({data_dirs[0]!r}) does"
+                f" not match actual directory name ({self.data_dir!r})"
             )
         if self.data_dir in self.filetree:
             if self.root_is_purelib:

@@ -1,9 +1,10 @@
 import base64
 import hashlib
-from   keyword import iskeyword
+from   keyword         import iskeyword
 import re
-from   typing  import List, Optional, Tuple
-from   .errors import WheelValidationError
+from   typing          import List, Optional, Tuple
+from   packaging.utils import canonicalize_name, canonicalize_version
+from   .errors         import WheelValidationError
 
 # <https://discuss.python.org/t/identifying-parsing-binary-extension-filenames/>
 MODULE_EXT_RGX = re.compile(
@@ -68,3 +69,66 @@ def is_stubs_dir(name: str) -> bool:
         return False
     basename = name[:-6]
     return basename.isidentifier() and not iskeyword(basename)
+
+def find_wheel_dirs(namelist: List[str], project: str, version: str) \
+        -> Tuple[str, Optional[str]]:
+    """
+    Given a list ``namelist`` of files in a wheel for a project ``project`` and
+    version ``version``, find & return the name of the wheel's ``.dist-info``
+    directory and (if it has one) its ``.data`` directory.
+
+    :raises WheelValidationError: if there is no unique ``.dist-info``
+        directory in the input
+    :raises WheelValidationError: if the name & version of the ``.dist-info``
+        directory are not normalization-equivalent to ``project`` & ``version``
+    :raises WheelValidationError: if there is more than one ``.data`` directory
+        in the input
+    :raises WheelValidationError: if the name & version of the ``.data``
+        directory are not normalization-equivalent to ``project`` & ``version``
+    """
+    canon_project = canonicalize_name(project)
+    canon_version = canonicalize_version(version.replace('_', '-'))
+    dist_info_dirs = set()
+    data_dirs = set()
+    for n in namelist:
+        basename = n.rstrip('/').split('/')[0]
+        if is_dist_info_dir(basename):
+            dist_info_dirs.add(basename)
+        if is_data_dir(basename):
+            data_dirs.add(basename)
+    if len(dist_info_dirs) > 1:
+        raise WheelValidationError(
+            'Wheel contains multiple .dist-info directories'
+        )
+    elif len(dist_info_dirs) == 1:
+        dist_info_dir = next(iter(dist_info_dirs))
+        diname, _, diversion = dist_info_dir[:-len(".dist-info")].partition('-')
+        if (
+            canonicalize_name(diname) != canon_project
+            or canonicalize_version(diversion.replace('_', '-'))
+                != canon_version
+        ):
+            raise WheelValidationError(
+                f"Project & version of wheel's .dist-info directory do not"
+                f" match wheel name: {dist_info_dir!r}"
+            )
+    else:
+        raise WheelValidationError('No .dist-info directory in wheel')
+    data_dir: Optional[str]
+    if len(data_dirs) > 1:
+        raise WheelValidationError('Wheel contains multiple .data directories')
+    elif len(data_dirs) == 1:
+        data_dir = next(iter(data_dirs))
+        daname, _, daversion = data_dir[:-len(".data")].partition('-')
+        if (
+            canonicalize_name(daname) != canon_project
+            or canonicalize_version(daversion.replace('_', '-'))
+                != canon_version
+        ):
+            raise WheelValidationError(
+                f"Project & version of wheel's .data directory do not match"
+                f" wheel name: {data_dir!r}"
+            )
+    else:
+        data_dir = None
+    return (dist_info_dir, data_dir)
