@@ -6,6 +6,7 @@ v0.2.0 (in development)
 - Support wheels whose filenames, `.dist-info` directories, and `.data`
   directories use different casings/spellings for the project name and/or
   version
+- Drop `read_version` build dependency
 
 v0.1.0 (2020-04-02)
 -------------------
