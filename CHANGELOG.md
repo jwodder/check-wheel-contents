@@ -1,5 +1,5 @@
-v0.2.0 (in development)
------------------------
+v0.2.0 (2020-11-07)
+-------------------
 - Paths passed to `src_dir` in a configuration file are now required to be
   directories
 - Support Python 3.9
