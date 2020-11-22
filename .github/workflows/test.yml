@@ -1,0 +1,55 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 6 * * *'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.6'
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - 'pypy3'
+        toxenv: [py]
+        include:
+          - python-version: '3.8'
+            toxenv: dogfood
+          - python-version: '3.8'
+            toxenv: typing
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip wheel
+          python -m pip install --upgrade --upgrade-strategy=eager tox
+
+      - name: Run tests with coverage
+        if: matrix.toxenv == 'py'
+        run: tox -e py -- --cov-report=xml
+
+      - name: Run generic tests
+        if: matrix.toxenv != 'py'
+        run: tox -e ${{ matrix.toxenv }}
+
+      - name: Upload coverage to Codecov
+        if: matrix.toxenv == 'py'
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: false
+
+# vim:set et sts=2:
