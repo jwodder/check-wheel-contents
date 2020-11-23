@@ -1,3 +1,7 @@
+v0.3.0 (in development)
+-----------------------
+- Make sdists include `*.pyc` files from the test data directory
+
 v0.2.0 (2020-11-07)
 -------------------
 - Paths passed to `src_dir` in a configuration file are now required to be

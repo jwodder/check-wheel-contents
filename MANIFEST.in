@@ -3,3 +3,4 @@ graft docs
 prune docs/_build
 graft test
 global-exclude *.py[cod]
+recursive-include test/data *.pyc
