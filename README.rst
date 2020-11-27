@@ -17,9 +17,6 @@
     :target: https://opensource.org/licenses/MIT
     :alt: MIT License
 
-.. image:: https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg
-    :target: https://saythanks.io/to/jwodder
-
 `GitHub <https://github.com/jwodder/check-wheel-contents>`_
 | `PyPI <https://pypi.org/project/check-wheel-contents/>`_
 | `Issues <https://github.com/jwodder/check-wheel-contents/issues>`_
