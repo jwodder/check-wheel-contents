@@ -56,14 +56,14 @@ passes all checks, the program will print ``{path_to_wheel}: OK``.
 Options
 -------
 
-- ``-c <file>``, ``--config <file>`` — Read configuration from the given file;
-  see below for more information
+-c FILE, --config FILE  Read configuration from the given file; see below for
+                        more information
 
-- ``--no-config`` — Disable reading from the configuration file
+--no-config             Disable reading from the configuration file
 
-- ``-h``, ``--help`` — Display a usage message and exit
+-h, --help              Display a usage message and exit
 
-- ``-V``, ``--version`` — Display the program version and exit
+-V, --version           Display the program version and exit
 
 The remaining options can be given either on the command line or in the
 configuration file; see "`Configuration Options`_" for more information.
