@@ -1,12 +1,13 @@
-from   configparser import ConfigParser
-from   pathlib      import Path
-from   typing       import Any, List, Mapping, Optional, Set, Tuple
-import attr
+from   collections.abc import Sequence
+from   configparser    import ConfigParser
+from   pathlib         import Path
+from   typing          import Any, List, Optional, Set, Tuple
+from   pydantic        import BaseModel, Field, ValidationError, validator
 import toml
-from   .checks      import Check, parse_check_prefixes
-from   .errors      import UserInputError
-from   .filetree    import Directory
-from   .util        import comma_split
+from   .checks         import Check, parse_check_prefix
+from   .errors         import UserInputError
+from   .filetree       import Directory
+from   .util           import comma_split
 
 #: The filenames that configuration is read from by default, in descending
 #: order of preference
@@ -26,16 +27,7 @@ CONFIG_SECTION = 'check-wheel-contents'
 #: ``--src-dir`` directories
 TRAVERSAL_EXCLUSIONS = ['.*', 'CVS', 'RCS', '*.pyc', '*.pyo', '*.egg-info']
 
-def convert_toplevel(value: Optional[List[str]]) -> Optional[List[str]]:
-    """
-    Strip trailing forward slashes from the elements of a list, if defined
-    """
-    if value is not None:
-        value = [tl.rstrip('/') for tl in value]
-    return value
-
-@attr.s(auto_attribs=True)
-class Configuration:
+class Configuration(BaseModel):
     """ A container for a `WheelChecker`'s raw configuration values """
 
     #: The set of selected checks, or `None` if not specified
@@ -44,17 +36,60 @@ class Configuration:
     ignore: Optional[Set[Check]] = None
     #: The list of toplevel names to check for with the W2 checks, or `None` if
     #: not specified
-    toplevel: Optional[List[str]] \
-        = attr.ib(default=None, converter=convert_toplevel)
+    toplevel: Optional[List[str]] = None
     #: The list of paths specified with ``--package``, or `None` if not
     #: specified
-    package_paths: Optional[List[Path]] = None
+    package_paths: Optional[List[Path]] = Field(None, alias="package")
     #: The list of paths specified with ``--src-dir``, or `None` if not
     #: specified
-    src_dirs: Optional[List[Path]] = None
+    src_dirs: Optional[List[Path]] = Field(None, alias="src_dir")
     #: The set of exclusion patterns for traversing ``package_paths`` and
     #: ``src_dirs``, or `None` if not specified
     package_omit: Optional[List[str]] = None
+
+    class Config:
+        allow_population_by_field_name = True
+
+    @validator(
+        "select", "ignore", "toplevel", "package_paths", "src_dirs",
+        "package_omit",
+        pre=True,
+    )
+    def _convert_comma_list(cls, value: Any) -> Any:  # noqa: B902
+        """
+        Convert strings to lists by splitting on commas.  Leave everything else
+        untouched.
+        """
+        if isinstance(value, str):
+            return comma_split(value)
+        else:
+            return value
+
+    @validator("select", "ignore", pre=True)
+    def _convert_check_set(cls, value: Any) -> Any:  # noqa: B902
+        """
+        If the input is a sequence, convert it to a `set` with any strings
+        converted from check names & check name prefixes to `Check` objects.
+        """
+        if isinstance(value, Sequence):
+            checks = set()
+            for c in value:
+                if isinstance(c, str):
+                    checks |= parse_check_prefix(c)
+                else:
+                    checks.add(c)
+            return checks
+        else:
+            return value
+
+    @validator("toplevel")
+    def _convert_toplevel(cls, value: Optional[List[str]]) -> Optional[List[str]]:  # noqa: B902
+        """
+        Strip trailing forward slashes from the elements of a list, if defined
+        """
+        if value is not None:
+            value = [tl.rstrip('/') for tl in value]
+        return value
 
     @classmethod
     def from_command_options(
@@ -68,27 +103,16 @@ class Configuration:
     ) -> 'Configuration':
         """
         Construct a `Configuration` instance from option values passed in on
-        the command line.  Elements of ``package`` and ``src_dir`` are
-        converted to `Path`s, and if either tuple is empty (indicating that the
-        corresponding option was not given on the command line), it is replaced
-        by `None`.  All other values are stored as-is.
+        the command line.  If either ``package`` or ``src_dir`` is an empty
+        tuple (indicating that the corresponding option was not given on the
+        command line), it is replaced by `None`.
         """
-        package_paths: Optional[List[Path]]
-        if package:
-            package_paths = [Path(p) for p in package]
-        else:
-            package_paths = None
-        src_dirs: Optional[List[Path]]
-        if src_dir:
-            src_dirs = [Path(p) for p in src_dir]
-        else:
-            src_dirs = None
         return cls(
             select        = select,
             ignore        = ignore,
             toplevel      = toplevel,
-            package_paths = package_paths,
-            src_dirs      = src_dirs,
+            package_paths = package or None,
+            src_dirs      = src_dir or None,
             package_omit  = package_omit,
         )
 
@@ -102,35 +126,106 @@ class Configuration:
         `Configuration` instance with all-default values.
         """
         if path is None:
-            cfgdict = ConfigDict.find_default()
+            cfg = cls.find_default()
         else:
-            cfgdict = ConfigDict.from_file(Path(path))
-        if cfgdict is None:
+            cfg = cls.from_file(Path(path))
+        if cfg is None:
             return cls()
         else:
-            return cls.from_config_dict(cfgdict)
+            return cfg
 
     @classmethod
-    def from_config_dict(cls, cfgdict: 'ConfigDict') -> 'Configuration':
-        """ Construct a `Configuration` instance from a `ConfigDict` """
-        return cls(
-            select        = cfgdict.get_check_set("select"),
-            ignore        = cfgdict.get_check_set("ignore"),
-            toplevel      = cfgdict.get_comma_list("toplevel"),
-            package_paths = cfgdict.get_path_list("package"),
-            src_dirs      = cfgdict.get_path_list("src_dir", require_dir=True),
-            package_omit  = cfgdict.get_comma_list("package_omit"),
-        )
+    def find_default(cls) -> Optional['Configuration']:
+        """
+        Find the default configuration file and read the relevant section from
+        it.  Returns `None` if no file with the appropriate section is found.
+        """
+        cwd = Path()
+        for d in (cwd, *cwd.resolve().parents):
+            found = [d / cf for cf in CONFIG_FILES if (d / cf).exists()]
+            if found:
+                for p in found:
+                    cfg = cls.from_file(p)
+                    if cfg is not None:
+                        return cfg
+                return None
+        return None
+
+    @classmethod
+    def from_file(cls, path: Path) -> Optional['Configuration']:
+        """
+        Read the relevant section from the given configuration file.  Returns
+        `None` if the section does not exist.
+        """
+        if path.suffix == '.toml':
+            data = toml.load(path)
+            tool = data.get("tool")
+            if not isinstance(tool, dict):
+                return None
+            cfg = tool.get(CONFIG_SECTION)
+            if cfg is None:
+                return None
+            else:
+                try:
+                    config = cls.parse_obj(cfg)
+                    config.resolve_paths(path)
+                except (UserInputError, ValidationError) as e:
+                    raise UserInputError(f'{path}: {e}')
+                return config
+        else:
+            data = ConfigParser()
+            with path.open(encoding='utf-8') as fp:
+                data.read_file(fp)
+            if path.name == 'setup.cfg':
+                section = f'tool:{CONFIG_SECTION}'
+            else:
+                section = CONFIG_SECTION
+            if data.has_section(section):
+                try:
+                    config = cls.parse_obj(data[section])
+                    config.resolve_paths(path)
+                except (UserInputError, ValidationError) as e:
+                    raise UserInputError(f'{path}: {e}')
+                return config
+            else:
+                return None
+
+    def resolve_paths(self, configpath: Path) -> None:
+        """
+        Resolve the paths in ``package_paths`` and ``src_dirs`` relative to the
+        directory containing ``configpath``.  If a resulting path does not
+        exist (or, for ``src_dirs``, if it is not a directory), a
+        `UserInputError` is raised.
+        """
+        base = configpath.resolve().parent
+        if self.package_paths is not None:
+            packages: List[Path] = []
+            for p in self.package_paths:
+                q = base / p
+                if not q.exists():
+                    raise UserInputError(
+                        f'package: no such file or directory: {str(q)!r}'
+                    )
+                packages.append(q)
+            self.package_paths = packages
+        if self.src_dirs is not None:
+            src_dirs: List[Path] = []
+            for p in self.src_dirs:
+                q = base / p
+                if not q.is_dir():
+                    raise UserInputError(
+                        f'src_dir: not a directory: {str(q)!r}'
+                    )
+                src_dirs.append(q)
+            self.src_dirs = src_dirs
 
     def update(self, cfg: 'Configuration') -> None:
         """
         Update this `Configuration` instance by copying over all non-`None`
         fields from ``cfg``
         """
-        for field in attr.fields_dict(type(self)).keys():
-            newvalue = getattr(cfg, field)
-            if newvalue is not None:
-                setattr(self, field, newvalue)
+        for field, value in cfg.dict(exclude_none=True).items():
+            setattr(self, field, value)
 
     def get_selected_checks(self) -> Set[Check]:
         """
@@ -187,138 +282,3 @@ class Configuration:
                     )
                 tree.entries[name] = entry
         return tree
-
-
-@attr.s(auto_attribs=True)
-class ConfigDict:
-    """ The raw data read from a section of a configuration file """
-
-    #: The path to the configuration file
-    configpath: Path
-    #: The data read from the configuration file
-    data: Mapping[str, Any]
-
-    @classmethod
-    def find_default(cls) -> Optional['ConfigDict']:
-        """
-        Find the default configuration file and read the relevant section from
-        it.  Returns `None` if no file with the appropriate section is found.
-        """
-        cwd = Path()
-        for d in (cwd, *cwd.resolve().parents):
-            found = [d / cf for cf in CONFIG_FILES if (d / cf).exists()]
-            if found:
-                for p in found:
-                    cfgdict = cls.from_file(p)
-                    if cfgdict is not None:
-                        return cfgdict
-                return None
-        return None
-
-    @classmethod
-    def from_file(cls, path: Path) -> Optional['ConfigDict']:
-        """
-        Read the relevant section from the given configuration file.  Returns
-        `None` if the section does not exist.
-        """
-        if path.suffix == '.toml':
-            data = toml.load(path)
-            tool = data.get("tool")
-            if not isinstance(tool, dict):
-                return None
-            cfg = tool.get(CONFIG_SECTION)
-            if cfg is None:
-                return None
-            elif not isinstance(cfg, dict):
-                raise UserInputError(
-                    f'{path}: tool.{CONFIG_SECTION}: not a table'
-                )
-            else:
-                return cls(path, cfg)
-        else:
-            data = ConfigParser()
-            with path.open(encoding='utf-8') as fp:
-                data.read_file(fp)
-            if path.name == 'setup.cfg':
-                section = f'tool:{CONFIG_SECTION}'
-            else:
-                section = CONFIG_SECTION
-            if data.has_section(section):
-                return cls(path, data[section])
-            else:
-                return None
-
-    def get_comma_list(self, key: str) -> Optional[List[str]]:
-        """
-        Retrieve the value of the given key from the data, converting it from a
-        comma-separated string to a list of strings in the process.  If the
-        value is already a list of strings, it is left as-is.  If it is
-        anything else, a `UserInputError` is raised.  If the key is not
-        present, `None` is returned.
-        """
-        if key not in self.data:
-            return None
-        value = self.data[key]
-        if isinstance(value, str):
-            return comma_split(value)
-        elif isinstance(value, list) and all(isinstance(v, str) for v in value):
-            return value
-        else:
-            raise UserInputError(
-                f'{self.configpath}: {key}: value must be comma-separated'
-                f' string or list of strings'
-            )
-
-    def get_check_set(self, key: str) -> Optional[Set[Check]]:
-        """
-        Retrieve the value of the given key from the data, converting it from
-        either a comma-separated string or list of strings of check names &
-        check name prefixes to a set of `Check` objects.
-
-        If the value is neither a string nor a list of strings, a
-        `UserInputError` is raised.
-
-        If the key is not present, `None` is returned.
-        """
-        value = self.get_comma_list(key)
-        if value is not None:
-            try:
-                return parse_check_prefixes(value)
-            except UserInputError as e:
-                raise UserInputError(f'{self.configpath}: {key}: {e}')
-        else:
-            return None
-
-    def get_path_list(self, key: str, require_dir: bool = False) \
-            -> Optional[List[Path]]:
-        """
-        Retrieve the value of the given key from the data, converting it from
-        either a comma-separated string or list of strings to a list of `Path`
-        objects resolved relative to the path to the configuration file.
-
-        If the value is neither a string nor a list of strings, a
-        `UserInputError` is raised.
-
-        If the key is not present, `None` is returned.
-
-        If a given path does not exist, a `UserInputError` is raised.
-        """
-        value = self.get_comma_list(key)
-        if value is not None:
-            base = self.configpath.resolve().parent
-            paths = []
-            for p in value:
-                q = base / p
-                if not q.exists():
-                    raise UserInputError(
-                        f'{self.configpath}: {key}: no such file or directory:'
-                        f' {str(q)!r}'
-                    )
-                elif require_dir and not q.is_dir():
-                    raise UserInputError(
-                        f'{self.configpath}: {key}: not a directory: {str(q)!r}'
-                    )
-                paths.append(q)
-            return paths
-        else:
-            return None

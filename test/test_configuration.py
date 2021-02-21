@@ -1,14 +1,411 @@
-from   pathlib                     import Path
-from   unittest.mock               import sentinel
-import attr
+import json
+from   operator                      import attrgetter
+from   pathlib                       import Path
+from   pydantic                      import ValidationError
 import pytest
 from   check_wheel_contents.checks   import Check
-from   check_wheel_contents.config   import ConfigDict, Configuration, \
-                                                TRAVERSAL_EXCLUSIONS
+from   check_wheel_contents.config   import Configuration, TRAVERSAL_EXCLUSIONS
 from   check_wheel_contents.errors   import UserInputError
 from   check_wheel_contents.filetree import Directory, File
 
-PROJECT_TREE = Path(__file__).with_name('data') / 'project-tree'
+DATA_DIR = Path(__file__).with_name('data')
+PROJECT_TREE = DATA_DIR / 'project-tree'
+
+@pytest.mark.parametrize('files,cfg', [
+    (
+        {
+            '/usr/src/project/pyproject.toml':
+                '[tool.check-wheel-contents]\n'
+                'select = "W001"\n',
+            '/usr/src/project/tox.ini':
+                '[check-wheel-contents]\n'
+                'select = W002\n',
+            '/usr/src/project/setup.cfg':
+                '[tool:check-wheel-contents]\n'
+                'select = W003\n',
+            '/usr/src/project/check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W004\n',
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W001}),
+    ),
+
+    (
+        {
+            '/usr/src/project/pyproject.toml': '',
+            '/usr/src/project/tox.ini':
+                '[check-wheel-contents]\n'
+                'select = W002\n',
+            '/usr/src/project/setup.cfg':
+                '[tool:check-wheel-contents]\n'
+                'select = W003\n',
+            '/usr/src/project/check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W004\n',
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W002}),
+    ),
+
+    (
+        {
+            '/usr/src/project/tox.ini':
+                '[check-wheel-contents]\n'
+                'select = W002\n',
+            '/usr/src/project/setup.cfg':
+                '[tool:check-wheel-contents]\n'
+                'select = W003\n',
+            '/usr/src/project/check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W004\n',
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W002}),
+    ),
+
+    (
+        {
+            '/usr/src/project/tox.ini': '',
+            '/usr/src/project/setup.cfg':
+                '[tool:check-wheel-contents]\n'
+                'select = W003\n',
+            '/usr/src/project/check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W004\n',
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W003}),
+    ),
+
+    (
+        {
+            '/usr/src/project/setup.cfg':
+                '[tool:check-wheel-contents]\n'
+                'select = W003\n',
+            '/usr/src/project/check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W004\n',
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W003}),
+    ),
+
+    (
+        {
+            '/usr/src/project/setup.cfg': '',
+            '/usr/src/project/check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W004\n',
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W004}),
+    ),
+
+    (
+        {
+            '/usr/src/project/check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W004\n',
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W004}),
+    ),
+
+    (
+        {
+            '/usr/src/project/check-wheel-contents.cfg': '',
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W005}),
+    ),
+
+    (
+        {
+            '/usr/src/project/.check-wheel-contents.cfg':
+                '[check-wheel-contents]\n'
+                'select = W005\n',
+        },
+        Configuration(select={Check.W005}),
+    ),
+
+    (
+        {'/usr/src/project/.check-wheel-contents.cfg': ''},
+        None,
+    ),
+
+    ({}, None),
+
+    (
+        {
+            "/usr/src/tox.ini":
+                '[check-wheel-contents]\n'
+                'select = W002\n',
+            "/usr/src/project/setup.cfg":
+                '[tool:check-wheel-contents]\n'
+                'select = W003\n',
+        },
+        Configuration(select={Check.W003}),
+    ),
+
+    (
+        {
+            "/usr/src/tox.ini":
+                '[check-wheel-contents]\n'
+                'select = W002\n',
+            "/usr/src/project/setup.cfg": '',
+        },
+        None,
+    ),
+
+    (
+        {
+            "/usr/src/tox.ini":
+                '[check-wheel-contents]\n'
+                'select = W002\n',
+        },
+        Configuration(select={Check.W002}),
+    ),
+
+    (
+        {
+            "/usr/src/tox.ini":
+                '[check-wheel-contents]\n'
+                'select = W002\n',
+            "/usr/pyproject.toml":
+                '[tool.check-wheel-contents]\n'
+                'select = "W001"\n',
+        },
+        Configuration(select={Check.W002}),
+    ),
+
+    (
+        {
+            "/usr/src/tox.ini": '',
+            "/usr/pyproject.toml":
+                '[tool.check-wheel-contents]\n'
+                'select = "W001"\n',
+        },
+        None,
+    ),
+
+    (
+        {
+            "/usr/pyproject.toml":
+                '[tool.check-wheel-contents]\n'
+                'select = "W001"\n',
+        },
+        Configuration(select={Check.W001}),
+    ),
+
+    (
+        {
+            "/usr/src/setup.cfg":
+                '[tool:check-wheel-contents]\n'
+                'select = W003\n',
+        },
+        Configuration(select={Check.W003}),
+    )
+])
+def test_find_default(fs, files, cfg, faking_path):
+    for path, text in files.items():
+        fs.create_file(path, contents=text)
+    fs.cwd = '/usr/src/project'
+    assert Configuration.find_default() == cfg
+
+@pytest.mark.parametrize('path', [
+    p for p in (DATA_DIR / 'configfiles').iterdir()
+      if p.suffix != '.json'
+], ids=attrgetter("name"))
+def test_from_file(path):
+    datafile = path.with_suffix('.json')
+    try:
+        data = json.loads(datafile.read_text())
+    except FileNotFoundError:
+        cfg = None
+    else:
+        cfg = Configuration.parse_obj(data)
+    assert Configuration.from_file(path) == cfg
+
+@pytest.mark.parametrize('cfgname,cfgsrc,expected', [
+    (
+        'cfg.ini',
+        '[check-wheel-contents]\n',
+        Configuration(
+            select = None,
+            ignore = None,
+            toplevel = None,
+            package_paths = None,
+            src_dirs = None,
+            package_omit = None,
+        ),
+    ),
+    (
+        'cfg.ini',
+        '[check-wheel-contents]\n'
+        'select = W001,W002\n'
+        'ignore = W003,W004\n'
+        'toplevel = foo.py,quux/\n'
+        'package = bar\n'
+        'src_dir = src\n'
+        'package_omit = __pycache__,test/data\n',
+        Configuration(
+            select = {Check.W001, Check.W002},
+            ignore = {Check.W003, Check.W004},
+            toplevel = ["foo.py", "quux"],
+            package_paths = [PROJECT_TREE / 'bar'],
+            src_dirs = [PROJECT_TREE / 'src'],
+            package_omit = ["__pycache__", "test/data"],
+        ),
+    ),
+    (
+        'cfg.toml',
+        '[tool.check-wheel-contents]\n'
+        'select = ["W001", "W002"]\n'
+        'ignore = ["W003", "W004"]\n'
+        'toplevel = ["foo.py", "quux/"]\n'
+        'package = ["bar"]\n'
+        'src_dir = ["src"]\n'
+        'package_omit = ["__pycache__", "test/data"]\n',
+        Configuration(
+            select = {Check.W001, Check.W002},
+            ignore = {Check.W003, Check.W004},
+            toplevel = ["foo.py", "quux"],
+            package_paths = [PROJECT_TREE / 'bar'],
+            src_dirs = [PROJECT_TREE / 'src'],
+            package_omit = ["__pycache__", "test/data"],
+        ),
+    ),
+])
+def test_from_file_in_project(cfgname, cfgsrc, expected):
+    cfgpath = PROJECT_TREE / cfgname
+    cfgpath.write_text(cfgsrc)
+    try:
+        assert Configuration.from_file(cfgpath) == expected
+    finally:
+        cfgpath.unlink()
+
+def test_from_file_bad_tool_section():
+    path = DATA_DIR / 'bad-tool-sect.toml'
+    with pytest.raises(UserInputError) as excinfo:
+        Configuration.from_file(path)
+    assert str(excinfo.value).startswith(f'{path}: ')
+
+@pytest.mark.parametrize('data,expected', [
+    ({}, None),
+    ({"package_omit": ""}, []),
+    ({"package_omit": "foo"}, ["foo"]),
+    ({"package_omit": "foo, bar,"}, ["foo", "bar"]),
+    ({"package_omit": ["foo", "bar"]}, ["foo", "bar"]),
+    ({"package_omit": ["foo, bar,"]}, ["foo, bar,"]),
+])
+def test_get_comma_list(data, expected):
+    cfg = Configuration.parse_obj(data)
+    assert cfg.package_omit == expected
+
+@pytest.mark.parametrize('field', [
+    'select',
+    'ignore',
+    'toplevel',
+    'package',
+    'src_dir',
+    'package_omit',
+])
+@pytest.mark.parametrize('value', [
+    42,
+    True,
+    [42],
+    ["foo", 42],
+    ["foo", None],
+])
+def test_convert_comma_list_error(field, value):
+    if field in ('toplevel', 'package_omit') and value in ([42], ["foo", 42]):
+        pytest.skip("pydantic allows int input to string fields")
+    with pytest.raises(ValidationError):
+        Configuration.parse_obj({field: value})
+
+@pytest.mark.parametrize('data,expected', [
+    ({}, None),
+    ({"select": ""}, set()),
+    ({"select": "W001"}, {Check.W001}),
+    ({"select": "W001, W002,"}, {Check.W001, Check.W002}),
+    ({"select": ["W001", "W002"]}, {Check.W001, Check.W002}),
+])
+def test_get_check_set(data, expected):
+    cfg = Configuration.parse_obj(data)
+    assert cfg.select == expected
+
+@pytest.mark.parametrize('field', ['select', 'ignore'])
+@pytest.mark.parametrize('value,badbit', [
+    (["W001, W002,"], "W001, W002,"),
+    (["W", ""], ""),
+    (["W9", ""], "W9"),
+])
+def test_convert_check_set_error(field, value, badbit):
+    with pytest.raises(ValidationError) as excinfo:
+        Configuration.parse_obj({field: value})
+    assert f'Unknown/invalid check prefix: {badbit!r}' in str(excinfo.value)
+
+BASE = Path('/usr/src/project/path')
+
+@pytest.mark.parametrize('data,expected', [
+    ({}, None),
+    ({"package": ""}, []),
+    ({"package": "foo"}, [BASE / 'foo']),
+    (
+        {"package": "foo, bar/, test/data, /usr/src"},
+        [BASE / 'foo', BASE / 'bar', BASE / 'test' / 'data', Path('/usr/src')],
+    ),
+    (
+        {"package": ["foo", "bar,baz", "test/data", "/usr/src"]},
+        [BASE / 'foo', BASE / 'bar,baz', BASE / 'test' / 'data', Path('/usr/src')],
+    ),
+])
+def test_resolve_paths(fs, faking_path, data, expected):
+    fs.create_file('/usr/src/project/path/foo')
+    fs.create_file('/usr/src/project/path/bar')
+    fs.create_file('/usr/src/project/path/bar,baz')
+    fs.create_file('/usr/src/project/path/test/data')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration.parse_obj(data)
+    cfg.resolve_paths(Path('path/foo.cfg'))
+    assert cfg.package_paths == expected
+
+def test_resolve_paths_nonexistent(fs):
+    fs.create_file('/usr/src/project/path/foo')
+    fs.create_file('/usr/src/project/path/bar')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration(package_paths="foo,bar,quux")
+    with pytest.raises(UserInputError) as excinfo:
+        cfg.resolve_paths(Path('path/foo.cfg'))
+    assert str(excinfo.value) \
+        == "package: no such file or directory: '/usr/src/project/path/quux'"
+
+def test_resolve_paths_require_dir_not_a_dir(fs):
+    fs.create_file('/usr/src/project/path/foo')
+    fs.create_file('/usr/src/project/path/bar')
+    fs.cwd = '/usr/src/project'
+    cfg = Configuration(src_dirs="foo,bar,quux")
+    with pytest.raises(UserInputError) as excinfo:
+        cfg.resolve_paths(Path('path/foo.cfg'))
+    assert str(excinfo.value) \
+        == "src_dir: not a directory: '/usr/src/project/path/foo'"
 
 @pytest.mark.parametrize('toplevel_in,toplevel_out', [
     (None, None),
@@ -32,16 +429,16 @@ def test_from_command_options(toplevel_in, toplevel_out, package_in,
                               package_out, src_dir_in, src_dir_out,
                               package_omit_in, package_omit_out):
     cfg = Configuration.from_command_options(
-        select = sentinel.SELECT,
-        ignore = sentinel.IGNORE,
+        select = {Check.W001, Check.W002},
+        ignore = {Check.W003, Check.W004},
         toplevel = toplevel_in,
         package = package_in,
         src_dir = src_dir_in,
         package_omit = package_omit_in,
     )
-    assert attr.asdict(cfg, recurse=False) == {
-        "select": sentinel.SELECT,
-        "ignore": sentinel.IGNORE,
+    assert cfg.dict() == {
+        "select": {Check.W001, Check.W002},
+        "ignore": {Check.W003, Check.W004},
         "toplevel": toplevel_out,
         "package_paths": package_out,
         "src_dirs": src_dir_out,
@@ -50,7 +447,7 @@ def test_from_command_options(toplevel_in, toplevel_out, package_in,
 
 def test_from_command_options_default():
     cfg = Configuration.from_command_options()
-    assert attr.asdict(cfg, recurse=False) == {
+    assert cfg.dict() == {
         "select": None,
         "ignore": None,
         "toplevel": None,
@@ -59,201 +456,81 @@ def test_from_command_options_default():
         "package_omit": None,
     }
 
-def test_from_config_dict_calls(mocker):
-    cd = mocker.Mock(
-        **{
-            "get_comma_list.return_value": ["foo.py", "bar/"],
-            "get_check_set.return_value": sentinel.CHECK_SET,
-            "get_path_list.return_value": sentinel.PATH_LIST,
-        },
-    )
-    cfg = Configuration.from_config_dict(cd)
-    assert attr.asdict(cfg, recurse=False) == {
-        "select": sentinel.CHECK_SET,
-        "ignore": sentinel.CHECK_SET,
-        "toplevel": ["foo.py", "bar"],
-        "package_paths": sentinel.PATH_LIST,
-        "src_dirs": sentinel.PATH_LIST,
-        "package_omit": ["foo.py", "bar/"],
-    }
-    assert cd.get_check_set.call_count == 2
-    cd.get_check_set.assert_any_call("select")
-    cd.get_check_set.assert_any_call("ignore")
-    assert cd.get_comma_list.call_count == 2
-    cd.get_comma_list.assert_any_call("toplevel")
-    cd.get_comma_list.assert_any_call("package_omit")
-    assert cd.get_path_list.call_count == 2
-    cd.get_path_list.assert_any_call("package")
-    cd.get_path_list.assert_any_call("src_dir", require_dir=True)
-
-@pytest.mark.parametrize('cfgdict,expected', [
-    (
-        ConfigDict(configpath=Path('foo.cfg'), data={}),
-        Configuration(
-            select = None,
-            ignore = None,
-            toplevel = None,
-            package_paths = None,
-            src_dirs = None,
-            package_omit = None,
-        ),
-    ),
-    (
-        ConfigDict(
-            configpath=PROJECT_TREE / 'cfg.ini',
-            data={
-                "select": "W001,W002",
-                "ignore": "W003,W004",
-                "toplevel": "foo.py,quux/",
-                "package": "bar",
-                "src_dir": "src",
-                "package_omit": "__pycache__,test/data",
-            },
-        ),
-        Configuration(
-            select = {Check.W001, Check.W002},
-            ignore = {Check.W003, Check.W004},
-            toplevel = ["foo.py", "quux"],
-            package_paths = [PROJECT_TREE / 'bar'],
-            src_dirs = [PROJECT_TREE / 'src'],
-            package_omit = ["__pycache__", "test/data"],
-        ),
-    ),
-    (
-        ConfigDict(
-            configpath=PROJECT_TREE / 'cfg.ini',
-            data={
-                "select": ["W001", "W002"],
-                "ignore": ["W003", "W004"],
-                "toplevel": ["foo.py", "quux/"],
-                "package": ["bar"],
-                "src_dir": ["src"],
-                "package_omit": ["__pycache__", "test/data"],
-            },
-        ),
-        Configuration(
-            select = {Check.W001, Check.W002},
-            ignore = {Check.W003, Check.W004},
-            toplevel = ["foo.py", "quux"],
-            package_paths = [PROJECT_TREE / 'bar'],
-            src_dirs = [PROJECT_TREE / 'src'],
-            package_omit = ["__pycache__", "test/data"],
-        ),
-    ),
-    (
-        ConfigDict(
-            configpath=Path('/usr/src/project/cfg.ini'),
-            data={
-                "toplevel": "",
-                "package": "",
-                "src_dir": "",
-                "package_omit": "",
-            },
-        ),
-        Configuration(
-            select = None,
-            ignore = None,
-            toplevel = [],
-            package_paths = [],
-            src_dirs = [],
-            package_omit = [],
-        ),
-    ),
-    (
-        ConfigDict(
-            configpath=Path('/usr/src/project/cfg.ini'),
-            data={
-                "toplevel": [],
-                "package": [],
-                "src_dir": [],
-                "package_omit": [],
-            },
-        ),
-        Configuration(
-            select = None,
-            ignore = None,
-            toplevel = [],
-            package_paths = [],
-            src_dirs = [],
-            package_omit = [],
-        ),
-    ),
-])
-def test_from_config_dict(cfgdict, expected):
-    assert Configuration.from_config_dict(cfgdict) == expected
-
-@pytest.mark.parametrize('cfgdict', [
+@pytest.mark.parametrize('cfg', [
     None,
-    ConfigDict(
-        configpath=PROJECT_TREE / 'cfg.ini',
-        data={
-            "select": "W001,W002",
-            "ignore": "W003,W004",
-            "toplevel": "foo.py,quux/",
-            "package": "bar",
-            "src_dir": "src",
-        },
+    Configuration(
+        select = {Check.W001, Check.W002},
+        ignore = {Check.W003, Check.W004},
+        toplevel = ["foo.py", "quux"],
+        package_paths = [PROJECT_TREE / 'bar'],
+        src_dirs = [PROJECT_TREE / 'src'],
+        package_omit = ["__pycache__", "test/data"],
     ),
 ])
-def test_from_config_file(mocker, cfgdict):
-    cdmock = mocker.patch('check_wheel_contents.config.ConfigDict', autospec=True)
-    cdmock.from_file.return_value = cfgdict
-    if cfgdict is None:
+def test_from_config_file(mocker, cfg):
+    """
+    Test that calling ``Configuration.from_config_file(path)`` delegates to
+    ``Configuration.from_file()`` and that `None` return values are converted
+    to a default-valued `Configuration`
+    """
+    mock = mocker.patch.object(Configuration, 'from_file', return_value=cfg)
+    if cfg is None:
         expected = Configuration()
     else:
-        expected = Configuration.from_config_dict(cfgdict)
+        expected = cfg
     path = '/foo/bar/quux'
-    cfg = Configuration.from_config_file(path)
-    assert cfg == expected
-    assert cdmock.method_calls == [mocker.call.from_file(Path(path))]
+    assert Configuration.from_config_file(path) == expected
+    mock.assert_called_once_with(Path(path))
 
-@pytest.mark.parametrize('cfgdict', [
+@pytest.mark.parametrize('cfg', [
     None,
-    ConfigDict(
-        configpath=PROJECT_TREE / 'cfg.ini',
-        data={
-            "select": "W001,W002",
-            "ignore": "W003,W004",
-            "toplevel": "foo.py,quux/",
-            "package": "bar",
-            "src_dir": "src",
-        },
+    Configuration(
+        select = {Check.W001, Check.W002},
+        ignore = {Check.W003, Check.W004},
+        toplevel = ["foo.py", "quux"],
+        package_paths = [PROJECT_TREE / 'bar'],
+        src_dirs = [PROJECT_TREE / 'src'],
+        package_omit = ["__pycache__", "test/data"],
     ),
 ])
-def test_from_config_file_none_path(mocker, cfgdict):
-    cdmock = mocker.patch('check_wheel_contents.config.ConfigDict', autospec=True)
-    cdmock.find_default.return_value = cfgdict
-    if cfgdict is None:
+def test_from_config_file_none_path(mocker, cfg):
+    """
+    Test that calling ``Configuration.from_config_file(None)`` delegates to
+    ``Configuration.find_default()`` and that `None` return values are
+    converted to a default-valued `Configuration`
+    """
+    mock = mocker.patch.object(Configuration, 'find_default', return_value=cfg)
+    if cfg is None:
         expected = Configuration()
     else:
-        expected = Configuration.from_config_dict(cfgdict)
-    cfg = Configuration.from_config_file(None)
-    assert cfg == expected
-    assert cdmock.method_calls == [mocker.call.find_default()]
+        expected = cfg
+    assert Configuration.from_config_file(None) == expected
+    mock.assert_called_once_with()
 
-@pytest.mark.parametrize('cfgdict', [
+@pytest.mark.parametrize('cfg', [
     None,
-    ConfigDict(
-        configpath=PROJECT_TREE / 'cfg.ini',
-        data={
-            "select": "W001,W002",
-            "ignore": "W003,W004",
-            "toplevel": "foo.py,quux/",
-            "package": "bar",
-            "src_dir": "src",
-        },
+    Configuration(
+        select = {Check.W001, Check.W002},
+        ignore = {Check.W003, Check.W004},
+        toplevel = ["foo.py", "quux"],
+        package_paths = [PROJECT_TREE / 'bar'],
+        src_dirs = [PROJECT_TREE / 'src'],
+        package_omit = ["__pycache__", "test/data"],
     ),
 ])
-def test_from_config_file_no_arg(mocker, cfgdict):
-    cdmock = mocker.patch('check_wheel_contents.config.ConfigDict', autospec=True)
-    cdmock.find_default.return_value = cfgdict
-    if cfgdict is None:
+def test_from_config_file_no_arg(mocker, cfg):
+    """
+    Test that calling ``Configuration.from_config_file()`` with no arguments
+    delegates to ``Configuration.find_default()`` and that `None` return values
+    are converted to a default-valued `Configuration`
+    """
+    mock = mocker.patch.object(Configuration, 'find_default', return_value=cfg)
+    if cfg is None:
         expected = Configuration()
     else:
-        expected = Configuration.from_config_dict(cfgdict)
-    cfg = Configuration.from_config_file()
-    assert cfg == expected
-    assert cdmock.method_calls == [mocker.call.find_default()]
+        expected = cfg
+    assert Configuration.from_config_file() == expected
+    mock.assert_called_once_with()
 
 @pytest.mark.parametrize('left,right,expected', [
     (Configuration(), Configuration(), Configuration()),
@@ -293,16 +570,16 @@ def test_from_config_file_no_arg(mocker, cfgdict):
             package_omit=['__pycache__', 'RCS'],
         ),
         Configuration(
-            select={},
-            ignore={},
+            select=set(),
+            ignore=set(),
             toplevel=[],
             package_paths=[],
             src_dirs=[],
             package_omit=[],
         ),
         Configuration(
-            select={},
-            ignore={},
+            select=set(),
+            ignore=set(),
             toplevel=[],
             package_paths=[],
             src_dirs=[],
