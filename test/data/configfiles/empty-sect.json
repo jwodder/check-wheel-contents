@@ -1,1 +1,8 @@
-{}
+{
+    "select": null,
+    "ignore": null,
+    "toplevel": null,
+    "package_paths": null,
+    "src_dirs": null,
+    "package_omit": null
+}

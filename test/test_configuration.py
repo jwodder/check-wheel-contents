@@ -1,6 +1,7 @@
 import json
 from   operator                      import attrgetter
 from   pathlib                       import Path
+from   shutil                        import copytree
 from   pydantic                      import ValidationError
 import pytest
 from   check_wheel_contents.checks   import Check
@@ -243,19 +244,7 @@ def test_from_file(path):
         cfg = Configuration.parse_obj(data)
     assert Configuration.from_file(path) == cfg
 
-@pytest.mark.parametrize('cfgname,cfgsrc,expected', [
-    (
-        'cfg.ini',
-        '[check-wheel-contents]\n',
-        Configuration(
-            select = None,
-            ignore = None,
-            toplevel = None,
-            package_paths = None,
-            src_dirs = None,
-            package_omit = None,
-        ),
-    ),
+@pytest.mark.parametrize('cfgname,cfgsrc', [
     (
         'cfg.ini',
         '[check-wheel-contents]\n'
@@ -265,14 +254,6 @@ def test_from_file(path):
         'package = bar\n'
         'src_dir = src\n'
         'package_omit = __pycache__,test/data\n',
-        Configuration(
-            select = {Check.W001, Check.W002},
-            ignore = {Check.W003, Check.W004},
-            toplevel = ["foo.py", "quux"],
-            package_paths = [PROJECT_TREE / 'bar'],
-            src_dirs = [PROJECT_TREE / 'src'],
-            package_omit = ["__pycache__", "test/data"],
-        ),
     ),
     (
         'cfg.toml',
@@ -283,23 +264,21 @@ def test_from_file(path):
         'package = ["bar"]\n'
         'src_dir = ["src"]\n'
         'package_omit = ["__pycache__", "test/data"]\n',
-        Configuration(
-            select = {Check.W001, Check.W002},
-            ignore = {Check.W003, Check.W004},
-            toplevel = ["foo.py", "quux"],
-            package_paths = [PROJECT_TREE / 'bar'],
-            src_dirs = [PROJECT_TREE / 'src'],
-            package_omit = ["__pycache__", "test/data"],
-        ),
     ),
 ])
-def test_from_file_in_project(cfgname, cfgsrc, expected):
-    cfgpath = PROJECT_TREE / cfgname
+def test_from_file_in_project(cfgname, cfgsrc, tmp_path):
+    project_dir = tmp_path / "project"
+    copytree(PROJECT_TREE, project_dir)
+    cfgpath = project_dir / cfgname
     cfgpath.write_text(cfgsrc)
-    try:
-        assert Configuration.from_file(cfgpath) == expected
-    finally:
-        cfgpath.unlink()
+    assert Configuration.from_file(cfgpath) == Configuration(
+        select = {Check.W001, Check.W002},
+        ignore = {Check.W003, Check.W004},
+        toplevel = ["foo.py", "quux"],
+        package_paths = [project_dir / 'bar'],
+        src_dirs = [project_dir / 'src'],
+        package_omit = ["__pycache__", "test/data"],
+    )
 
 def test_from_file_bad_tool_section():
     path = DATA_DIR / 'bad-tool-sect.toml'
@@ -315,7 +294,7 @@ def test_from_file_bad_tool_section():
     ({"package_omit": ["foo", "bar"]}, ["foo", "bar"]),
     ({"package_omit": ["foo, bar,"]}, ["foo, bar,"]),
 ])
-def test_get_comma_list(data, expected):
+def test_convert_comma_list(data, expected):
     cfg = Configuration.parse_obj(data)
     assert cfg.package_omit == expected
 
@@ -347,7 +326,7 @@ def test_convert_comma_list_error(field, value):
     ({"select": "W001, W002,"}, {Check.W001, Check.W002}),
     ({"select": ["W001", "W002"]}, {Check.W001, Check.W002}),
 ])
-def test_get_check_set(data, expected):
+def test_convert_check_set(data, expected):
     cfg = Configuration.parse_obj(data)
     assert cfg.select == expected
 
