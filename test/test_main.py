@@ -147,11 +147,11 @@ def show_result(r):
         },
     ),
 ])
-def test_options2configargs(fs, mocker, options, configargs):
-    fs.create_dir('/usr/src/project/foo')
-    fs.create_dir('/usr/src/project/src')
-    fs.create_file('/usr/src/project/foo.cfg')
-    fs.cwd = '/usr/src/project'
+def test_options2configargs(mocker, monkeypatch, options, configargs, tmp_path):
+    (tmp_path / "foo").mkdir()
+    (tmp_path / "src").mkdir()
+    (tmp_path / "foo.cfg").touch()
+    monkeypatch.chdir(tmp_path)
     mock_checker = mocker.patch(
         'check_wheel_contents.__main__.WheelChecker',
         autospec=True,

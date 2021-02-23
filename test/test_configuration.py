@@ -12,22 +12,29 @@ from   check_wheel_contents.filetree import Directory, File
 DATA_DIR = Path(__file__).with_name('data')
 PROJECT_TREE = DATA_DIR / 'project-tree'
 
+def create_file(p, contents=None):
+    p.parent.mkdir(parents=True, exist_ok=True)
+    if contents is not None:
+        p.write_text(contents)
+    else:
+        p.touch()
+
 @pytest.mark.parametrize('files,cfg', [
     (
         {
-            '/usr/src/project/pyproject.toml':
+            'usr/src/project/pyproject.toml':
                 '[tool.check-wheel-contents]\n'
                 'select = "W001"\n',
-            '/usr/src/project/tox.ini':
+            'usr/src/project/tox.ini':
                 '[check-wheel-contents]\n'
                 'select = W002\n',
-            '/usr/src/project/setup.cfg':
+            'usr/src/project/setup.cfg':
                 '[tool:check-wheel-contents]\n'
                 'select = W003\n',
-            '/usr/src/project/check-wheel-contents.cfg':
+            'usr/src/project/check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W004\n',
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -36,17 +43,17 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            '/usr/src/project/pyproject.toml': '',
-            '/usr/src/project/tox.ini':
+            'usr/src/project/pyproject.toml': '',
+            'usr/src/project/tox.ini':
                 '[check-wheel-contents]\n'
                 'select = W002\n',
-            '/usr/src/project/setup.cfg':
+            'usr/src/project/setup.cfg':
                 '[tool:check-wheel-contents]\n'
                 'select = W003\n',
-            '/usr/src/project/check-wheel-contents.cfg':
+            'usr/src/project/check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W004\n',
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -55,16 +62,16 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            '/usr/src/project/tox.ini':
+            'usr/src/project/tox.ini':
                 '[check-wheel-contents]\n'
                 'select = W002\n',
-            '/usr/src/project/setup.cfg':
+            'usr/src/project/setup.cfg':
                 '[tool:check-wheel-contents]\n'
                 'select = W003\n',
-            '/usr/src/project/check-wheel-contents.cfg':
+            'usr/src/project/check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W004\n',
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -73,14 +80,14 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            '/usr/src/project/tox.ini': '',
-            '/usr/src/project/setup.cfg':
+            'usr/src/project/tox.ini': '',
+            'usr/src/project/setup.cfg':
                 '[tool:check-wheel-contents]\n'
                 'select = W003\n',
-            '/usr/src/project/check-wheel-contents.cfg':
+            'usr/src/project/check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W004\n',
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -89,13 +96,13 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            '/usr/src/project/setup.cfg':
+            'usr/src/project/setup.cfg':
                 '[tool:check-wheel-contents]\n'
                 'select = W003\n',
-            '/usr/src/project/check-wheel-contents.cfg':
+            'usr/src/project/check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W004\n',
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -104,11 +111,11 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            '/usr/src/project/setup.cfg': '',
-            '/usr/src/project/check-wheel-contents.cfg':
+            'usr/src/project/setup.cfg': '',
+            'usr/src/project/check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W004\n',
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -117,10 +124,10 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            '/usr/src/project/check-wheel-contents.cfg':
+            'usr/src/project/check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W004\n',
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -129,8 +136,8 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            '/usr/src/project/check-wheel-contents.cfg': '',
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/check-wheel-contents.cfg': '',
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -139,7 +146,7 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            '/usr/src/project/.check-wheel-contents.cfg':
+            'usr/src/project/.check-wheel-contents.cfg':
                 '[check-wheel-contents]\n'
                 'select = W005\n',
         },
@@ -147,7 +154,7 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
     ),
 
     (
-        {'/usr/src/project/.check-wheel-contents.cfg': ''},
+        {'usr/src/project/.check-wheel-contents.cfg': ''},
         None,
     ),
 
@@ -155,10 +162,10 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            "/usr/src/tox.ini":
+            "usr/src/tox.ini":
                 '[check-wheel-contents]\n'
                 'select = W002\n',
-            "/usr/src/project/setup.cfg":
+            "usr/src/project/setup.cfg":
                 '[tool:check-wheel-contents]\n'
                 'select = W003\n',
         },
@@ -167,17 +174,17 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            "/usr/src/tox.ini":
+            "usr/src/tox.ini":
                 '[check-wheel-contents]\n'
                 'select = W002\n',
-            "/usr/src/project/setup.cfg": '',
+            "usr/src/project/setup.cfg": '',
         },
         None,
     ),
 
     (
         {
-            "/usr/src/tox.ini":
+            "usr/src/tox.ini":
                 '[check-wheel-contents]\n'
                 'select = W002\n',
         },
@@ -186,10 +193,10 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            "/usr/src/tox.ini":
+            "usr/src/tox.ini":
                 '[check-wheel-contents]\n'
                 'select = W002\n',
-            "/usr/pyproject.toml":
+            "usr/pyproject.toml":
                 '[tool.check-wheel-contents]\n'
                 'select = "W001"\n',
         },
@@ -198,8 +205,8 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            "/usr/src/tox.ini": '',
-            "/usr/pyproject.toml":
+            "usr/src/tox.ini": '',
+            "usr/pyproject.toml":
                 '[tool.check-wheel-contents]\n'
                 'select = "W001"\n',
         },
@@ -208,7 +215,7 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            "/usr/pyproject.toml":
+            "usr/pyproject.toml":
                 '[tool.check-wheel-contents]\n'
                 'select = "W001"\n',
         },
@@ -217,17 +224,19 @@ PROJECT_TREE = DATA_DIR / 'project-tree'
 
     (
         {
-            "/usr/src/setup.cfg":
+            "usr/src/setup.cfg":
                 '[tool:check-wheel-contents]\n'
                 'select = W003\n',
         },
         Configuration(select={Check.W003}),
     )
 ])
-def test_find_default(fs, files, cfg, faking_path):
+def test_find_default(files, cfg, monkeypatch, tmp_path):
     for path, text in files.items():
-        fs.create_file(path, contents=text)
-    fs.cwd = '/usr/src/project'
+        create_file(tmp_path / path, text)
+    pwd = tmp_path / "usr" / "src" / "project"
+    pwd.mkdir(parents=True, exist_ok=True)
+    monkeypatch.chdir(pwd)
     assert Configuration.find_default() == cfg
 
 @pytest.mark.parametrize('path', [
@@ -341,50 +350,60 @@ def test_convert_check_set_error(field, value, badbit):
         Configuration.parse_obj({field: value})
     assert f'Unknown/invalid check prefix: {badbit!r}' in str(excinfo.value)
 
-BASE = Path('/usr/src/project/path')
+BASE = Path('usr/src/project/path')
 
 @pytest.mark.parametrize('data,expected', [
     ({}, None),
     ({"package": ""}, []),
     ({"package": "foo"}, [BASE / 'foo']),
     (
-        {"package": "foo, bar/, test/data, /usr/src"},
-        [BASE / 'foo', BASE / 'bar', BASE / 'test' / 'data', Path('/usr/src')],
+        {"package": "foo, bar/, test/data, {tmp_path}/usr/src"},
+        [BASE / 'foo', BASE / 'bar', BASE / 'test' / 'data', Path('usr/src')],
     ),
     (
-        {"package": ["foo", "bar,baz", "test/data", "/usr/src"]},
-        [BASE / 'foo', BASE / 'bar,baz', BASE / 'test' / 'data', Path('/usr/src')],
+        {"package": ["foo", "bar,baz", "test/data", "{tmp_path}/usr/src"]},
+        [BASE / 'foo', BASE / 'bar,baz', BASE / 'test' / 'data', Path('usr/src')],
     ),
 ])
-def test_resolve_paths(fs, faking_path, data, expected):
-    fs.create_file('/usr/src/project/path/foo')
-    fs.create_file('/usr/src/project/path/bar')
-    fs.create_file('/usr/src/project/path/bar,baz')
-    fs.create_file('/usr/src/project/path/test/data')
-    fs.cwd = '/usr/src/project'
+def test_resolve_paths(data, expected, monkeypatch, tmp_path):
+    for path in [
+        'usr/src/project/path/foo',
+        'usr/src/project/path/bar',
+        'usr/src/project/path/bar,baz',
+        'usr/src/project/path/test/data',
+    ]:
+        create_file(tmp_path / path)
+    monkeypatch.chdir(tmp_path / "usr" / "src" / "project")
+    if isinstance(data.get("package"), str):
+        data["package"] = data["package"].format(tmp_path=tmp_path)
+    elif isinstance(data.get("package"), list):
+        data["package"] = [p.format(tmp_path=tmp_path) for p in data["package"]]
     cfg = Configuration.parse_obj(data)
     cfg.resolve_paths(Path('path/foo.cfg'))
+    if expected is not None:
+        expected = [tmp_path / p for p in expected]
     assert cfg.package_paths == expected
 
-def test_resolve_paths_nonexistent(fs):
-    fs.create_file('/usr/src/project/path/foo')
-    fs.create_file('/usr/src/project/path/bar')
-    fs.cwd = '/usr/src/project'
+def test_resolve_paths_nonexistent(monkeypatch, tmp_path):
+    create_file(tmp_path / 'path/foo')
+    create_file(tmp_path / 'path/bar')
+    monkeypatch.chdir(tmp_path)
     cfg = Configuration(package_paths="foo,bar,quux")
     with pytest.raises(UserInputError) as excinfo:
         cfg.resolve_paths(Path('path/foo.cfg'))
-    assert str(excinfo.value) \
-        == "package: no such file or directory: '/usr/src/project/path/quux'"
+    assert str(excinfo.value) == (
+        f"package: no such file or directory: '{tmp_path}/path/quux'"
+    )
 
-def test_resolve_paths_require_dir_not_a_dir(fs):
-    fs.create_file('/usr/src/project/path/foo')
-    fs.create_file('/usr/src/project/path/bar')
-    fs.cwd = '/usr/src/project'
+def test_resolve_paths_require_dir_not_a_dir(monkeypatch, tmp_path):
+    create_file(tmp_path / 'path/foo')
+    create_file(tmp_path / 'path/bar')
+    monkeypatch.chdir(tmp_path)
     cfg = Configuration(src_dirs="foo,bar,quux")
     with pytest.raises(UserInputError) as excinfo:
         cfg.resolve_paths(Path('path/foo.cfg'))
     assert str(excinfo.value) \
-        == "src_dir: not a directory: '/usr/src/project/path/foo'"
+        == f"src_dir: not a directory: '{tmp_path}/path/foo'"
 
 @pytest.mark.parametrize('toplevel_in,toplevel_out', [
     (None, None),
@@ -700,12 +719,12 @@ def test_get_package_tree_src_dir(mocker, package_omit, exclude):
     assert cfg.get_package_tree() == tree
     fltmock.assert_called_once_with(path, exclude=exclude, include_root=False)
 
-def test_get_package_tree_multiple_package_paths(fs):
-    fs.create_file('/usr/src/project/foo.py')
-    fs.create_file('/usr/src/project/bar/__init__.py')
-    fs.create_file('/usr/src/project/bar/quux.py')
-    fs.create_file('/usr/src/project/bar/glarch.py')
-    fs.cwd = '/usr/src/project'
+def test_get_package_tree_multiple_package_paths(monkeypatch, tmp_path):
+    create_file(tmp_path / 'foo.py')
+    create_file(tmp_path / 'bar/__init__.py')
+    create_file(tmp_path / 'bar/quux.py')
+    create_file(tmp_path / 'bar/glarch.py')
+    monkeypatch.chdir(tmp_path)
     cfg = Configuration(package_paths=[Path('foo.py'), Path('bar')])
     assert cfg.get_package_tree() == Directory(
         path=None,
@@ -722,12 +741,12 @@ def test_get_package_tree_multiple_package_paths(fs):
         },
     )
 
-def test_get_package_tree_multiple_src_dirs(fs):
-    fs.create_file('/usr/src/project/src/foo.py')
-    fs.create_file('/usr/src/project/source/bar/__init__.py')
-    fs.create_file('/usr/src/project/source/bar/quux.py')
-    fs.create_file('/usr/src/project/source/bar/glarch.py')
-    fs.cwd = '/usr/src/project'
+def test_get_package_tree_multiple_src_dirs(monkeypatch, tmp_path):
+    create_file(tmp_path / 'src/foo.py')
+    create_file(tmp_path / 'source/bar/__init__.py')
+    create_file(tmp_path / 'source/bar/quux.py')
+    create_file(tmp_path / 'source/bar/glarch.py')
+    monkeypatch.chdir(tmp_path)
     cfg = Configuration(src_dirs=[Path('src'), Path('source')])
     assert cfg.get_package_tree() == Directory(
         path=None,
@@ -744,12 +763,12 @@ def test_get_package_tree_multiple_src_dirs(fs):
         },
     )
 
-def test_get_package_tree_package_path_and_src_dir(fs):
-    fs.create_file('/usr/src/project/src/foo.py')
-    fs.create_file('/usr/src/project/bar/__init__.py')
-    fs.create_file('/usr/src/project/bar/quux.py')
-    fs.create_file('/usr/src/project/bar/glarch.py')
-    fs.cwd = '/usr/src/project'
+def test_get_package_tree_package_path_and_src_dir(monkeypatch, tmp_path):
+    create_file(tmp_path / 'src/foo.py')
+    create_file(tmp_path / 'bar/__init__.py')
+    create_file(tmp_path / 'bar/quux.py')
+    create_file(tmp_path / 'bar/glarch.py')
+    monkeypatch.chdir(tmp_path)
     cfg = Configuration(package_paths=[Path('bar')], src_dirs=[Path('src')])
     assert cfg.get_package_tree() == Directory(
         path=None,
@@ -766,12 +785,12 @@ def test_get_package_tree_package_path_and_src_dir(fs):
         },
     )
 
-def test_get_package_tree_package_paths_conflict(fs):
-    fs.create_file('/usr/src/project/bar/__init__.py')
-    fs.create_file('/usr/src/project/bar/quux.py')
-    fs.create_file('/usr/src/project/bar/glarch.py')
-    fs.create_file('/usr/src/project/src/bar/gnusto.py')
-    fs.cwd = '/usr/src/project'
+def test_get_package_tree_package_paths_conflict(monkeypatch, tmp_path):
+    create_file(tmp_path / 'bar/__init__.py')
+    create_file(tmp_path / 'bar/quux.py')
+    create_file(tmp_path / 'bar/glarch.py')
+    create_file(tmp_path / 'src/bar/gnusto.py')
+    monkeypatch.chdir(tmp_path)
     cfg = Configuration(package_paths=[Path('bar'), Path('src/bar')])
     with pytest.raises(UserInputError) as excinfo:
         cfg.get_package_tree()
@@ -780,12 +799,12 @@ def test_get_package_tree_package_paths_conflict(fs):
         " present from prior --package option"
     )
 
-def test_get_package_tree_src_dirs_conflict(fs):
-    fs.create_file('/usr/src/project/source/bar/__init__.py')
-    fs.create_file('/usr/src/project/source/bar/quux.py')
-    fs.create_file('/usr/src/project/source/bar/glarch.py')
-    fs.create_file('/usr/src/project/src/bar/gnusto.py')
-    fs.cwd = '/usr/src/project'
+def test_get_package_tree_src_dirs_conflict(monkeypatch, tmp_path):
+    create_file(tmp_path / 'source/bar/__init__.py')
+    create_file(tmp_path / 'source/bar/quux.py')
+    create_file(tmp_path / 'source/bar/glarch.py')
+    create_file(tmp_path / 'src/bar/gnusto.py')
+    monkeypatch.chdir(tmp_path)
     cfg = Configuration(src_dirs=[Path('source'), Path('src')])
     with pytest.raises(UserInputError) as excinfo:
         cfg.get_package_tree()
@@ -794,12 +813,12 @@ def test_get_package_tree_src_dirs_conflict(fs):
         " from prior --package or --src-dir option"
     )
 
-def test_get_package_tree_package_path_src_dir_conflict(fs):
-    fs.create_file('/usr/src/project/bar/__init__.py')
-    fs.create_file('/usr/src/project/bar/quux.py')
-    fs.create_file('/usr/src/project/bar/glarch.py')
-    fs.create_file('/usr/src/project/src/bar/gnusto.py')
-    fs.cwd = '/usr/src/project'
+def test_get_package_tree_package_path_src_dir_conflict(monkeypatch, tmp_path):
+    create_file(tmp_path / 'bar/__init__.py')
+    create_file(tmp_path / 'bar/quux.py')
+    create_file(tmp_path / 'bar/glarch.py')
+    create_file(tmp_path / 'src/bar/gnusto.py')
+    monkeypatch.chdir(tmp_path)
     cfg = Configuration(package_paths=[Path('bar')], src_dirs=[Path('src')])
     with pytest.raises(UserInputError) as excinfo:
         cfg.get_package_tree()

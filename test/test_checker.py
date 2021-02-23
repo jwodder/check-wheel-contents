@@ -74,22 +74,16 @@ def test_defaults():
         ),
     ),
 ])
-def test_configure_options(fs, mocker, faking_path, kwargs, cfg):
-    fs.create_file(
-        '/usr/src/project/check-wheel-contents.cfg',
-        contents=(
-            '[check-wheel-contents]\n'
-            'select = W001,W002\n'
-        ),
+def test_configure_options(mocker, monkeypatch, kwargs, cfg, tmp_path):
+    (tmp_path / 'check-wheel-contents.cfg').write_text(
+        '[check-wheel-contents]\n'
+        'select = W001,W002\n'
     )
-    fs.create_file(
-        '/usr/src/project/custom.cfg',
-        contents=(
-            '[check-wheel-contents]\n'
-            'ignore = W001,W002\n'
-        ),
+    (tmp_path / 'custom.cfg').write_text(
+        '[check-wheel-contents]\n'
+        'ignore = W001,W002\n'
     )
-    fs.cwd = '/usr/src/project'
+    monkeypatch.chdir(tmp_path)
     checker = WheelChecker()
     apply_mock = mocker.patch.object(checker, 'apply_config')
     checker.configure_options(**kwargs)
