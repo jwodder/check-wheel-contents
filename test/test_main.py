@@ -186,3 +186,37 @@ def test_main(monkeypatch, whlfile):
     assert r.exit_code == expected["rc"], show_result(r)
     assert r.stdout.rstrip() == expected["stdout"]
     assert r.stderr.rstrip() == expected["stderr"]
+
+@pytest.mark.parametrize('cfgname,cfgsrc,errmsg', [
+    (
+        'foo.ini',
+        '[check-wheel-contents]\n'
+        'select = W9\n',
+        "Unknown/invalid check prefix: 'W9'",
+    ),
+    (
+        'foo.toml',
+        '[tool.check-wheel-contents]\n'
+        'ignore = [""]\n',
+        "Unknown/invalid check prefix: ''",
+    ),
+    (
+        'foo.cfg',
+        '[check-wheel-contents]\n'
+        'package = missing\n',
+        "package: no such file or directory: '{tmp_path}/missing'",
+    ),
+    (
+        'foo.cfg',
+        '[check-wheel-contents]\n'
+        'src_dir = missing\n',
+        "src_dir: not a directory: '{tmp_path}/missing'",
+    ),
+])
+def test_bad_config_error(cfgname, cfgsrc, errmsg, monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    Path(cfgname).write_text(cfgsrc)
+    r = CliRunner().invoke(main, ['--config', cfgname])
+    assert r.exit_code != 0, show_result(r)
+    assert f'Error: {cfgname}: ' in r.output
+    assert errmsg.format(tmp_path=tmp_path) in r.output
