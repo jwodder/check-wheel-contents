@@ -1,6 +1,8 @@
 v0.3.0 (in development)
 -----------------------
 - Make sdists include `*.pyc` files from the test data directory
+- Use [`pydantic`](https://github.com/samuelcolvin/pydantic) for configuration
+  validation
 
 v0.2.0 (2020-11-07)
 -------------------
