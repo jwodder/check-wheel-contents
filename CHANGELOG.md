@@ -3,6 +3,8 @@ v0.3.0 (in development)
 - Make sdists include `*.pyc` files from the test data directory
 - Use [`pydantic`](https://github.com/samuelcolvin/pydantic) for configuration
   validation
+- Add `app`, `cli`, `lib`, and `scripts` to the set of common toplevel names
+  checked for by W005
 
 v0.2.0 (2020-11-07)
 -------------------

@@ -33,7 +33,8 @@ IGNORED_TOPLEVEL_RGX = re.compile(r'.\.pth\Z')
 #: A list of common toplevel names for W005 to fail on
 COMMON_NAMES = '''
     .eggs .nox .tox .venv
-    build data dist doc docs example examples src test tests venv
+    app build cli data dist doc docs example examples lib scripts src test
+    tests venv
 '''.split()
 
 @attr.s(auto_attribs=True)
