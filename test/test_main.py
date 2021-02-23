@@ -175,9 +175,11 @@ def test_bad_checks_option_error(mocker, options):
     assert "Unknown/invalid check prefix: 'W9999'" in r.output
     mock_checker.assert_not_called()
 
-@pytest.mark.parametrize('whlfile', [
-    p for p in WHEEL_DIR.iterdir() if p.suffix == '.whl'
-], ids=attrgetter("name"))
+@pytest.mark.parametrize(
+    'whlfile',
+    WHEEL_DIR.glob("*.whl"),
+    ids=attrgetter("name"),
+)
 def test_main(monkeypatch, whlfile):
     with open(str(whlfile.with_suffix('.json'))) as fp:
         expected = json.load(fp)

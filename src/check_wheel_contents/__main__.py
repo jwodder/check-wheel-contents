@@ -159,7 +159,7 @@ def args2wheelpaths(args: List[str]) -> Iterable[Path]:
     for a in args:
         p = Path(a)
         if p.is_dir():
-            yield from p.glob('**/*.[Ww][Hh][Ll]')
+            yield from p.rglob('*.[Ww][Hh][Ll]')
         else:
             yield p
 
