@@ -55,7 +55,7 @@ class Configuration(BaseModel):
         "package_omit",
         pre=True,
     )
-    def _convert_comma_list(cls, value: Any) -> Any:  # noqa: B902
+    def _convert_comma_list(cls, value: Any) -> Any:  # noqa: B902, U100
         """
         Convert strings to lists by splitting on commas.  Leave everything else
         untouched.
@@ -66,7 +66,7 @@ class Configuration(BaseModel):
             return value
 
     @validator("select", "ignore", pre=True)
-    def _convert_check_set(cls, value: Any) -> Any:  # noqa: B902
+    def _convert_check_set(cls, value: Any) -> Any:  # noqa: B902, U100
         """
         If the input is a sequence, convert it to a `set` with any strings
         converted from check names & check name prefixes to `Check` objects.
@@ -83,7 +83,7 @@ class Configuration(BaseModel):
             return value
 
     @validator("toplevel")
-    def _convert_toplevel(cls, value: Optional[List[str]]) -> Optional[List[str]]:  # noqa: B902
+    def _convert_toplevel(cls, value: Optional[List[str]]) -> Optional[List[str]]:  # noqa: B902, U100
         """
         Strip trailing forward slashes from the elements of a list, if defined
         """

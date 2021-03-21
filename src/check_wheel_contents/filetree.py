@@ -131,7 +131,7 @@ class Directory:
     entries: Dict[str, Union[File, 'Directory']] = attr.Factory(dict)
 
     @path.validator
-    def _validate_path(self, attribute: attr.Attribute, value: Optional[str]) \
+    def _validate_path(self, _attribute: attr.Attribute, value: Optional[str]) \
             -> None:
         if value is not None:
             if not value.endswith('/'):
