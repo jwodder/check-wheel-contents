@@ -5,6 +5,7 @@ v0.3.0 (in development)
   validation
 - Add `app`, `cli`, `lib`, and `scripts` to the set of common toplevel names
   checked for by W005
+- Support Click 8
 
 v0.2.0 (2020-11-07)
 -------------------

@@ -60,6 +60,7 @@ class ConfigParamType(click.ParamType):
     '--no-config',
     'config',
     flag_value = NO_CONFIG,
+    type       = ConfigParamType(),
     help       = 'Do not read from a configuration file',
 )
 @click.option(
