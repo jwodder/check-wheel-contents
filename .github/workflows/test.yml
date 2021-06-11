@@ -22,6 +22,8 @@ jobs:
         include:
           - python-version: '3.8'
             toxenv: dogfood
+          - python-version: '3.6'
+            toxenv: lint
           - python-version: '3.8'
             toxenv: typing
     steps:
