@@ -1,16 +1,17 @@
-from   pathlib        import Path
-from   typing         import Any, Iterable, List, Optional, Set, Tuple
+from pathlib import Path
+from typing import Any, Iterable, List, Optional, Set, Tuple
 import click
-from   wheel_filename import InvalidFilenameError
-from   .              import __version__
-from   .checker       import NO_CONFIG, WheelChecker
-from   .checks        import Check, parse_checks_string
-from   .contents      import WheelContents
-from   .errors        import UserInputError, WheelValidationError
-from   .util          import comma_split
+from wheel_filename import InvalidFilenameError
+from . import __version__
+from .checker import NO_CONFIG, WheelChecker
+from .checks import Check, parse_checks_string
+from .contents import WheelContents
+from .errors import UserInputError, WheelValidationError
+from .util import comma_split
+
 
 class ChecksParamType(click.ParamType):
-    name = 'checks'
+    name = "checks"
 
     def convert(
         self,
@@ -30,7 +31,7 @@ class ConfigParamType(click.ParamType):
     is also allowed as a value
     """
 
-    name = 'config'
+    name = "config"
 
     def convert(
         self,
@@ -41,65 +42,66 @@ class ConfigParamType(click.ParamType):
         if value is NO_CONFIG:
             return value
         else:
-            return click.Path(exists=True, dir_okay=False)\
-                        .convert(value, param, ctx)
+            return click.Path(exists=True, dir_okay=False).convert(value, param, ctx)
 
 
 @click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(
     __version__,
-    '-V', '--version',
-    message = '%(prog)s %(version)s',
+    "-V",
+    "--version",
+    message="%(prog)s %(version)s",
 )
 @click.option(
-    '-c', '--config',
-    type = ConfigParamType(),
-    help = 'Use the specified configuration file',
+    "-c",
+    "--config",
+    type=ConfigParamType(),
+    help="Use the specified configuration file",
 )
 @click.option(
-    '--no-config',
-    'config',
-    flag_value = NO_CONFIG,
-    type       = ConfigParamType(),
-    help       = 'Do not read from a configuration file',
+    "--no-config",
+    "config",
+    flag_value=NO_CONFIG,
+    type=ConfigParamType(),
+    help="Do not read from a configuration file",
 )
 @click.option(
-    '--ignore',
-    type    = ChecksParamType(),
-    help    = 'Comma-separated list of checks to disable',
-    metavar = 'CHECKS',
+    "--ignore",
+    type=ChecksParamType(),
+    help="Comma-separated list of checks to disable",
+    metavar="CHECKS",
 )
 @click.option(
-    '--package',
-    type     = click.Path(exists=True),
-    multiple = True,
-    help     = 'Module or package to expect in wheel library'
+    "--package",
+    type=click.Path(exists=True),
+    multiple=True,
+    help="Module or package to expect in wheel library",
 )
 @click.option(
-    '--package-omit',
-    type    = comma_split,
-    help    = 'Patterns in --package/--src-dir to ignore',
-    metavar = 'PATTERNS',
+    "--package-omit",
+    type=comma_split,
+    help="Patterns in --package/--src-dir to ignore",
+    metavar="PATTERNS",
 )
 @click.option(
-    '--select',
-    type    = ChecksParamType(),
-    help    = 'Comma-separated list of checks to enable',
-    metavar = 'CHECKS',
+    "--select",
+    type=ChecksParamType(),
+    help="Comma-separated list of checks to enable",
+    metavar="CHECKS",
 )
 @click.option(
-    '--src-dir',
-    type     = click.Path(exists=True, file_okay=False),
-    multiple = True,
-    help     = 'Directory to expect contents of in wheel library'
+    "--src-dir",
+    type=click.Path(exists=True, file_okay=False),
+    multiple=True,
+    help="Directory to expect contents of in wheel library",
 )
 @click.option(
-    '--toplevel',
-    type    = comma_split,
-    help    = 'Comma-separated list of expected toplevel library entries',
-    metavar = 'NAMES',
+    "--toplevel",
+    type=comma_split,
+    help="Comma-separated list of expected toplevel library entries",
+    metavar="NAMES",
 )
-@click.argument('wheel', nargs=-1, type=click.Path(exists=True, dir_okay=True))
+@click.argument("wheel", nargs=-1, type=click.Path(exists=True, dir_okay=True))
 @click.pass_context
 def main(
     ctx: click.Context,
@@ -121,13 +123,13 @@ def main(
     checker = WheelChecker()
     try:
         checker.configure_options(
-            configpath   = config,
-            select       = select,
-            ignore       = ignore,
-            toplevel     = toplevel,
-            package      = package,
-            src_dir      = src_dir,
-            package_omit = package_omit,
+            configpath=config,
+            select=select,
+            ignore=ignore,
+            toplevel=toplevel,
+            package=package,
+            src_dir=src_dir,
+            package_omit=package_omit,
         )
     except UserInputError as e:
         ctx.fail(str(e))
@@ -136,11 +138,11 @@ def main(
         try:
             contents = WheelContents.from_wheel(w)
         except InvalidFilenameError:
-            click.echo(f'{w}: wheel has invalid filename', err=True)
+            click.echo(f"{w}: wheel has invalid filename", err=True)
             ok = False
             continue
         except WheelValidationError as e:
-            click.echo(f'{w}: invalid wheel: {e}', err=True)
+            click.echo(f"{w}: invalid wheel: {e}", err=True)
             ok = False
             continue
         failures = checker.check_contents(contents)
@@ -149,8 +151,9 @@ def main(
                 print(f.show(str(w)))
             ok = False
         else:
-            print(f'{w}: OK')
+            print(f"{w}: OK")
     ctx.exit(0 if ok else 1)
+
 
 def args2wheelpaths(args: List[str]) -> Iterable[Path]:
     """
@@ -160,9 +163,10 @@ def args2wheelpaths(args: List[str]) -> Iterable[Path]:
     for a in args:
         p = Path(a)
         if p.is_dir():
-            yield from p.rglob('*.[Ww][Hh][Ll]')
+            yield from p.rglob("*.[Ww][Hh][Ll]")
         else:
             yield p
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()  # pragma: no cover

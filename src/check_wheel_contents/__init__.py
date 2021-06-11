@@ -12,8 +12,8 @@ README, along with common causes and corresponding fixes.
 Visit <https://github.com/jwodder/check-wheel-contents> for more information.
 """
 
-__version__      = '0.3.0'
-__author__       = 'John Thorvald Wodder II'
-__author_email__ = 'check-wheel-contents@varonathe.org'
-__license__      = 'MIT'
-__url__          = 'https://github.com/jwodder/check-wheel-contents'
+__version__ = "0.3.0"
+__author__ = "John Thorvald Wodder II"
+__author_email__ = "check-wheel-contents@varonathe.org"
+__license__ = "MIT"
+__url__ = "https://github.com/jwodder/check-wheel-contents"

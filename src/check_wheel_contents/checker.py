@@ -1,52 +1,53 @@
-from   operator  import attrgetter
+from operator import attrgetter
 import re
 import sys
-from   typing    import Any, List, Optional, Set, Tuple
+from typing import Any, List, Optional, Set, Tuple
 import attr
-from   .checks   import Check, FailedCheck
-from   .config   import Configuration
-from   .contents import WheelContents
-from   .filetree import Directory, File
-from   .util     import bytes_signature, is_stubs_dir
+from .checks import Check, FailedCheck
+from .config import Configuration
+from .contents import WheelContents
+from .filetree import Directory, File
+from .util import bytes_signature, is_stubs_dir
 
 #: A sentinel object used to disable reading from a configuration file
 NO_CONFIG = object()
 
 #: The file extensions of Python bytecode files
-BYTECODE_SUFFIXES = ('.pyc', '.pyo')
+BYTECODE_SUFFIXES = (".pyc", ".pyo")
 
 #: Signatures of common files that are excluded from W002's duplicate-checking
 ALLOWED_DUPLICATES = {
     (None, None),
-    bytes_signature(b''),
-    bytes_signature(b'\n'),
-    bytes_signature(b'\r\n'),
-    bytes_signature(b'# -*- coding: utf-8 -*-'),
-    bytes_signature(b'# -*- coding: utf-8 -*-\n'),
-    bytes_signature(b'# -*- coding: utf-8 -*-\n\r'),
+    bytes_signature(b""),
+    bytes_signature(b"\n"),
+    bytes_signature(b"\r\n"),
+    bytes_signature(b"# -*- coding: utf-8 -*-"),
+    bytes_signature(b"# -*- coding: utf-8 -*-\n"),
+    bytes_signature(b"# -*- coding: utf-8 -*-\n\r"),
 }
 
 #: A regex matching filenames to ignore for the purposes of W003, W009, and
 #: W202.  Currently, it just matches ``*.pth`` files.
-IGNORED_TOPLEVEL_RGX = re.compile(r'.\.pth\Z')
+IGNORED_TOPLEVEL_RGX = re.compile(r".\.pth\Z")
 
 #: A list of common toplevel names for W005 to fail on
-COMMON_NAMES = '''
+COMMON_NAMES = """
     .eggs .nox .tox .venv
     app build cli data dist doc docs example examples lib scripts src test
     tests venv
-'''.split()
+""".split()
+
 
 @attr.s(auto_attribs=True)
 class WheelChecker:
-    """ A class for performing various checks on a `WheelContents` instance """
+    """A class for performing various checks on a `WheelContents` instance"""
 
     #: The set of selected (active) checks
     selected: Set[Check] = attr.ib()
     #: The toplevel names to expect for W2, or `None` to disable the checks
     toplevel: Optional[List[str]] = None
     #: The package tree to expect for W1, or `None` to disable the checks
-    pkgtree:  Optional[Directory] = None
+    pkgtree: Optional[Directory] = None
 
     @selected.default
     def _selected_default(self) -> Set[Check]:
@@ -70,27 +71,35 @@ class WheelChecker:
         cfg = Configuration()
         if configpath is not NO_CONFIG:
             if configpath is not None and not isinstance(configpath, str):
-                raise TypeError('configpath must be None, str, or NO_CONFIG')
+                raise TypeError("configpath must be None, str, or NO_CONFIG")
             cfg.update(Configuration.from_config_file(configpath))
-        cfg.update(Configuration.from_command_options(
-            select       = select,
-            ignore       = ignore,
-            toplevel     = toplevel,
-            package      = package,
-            src_dir      = src_dir,
-            package_omit = package_omit,
-        ))
+        cfg.update(
+            Configuration.from_command_options(
+                select=select,
+                ignore=ignore,
+                toplevel=toplevel,
+                package=package,
+                src_dir=src_dir,
+                package_omit=package_omit,
+            )
+        )
         self.apply_config(cfg)
 
     def apply_config(self, cfg: Configuration) -> None:
-        """ Apply a given `Configuration` to self """
+        """Apply a given `Configuration` to self"""
         self.selected = cfg.get_selected_checks()
         self.toplevel = cfg.toplevel
         self.pkgtree = cfg.get_package_tree()
-        if self.toplevel is not None and self.pkgtree is not None \
-                and set(self.toplevel) != set(self.pkgtree.entries.keys()):
-            print('Warning: --toplevel value does not match top level of'
-                  ' --package/--src-dir file tree', file=sys.stderr)
+        if (
+            self.toplevel is not None
+            and self.pkgtree is not None
+            and set(self.toplevel) != set(self.pkgtree.entries.keys())
+        ):
+            print(
+                "Warning: --toplevel value does not match top level of"
+                " --package/--src-dir file tree",
+                file=sys.stderr,
+            )
 
     def check_contents(self, contents: WheelContents) -> List[FailedCheck]:
         """
@@ -101,13 +110,13 @@ class WheelChecker:
         collects these lists and returns their concatenation.
         """
         failures = []
-        for c in sorted(self.selected, key=attrgetter('name')):
-            method = getattr(self, 'check_' + c.name)
+        for c in sorted(self.selected, key=attrgetter("name")):
+            method = getattr(self, "check_" + c.name)
             failures.extend(method(contents))
         return failures
 
     def check_W001(self, contents: WheelContents) -> List[FailedCheck]:
-        """ Check W001 — Wheel contains .pyc/.pyo files """
+        """Check W001 — Wheel contains .pyc/.pyo files"""
         badfiles = []
         for f in contents.filetree.all_files():
             if f.extension in BYTECODE_SUFFIXES:
@@ -145,8 +154,10 @@ class WheelChecker:
         badtops = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for name, entry in tree.files.items():
-                if IGNORED_TOPLEVEL_RGX.search(name) is None \
-                        and not entry.has_module_ext():
+                if (
+                    IGNORED_TOPLEVEL_RGX.search(name) is None
+                    and not entry.has_module_ext()
+                ):
                     badtops.append(entry.path)
         if badtops:
             return [FailedCheck(Check.W003, badtops)]
@@ -250,8 +261,8 @@ class WheelChecker:
         toplevels = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for name, entry in tree.entries.items():
-                if not name.startswith('_') and not (
-                    isinstance(entry,File) and IGNORED_TOPLEVEL_RGX.search(name)
+                if not name.startswith("_") and not (
+                    isinstance(entry, File) and IGNORED_TOPLEVEL_RGX.search(name)
                 ):
                     toplevels.append(entry.path)
         if len(toplevels) > 1:
@@ -329,8 +340,7 @@ class WheelChecker:
             return []
         missing = []
         for name in self.toplevel:
-            if name not in contents.purelib_tree \
-                    and name not in contents.platlib_tree:
+            if name not in contents.purelib_tree and name not in contents.platlib_tree:
                 missing.append(name)
         if missing:
             return [FailedCheck(Check.W201, missing)]
@@ -352,7 +362,7 @@ class WheelChecker:
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for name, entry in tree.entries.items():
                 if name not in expected and not (
-                    isinstance(entry,File) and IGNORED_TOPLEVEL_RGX.search(name)
+                    isinstance(entry, File) and IGNORED_TOPLEVEL_RGX.search(name)
                 ):
                     extra.append(entry.path)
         if extra:

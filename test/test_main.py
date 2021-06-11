@@ -1,173 +1,172 @@
 import json
-from   operator                      import attrgetter
-from   pathlib                       import Path
-from   traceback                     import format_exception
-from   click.testing                 import CliRunner
+from operator import attrgetter
+from pathlib import Path
+from traceback import format_exception
+from click.testing import CliRunner
 import pytest
-from   check_wheel_contents.__main__ import main
-from   check_wheel_contents.checker  import NO_CONFIG
-from   check_wheel_contents.checks   import Check
+from check_wheel_contents.__main__ import main
+from check_wheel_contents.checker import NO_CONFIG
+from check_wheel_contents.checks import Check
 
-WHEEL_DIR = Path(__file__).with_name('data') / 'wheels'
+WHEEL_DIR = Path(__file__).with_name("data") / "wheels"
+
 
 def show_result(r):
     if r.exception is not None:
-        return ''.join(format_exception(*r.exc_info))
+        return "".join(format_exception(*r.exc_info))
     else:
         return r.output
 
-@pytest.mark.parametrize('options,configargs', [
-    (
-        [],
-        {
-            "configpath": None,
-            "select": None,
-            "ignore": None,
-            "toplevel": None,
-            "package": (),
-            "src_dir": (),
-            "package_omit": None,
-        },
-    ),
 
-    (
-        ['--no-config'],
-        {
-            "configpath": NO_CONFIG,
-            "select": None,
-            "ignore": None,
-            "toplevel": None,
-            "package": (),
-            "src_dir": (),
-            "package_omit": None,
-        },
-    ),
-
-    (
-        ['--config', 'foo.cfg'],
-        {
-            "configpath": 'foo.cfg',
-            "select": None,
-            "ignore": None,
-            "toplevel": None,
-            "package": (),
-            "src_dir": (),
-            "package_omit": None,
-        },
-    ),
-
-    (
-        ['--config', 'foo.cfg', '--no-config'],
-        {
-            "configpath": NO_CONFIG,
-            "select": None,
-            "ignore": None,
-            "toplevel": None,
-            "package": (),
-            "src_dir": (),
-            "package_omit": None,
-        },
-    ),
-
-    (
-        ['--no-config', '--config', 'foo.cfg'],
-        {
-            "configpath": 'foo.cfg',
-            "select": None,
-            "ignore": None,
-            "toplevel": None,
-            "package": (),
-            "src_dir": (),
-            "package_omit": None,
-        },
-    ),
-
-    (
-        ['--select', 'W001,W2', '--ignore=W201'],
-        {
-            "configpath": None,
-            "select": {Check.W001, Check.W201, Check.W202},
-            "ignore": {Check.W201},
-            "toplevel": None,
-            "package": (),
-            "src_dir": (),
-            "package_omit": None,
-        },
-    ),
-
-    (
-        ['--toplevel', 'foo,bar/'],
-        {
-            "configpath": None,
-            "select": None,
-            "ignore": None,
-            "toplevel": ['foo', 'bar/'],
-            "package": (),
-            "src_dir": (),
-            "package_omit": None,
-        },
-    ),
-
-    (
-        ['--package=foo', '--src-dir', 'src'],
-        {
-            "configpath": None,
-            "select": None,
-            "ignore": None,
-            "toplevel": None,
-            "package": ('foo',),
-            "src_dir": ('src',),
-            "package_omit": None,
-        },
-    ),
-
-    (
-        ['--package-omit', '__*__, test/data'],
-        {
-            "configpath": None,
-            "select": None,
-            "ignore": None,
-            "toplevel": None,
-            "package": (),
-            "src_dir": (),
-            "package_omit": ["__*__", "test/data"],
-        },
-    ),
-
-    (
-        ['--package-omit', ''],
-        {
-            "configpath": None,
-            "select": None,
-            "ignore": None,
-            "toplevel": None,
-            "package": (),
-            "src_dir": (),
-            "package_omit": [],
-        },
-    ),
-])
+@pytest.mark.parametrize(
+    "options,configargs",
+    [
+        (
+            [],
+            {
+                "configpath": None,
+                "select": None,
+                "ignore": None,
+                "toplevel": None,
+                "package": (),
+                "src_dir": (),
+                "package_omit": None,
+            },
+        ),
+        (
+            ["--no-config"],
+            {
+                "configpath": NO_CONFIG,
+                "select": None,
+                "ignore": None,
+                "toplevel": None,
+                "package": (),
+                "src_dir": (),
+                "package_omit": None,
+            },
+        ),
+        (
+            ["--config", "foo.cfg"],
+            {
+                "configpath": "foo.cfg",
+                "select": None,
+                "ignore": None,
+                "toplevel": None,
+                "package": (),
+                "src_dir": (),
+                "package_omit": None,
+            },
+        ),
+        (
+            ["--config", "foo.cfg", "--no-config"],
+            {
+                "configpath": NO_CONFIG,
+                "select": None,
+                "ignore": None,
+                "toplevel": None,
+                "package": (),
+                "src_dir": (),
+                "package_omit": None,
+            },
+        ),
+        (
+            ["--no-config", "--config", "foo.cfg"],
+            {
+                "configpath": "foo.cfg",
+                "select": None,
+                "ignore": None,
+                "toplevel": None,
+                "package": (),
+                "src_dir": (),
+                "package_omit": None,
+            },
+        ),
+        (
+            ["--select", "W001,W2", "--ignore=W201"],
+            {
+                "configpath": None,
+                "select": {Check.W001, Check.W201, Check.W202},
+                "ignore": {Check.W201},
+                "toplevel": None,
+                "package": (),
+                "src_dir": (),
+                "package_omit": None,
+            },
+        ),
+        (
+            ["--toplevel", "foo,bar/"],
+            {
+                "configpath": None,
+                "select": None,
+                "ignore": None,
+                "toplevel": ["foo", "bar/"],
+                "package": (),
+                "src_dir": (),
+                "package_omit": None,
+            },
+        ),
+        (
+            ["--package=foo", "--src-dir", "src"],
+            {
+                "configpath": None,
+                "select": None,
+                "ignore": None,
+                "toplevel": None,
+                "package": ("foo",),
+                "src_dir": ("src",),
+                "package_omit": None,
+            },
+        ),
+        (
+            ["--package-omit", "__*__, test/data"],
+            {
+                "configpath": None,
+                "select": None,
+                "ignore": None,
+                "toplevel": None,
+                "package": (),
+                "src_dir": (),
+                "package_omit": ["__*__", "test/data"],
+            },
+        ),
+        (
+            ["--package-omit", ""],
+            {
+                "configpath": None,
+                "select": None,
+                "ignore": None,
+                "toplevel": None,
+                "package": (),
+                "src_dir": (),
+                "package_omit": [],
+            },
+        ),
+    ],
+)
 def test_options2configargs(mocker, monkeypatch, options, configargs, tmp_path):
     (tmp_path / "foo").mkdir()
     (tmp_path / "src").mkdir()
     (tmp_path / "foo.cfg").touch()
     monkeypatch.chdir(tmp_path)
     mock_checker = mocker.patch(
-        'check_wheel_contents.__main__.WheelChecker',
+        "check_wheel_contents.__main__.WheelChecker",
         autospec=True,
     )
     r = CliRunner().invoke(main, options)
     assert r.exit_code == 0, show_result(r)
-    assert mock_checker.method_calls \
-        == [mocker.call().configure_options(**configargs)]
+    assert mock_checker.method_calls == [mocker.call().configure_options(**configargs)]
 
-@pytest.mark.parametrize('options', [
-    ['--select=W9999'],
-    ['--ignore', 'W9999'],
-])
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        ["--select=W9999"],
+        ["--ignore", "W9999"],
+    ],
+)
 def test_bad_checks_option_error(mocker, options):
     mock_checker = mocker.patch(
-        'check_wheel_contents.__main__.WheelChecker',
+        "check_wheel_contents.__main__.WheelChecker",
         autospec=True,
     )
     r = CliRunner().invoke(main, options)
@@ -175,50 +174,51 @@ def test_bad_checks_option_error(mocker, options):
     assert "Unknown/invalid check prefix: 'W9999'" in r.output
     mock_checker.assert_not_called()
 
+
 @pytest.mark.parametrize(
-    'whlfile',
+    "whlfile",
     WHEEL_DIR.glob("*.whl"),
     ids=attrgetter("name"),
 )
 def test_main(monkeypatch, whlfile):
-    with open(str(whlfile.with_suffix('.json'))) as fp:
+    with open(str(whlfile.with_suffix(".json"))) as fp:
         expected = json.load(fp)
     monkeypatch.chdir(str(WHEEL_DIR))
-    r = CliRunner(mix_stderr=False).invoke(main, ['--no-config', whlfile.name])
+    r = CliRunner(mix_stderr=False).invoke(main, ["--no-config", whlfile.name])
     assert r.exit_code == expected["rc"], show_result(r)
     assert r.stdout.rstrip() == expected["stdout"]
     assert r.stderr.rstrip() == expected["stderr"]
 
-@pytest.mark.parametrize('cfgname,cfgsrc,errmsg', [
-    (
-        'foo.ini',
-        '[check-wheel-contents]\n'
-        'select = W9\n',
-        "Unknown/invalid check prefix: 'W9'",
-    ),
-    (
-        'foo.toml',
-        '[tool.check-wheel-contents]\n'
-        'ignore = [""]\n',
-        "Unknown/invalid check prefix: ''",
-    ),
-    (
-        'foo.cfg',
-        '[check-wheel-contents]\n'
-        'package = missing\n',
-        "package: no such file or directory: '{tmp_path}/missing'",
-    ),
-    (
-        'foo.cfg',
-        '[check-wheel-contents]\n'
-        'src_dir = missing\n',
-        "src_dir: not a directory: '{tmp_path}/missing'",
-    ),
-])
+
+@pytest.mark.parametrize(
+    "cfgname,cfgsrc,errmsg",
+    [
+        (
+            "foo.ini",
+            "[check-wheel-contents]\n" "select = W9\n",
+            "Unknown/invalid check prefix: 'W9'",
+        ),
+        (
+            "foo.toml",
+            "[tool.check-wheel-contents]\n" 'ignore = [""]\n',
+            "Unknown/invalid check prefix: ''",
+        ),
+        (
+            "foo.cfg",
+            "[check-wheel-contents]\n" "package = missing\n",
+            "package: no such file or directory: '{tmp_path}/missing'",
+        ),
+        (
+            "foo.cfg",
+            "[check-wheel-contents]\n" "src_dir = missing\n",
+            "src_dir: not a directory: '{tmp_path}/missing'",
+        ),
+    ],
+)
 def test_bad_config_error(cfgname, cfgsrc, errmsg, monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     Path(cfgname).write_text(cfgsrc)
-    r = CliRunner().invoke(main, ['--config', cfgname])
+    r = CliRunner().invoke(main, ["--config", cfgname])
     assert r.exit_code != 0, show_result(r)
-    assert f'Error: {cfgname}: ' in r.output
+    assert f"Error: {cfgname}: " in r.output
     assert errmsg.format(tmp_path=tmp_path) in r.output

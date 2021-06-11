@@ -1,34 +1,35 @@
-from   collections.abc import Sequence
-from   configparser    import ConfigParser
-from   pathlib         import Path
-from   typing          import Any, List, Optional, Set, Tuple
-from   pydantic        import BaseModel, Field, ValidationError, validator
+from collections.abc import Sequence
+from configparser import ConfigParser
+from pathlib import Path
+from typing import Any, List, Optional, Set, Tuple
+from pydantic import BaseModel, Field, ValidationError, validator
 import toml
-from   .checks         import Check, parse_check_prefix
-from   .errors         import UserInputError
-from   .filetree       import Directory
-from   .util           import comma_split
+from .checks import Check, parse_check_prefix
+from .errors import UserInputError
+from .filetree import Directory
+from .util import comma_split
 
 #: The filenames that configuration is read from by default, in descending
 #: order of preference
 CONFIG_FILES = [
-    'pyproject.toml',
-    'tox.ini',
-    'setup.cfg',
-    'check-wheel-contents.cfg',
-    '.check-wheel-contents.cfg',
+    "pyproject.toml",
+    "tox.ini",
+    "setup.cfg",
+    "check-wheel-contents.cfg",
+    ".check-wheel-contents.cfg",
 ]
 
 #: The name of the configuration section from which the configuration is
 #: retrieved for most configuration formats
-CONFIG_SECTION = 'check-wheel-contents'
+CONFIG_SECTION = "check-wheel-contents"
 
 #: The default set of exclusion patterns for traversing ``--package`` and
 #: ``--src-dir`` directories
-TRAVERSAL_EXCLUSIONS = ['.*', 'CVS', 'RCS', '*.pyc', '*.pyo', '*.egg-info']
+TRAVERSAL_EXCLUSIONS = [".*", "CVS", "RCS", "*.pyc", "*.pyo", "*.egg-info"]
+
 
 class Configuration(BaseModel):
-    """ A container for a `WheelChecker`'s raw configuration values """
+    """A container for a `WheelChecker`'s raw configuration values"""
 
     #: The set of selected checks, or `None` if not specified
     select: Optional[Set[Check]] = None
@@ -51,7 +52,11 @@ class Configuration(BaseModel):
         allow_population_by_field_name = True
 
     @validator(
-        "select", "ignore", "toplevel", "package_paths", "src_dirs",
+        "select",
+        "ignore",
+        "toplevel",
+        "package_paths",
+        "src_dirs",
         "package_omit",
         pre=True,
     )
@@ -83,12 +88,14 @@ class Configuration(BaseModel):
             return value
 
     @validator("toplevel")
-    def _convert_toplevel(cls, value: Optional[List[str]]) -> Optional[List[str]]:  # noqa: B902, U100
+    def _convert_toplevel(
+        cls, value: Optional[List[str]]  # noqa: B902, U100
+    ) -> Optional[List[str]]:
         """
         Strip trailing forward slashes from the elements of a list, if defined
         """
         if value is not None:
-            value = [tl.rstrip('/') for tl in value]
+            value = [tl.rstrip("/") for tl in value]
         return value
 
     @classmethod
@@ -100,7 +107,7 @@ class Configuration(BaseModel):
         package: Tuple[str, ...] = (),
         src_dir: Tuple[str, ...] = (),
         package_omit: Optional[List[str]] = None,
-    ) -> 'Configuration':
+    ) -> "Configuration":
         """
         Construct a `Configuration` instance from option values passed in on
         the command line.  If either ``package`` or ``src_dir`` is an empty
@@ -108,16 +115,16 @@ class Configuration(BaseModel):
         command line), it is replaced by `None`.
         """
         return cls(
-            select        = select,
-            ignore        = ignore,
-            toplevel      = toplevel,
-            package_paths = package or None,
-            src_dirs      = src_dir or None,
-            package_omit  = package_omit,
+            select=select,
+            ignore=ignore,
+            toplevel=toplevel,
+            package_paths=package or None,
+            src_dirs=src_dir or None,
+            package_omit=package_omit,
         )
 
     @classmethod
-    def from_config_file(cls, path: Optional[str] = None) -> 'Configuration':
+    def from_config_file(cls, path: Optional[str] = None) -> "Configuration":
         """
         Construct a `Configuration` instance from the configuration file at the
         given path.  If the path is `None`, read from the default configuration
@@ -135,7 +142,7 @@ class Configuration(BaseModel):
             return cfg
 
     @classmethod
-    def find_default(cls) -> Optional['Configuration']:
+    def find_default(cls) -> Optional["Configuration"]:
         """
         Find the default configuration file and read the relevant section from
         it.  Returns `None` if no file with the appropriate section is found.
@@ -152,12 +159,12 @@ class Configuration(BaseModel):
         return None
 
     @classmethod
-    def from_file(cls, path: Path) -> Optional['Configuration']:
+    def from_file(cls, path: Path) -> Optional["Configuration"]:
         """
         Read the relevant section from the given configuration file.  Returns
         `None` if the section does not exist.
         """
-        if path.suffix == '.toml':
+        if path.suffix == ".toml":
             data = toml.load(path)
             tool = data.get("tool")
             if not isinstance(tool, dict):
@@ -170,14 +177,14 @@ class Configuration(BaseModel):
                     config = cls.parse_obj(cfg)
                     config.resolve_paths(path)
                 except (UserInputError, ValidationError) as e:
-                    raise UserInputError(f'{path}: {e}')
+                    raise UserInputError(f"{path}: {e}")
                 return config
         else:
             data = ConfigParser()
-            with path.open(encoding='utf-8') as fp:
+            with path.open(encoding="utf-8") as fp:
                 data.read_file(fp)
-            if path.name == 'setup.cfg':
-                section = f'tool:{CONFIG_SECTION}'
+            if path.name == "setup.cfg":
+                section = f"tool:{CONFIG_SECTION}"
             else:
                 section = CONFIG_SECTION
             if data.has_section(section):
@@ -185,7 +192,7 @@ class Configuration(BaseModel):
                     config = cls.parse_obj(data[section])
                     config.resolve_paths(path)
                 except (UserInputError, ValidationError) as e:
-                    raise UserInputError(f'{path}: {e}')
+                    raise UserInputError(f"{path}: {e}")
                 return config
             else:
                 return None
@@ -204,7 +211,7 @@ class Configuration(BaseModel):
                 q = base / p
                 if not q.exists():
                     raise UserInputError(
-                        f'package: no such file or directory: {str(q)!r}'
+                        f"package: no such file or directory: {str(q)!r}"
                     )
                 packages.append(q)
             self.package_paths = packages
@@ -213,13 +220,11 @@ class Configuration(BaseModel):
             for p in self.src_dirs:
                 q = base / p
                 if not q.is_dir():
-                    raise UserInputError(
-                        f'src_dir: not a directory: {str(q)!r}'
-                    )
+                    raise UserInputError(f"src_dir: not a directory: {str(q)!r}")
                 src_dirs.append(q)
             self.src_dirs = src_dirs
 
-    def update(self, cfg: 'Configuration') -> None:
+    def update(self, cfg: "Configuration") -> None:
         """
         Update this `Configuration` instance by copying over all non-`None`
         fields from ``cfg``
@@ -256,29 +261,29 @@ class Configuration(BaseModel):
         else:
             exclude = self.package_omit
         tree = Directory()
-        for p in (self.package_paths or []):
+        for p in self.package_paths or []:
             subtree = Directory.from_local_tree(p, exclude=exclude)
             ### TODO: Move the below logic to Directory?
             for name, entry in subtree.entries.items():
                 if name in tree:
                     raise UserInputError(
-                        f'`--package {p}` adds {name!r} to file tree, but it is'
-                        f' already present from prior --package option'
+                        f"`--package {p}` adds {name!r} to file tree, but it is"
+                        f" already present from prior --package option"
                     )
                 tree.entries[name] = entry
-        for p in (self.src_dirs or []):
+        for p in self.src_dirs or []:
             subtree = Directory.from_local_tree(
                 p,
-                exclude      = exclude,
-                include_root = False,
+                exclude=exclude,
+                include_root=False,
             )
             ### TODO: Move the below logic to Directory?
             for name, entry in subtree.entries.items():
                 if name in tree:
                     raise UserInputError(
-                        f'`--src-dir {p}` adds {name!r} to file tree, but it is'
-                        f' already present from prior --package or --src-dir'
-                        f' option'
+                        f"`--src-dir {p}` adds {name!r} to file tree, but it is"
+                        f" already present from prior --package or --src-dir"
+                        f" option"
                     )
                 tree.entries[name] = entry
         return tree
