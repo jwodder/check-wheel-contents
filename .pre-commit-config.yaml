@@ -14,6 +14,11 @@ repos:
     hooks:
       - id: black
 
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.9.1
+    hooks:
+      - id: isort
+
   - repo: https://gitlab.com/pycqa/flake8
     rev: 3.9.2
     hooks:
@@ -21,6 +26,5 @@ repos:
         additional_dependencies:
           - flake8-bugbear
           - flake8-builtins
-          - flake8-import-order-jwodder
           - flake8-unused-arguments
         exclude: ^test/data

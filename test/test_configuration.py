@@ -5,7 +5,7 @@ from shutil import copytree
 from pydantic import ValidationError
 import pytest
 from check_wheel_contents.checks import Check
-from check_wheel_contents.config import Configuration, TRAVERSAL_EXCLUSIONS
+from check_wheel_contents.config import TRAVERSAL_EXCLUSIONS, Configuration
 from check_wheel_contents.errors import UserInputError
 from check_wheel_contents.filetree import Directory, File
 
