@@ -3,7 +3,7 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, List, Optional, Set, Tuple
 from pydantic import BaseModel, Field, ValidationError, validator
-import toml
+import tomli
 from .checks import Check, parse_check_prefix
 from .errors import UserInputError
 from .filetree import Directory
@@ -165,8 +165,9 @@ class Configuration(BaseModel):
         `None` if the section does not exist.
         """
         if path.suffix == ".toml":
-            data = toml.load(path)
-            tool = data.get("tool")
+            with path.open() as fp:
+                tdata = tomli.load(fp)
+            tool = tdata.get("tool")
             if not isinstance(tool, dict):
                 return None
             cfg = tool.get(CONFIG_SECTION)
@@ -180,16 +181,16 @@ class Configuration(BaseModel):
                     raise UserInputError(f"{path}: {e}")
                 return config
         else:
-            data = ConfigParser()
+            cdata = ConfigParser()
             with path.open(encoding="utf-8") as fp:
-                data.read_file(fp)
+                cdata.read_file(fp)
             if path.name == "setup.cfg":
                 section = f"tool:{CONFIG_SECTION}"
             else:
                 section = CONFIG_SECTION
-            if data.has_section(section):
+            if cdata.has_section(section):
                 try:
-                    config = cls.parse_obj(data[section])
+                    config = cls.parse_obj(cdata[section])
                     config.resolve_paths(path)
                 except (UserInputError, ValidationError) as e:
                     raise UserInputError(f"{path}: {e}")

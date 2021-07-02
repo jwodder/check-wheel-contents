@@ -1,3 +1,7 @@
+v0.3.1 (in development)
+-----------------------
+- Switch from toml to tomli
+
 v0.3.0 (2021-05-12)
 -------------------
 - Make sdists include `*.pyc` files from the test data directory
