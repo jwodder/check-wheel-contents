@@ -3,14 +3,20 @@ import csv
 from io import TextIOWrapper
 import os
 import re
+import sys
 from typing import DefaultDict, Iterable, List, Optional, TextIO, Tuple, Union
 from zipfile import ZipFile
 import attr
-from property_manager import cached_property
 from wheel_filename import parse_wheel_filename
 from .errors import WheelValidationError
 from .filetree import Directory, File
 from .util import find_wheel_dirs, is_data_dir, is_dist_info_dir
+
+if sys.version_info[:2] >= (3, 8):
+    from functools import cached_property
+else:
+    from cached_property import cached_property
+
 
 ROOT_IS_PURELIB_RGX = re.compile(r"Root-Is-Purelib\s*:\s*(.*?)\s*", flags=re.I)
 
@@ -157,8 +163,14 @@ class WheelContents:
         if isinstance(entry, File):
             self.by_signature[entry.signature].append(entry)
         # Invalidate cached properties:
-        del self.purelib_tree
-        del self.platlib_tree
+        try:
+            del self.purelib_tree
+        except AttributeError:
+            pass
+        try:
+            del self.platlib_tree
+        except AttributeError:
+            pass
 
     def validate_tree(self) -> None:
         """
