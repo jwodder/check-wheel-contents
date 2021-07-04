@@ -17,7 +17,7 @@ PROJECT_TREE = DATA_DIR / "project-tree"
 def create_file(p, contents=None):
     p.parent.mkdir(parents=True, exist_ok=True)
     if contents is not None:
-        p.write_text(contents)
+        p.write_text(contents, encoding="UTF-8")
     else:
         p.touch()
 
