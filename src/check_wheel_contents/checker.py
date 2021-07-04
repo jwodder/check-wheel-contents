@@ -198,6 +198,7 @@ class WheelChecker:
                 except KeyError:
                     pass
                 else:
+                    assert entry.path is not None
                     badpaths.append(entry.path)
         if badpaths:
             return [FailedCheck(Check.W005, badpaths)]
@@ -264,6 +265,7 @@ class WheelChecker:
                 if not name.startswith("_") and not (
                     isinstance(entry, File) and IGNORED_TOPLEVEL_RGX.search(name)
                 ):
+                    assert entry.path is not None
                     toplevels.append(entry.path)
         if len(toplevels) > 1:
             return [FailedCheck(Check.W009, toplevels)]
@@ -284,6 +286,7 @@ class WheelChecker:
                 if not is_stubs_dir(name) and not any(
                     f.has_module_ext() for f in subdir.all_files()
                 ):
+                    assert subdir.path is not None
                     baddirs.append(subdir.path)
         if baddirs:
             return [FailedCheck(Check.W010, baddirs)]
@@ -303,6 +306,7 @@ class WheelChecker:
         missing = {f.path for f in self.pkgtree.all_files()}
         for tree in (contents.purelib_tree, contents.platlib_tree):
             for f in tree.all_files():
+                assert f.libpath is not None
                 missing.discard(f.libpath)
         if missing:
             return [FailedCheck(Check.W101, sorted(missing))]
@@ -364,6 +368,7 @@ class WheelChecker:
                 if name not in expected and not (
                     isinstance(entry, File) and IGNORED_TOPLEVEL_RGX.search(name)
                 ):
+                    assert entry.path is not None
                     extra.append(entry.path)
         if extra:
             return [FailedCheck(Check.W202, extra)]
