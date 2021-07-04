@@ -867,7 +867,7 @@ def test_toml_unicode(tmp_path):
     configuration = textwrap.dedent("""
     [tool.check-wheel-contents]
     select = "W001"
-    
+
     [project]
     description = "Factory ⸻ A code generator 🏭"
     authors = [{name = "Łukasz Langa"}]
