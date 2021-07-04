@@ -2,6 +2,7 @@ import json
 from operator import attrgetter
 from pathlib import Path
 from shutil import copytree
+import textwrap
 from pydantic import ValidationError
 import pytest
 from check_wheel_contents.checks import Check
@@ -860,3 +861,17 @@ def test_get_package_tree_package_path_src_dir_conflict(monkeypatch, tmp_path):
         "`--src-dir src` adds 'bar' to file tree, but it is already present"
         " from prior --package or --src-dir option"
     )
+
+
+def test_toml_unicode(tmp_path):
+    configuration = textwrap.dedent("""
+    [tool.check-wheel-contents]
+    select = "W001"
+    
+    [project]
+    description = "Factory ⸻ A code generator 🏭"
+    authors = [{name = "Łukasz Langa"}]
+    """)
+
+    create_file(tmp_path / "pyproject.toml", configuration)
+    Configuration.from_file(tmp_path / "pyproject.toml")
