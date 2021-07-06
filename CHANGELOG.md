@@ -1,3 +1,8 @@
+v0.3.2 (in development)
+-----------------------
+- Replace `property-manager` with `functools.cached_property` (Python 3.8+) /
+  `cached-property` (pre-Python 3.8)
+
 v0.3.1 (2021-07-02)
 -------------------
 - Switch from toml to tomli
