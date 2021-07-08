@@ -2,6 +2,8 @@ v0.3.2 (in development)
 -----------------------
 - Replace `property-manager` with `functools.cached_property` (Python 3.8+) /
   `cached-property` (pre-Python 3.8)
+- Open TOML files using UTF-8 (contributed by
+  [@domdfcoding](https://github.com/domdfcoding))
 
 v0.3.1 (2021-07-02)
 -------------------
