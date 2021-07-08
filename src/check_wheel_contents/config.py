@@ -165,7 +165,7 @@ class Configuration(BaseModel):
         `None` if the section does not exist.
         """
         if path.suffix == ".toml":
-            with path.open() as fp:
+            with path.open(encoding="UTF-8") as fp:
                 tdata = tomli.load(fp)
             tool = tdata.get("tool")
             if not isinstance(tool, dict):
