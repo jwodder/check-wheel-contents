@@ -206,12 +206,12 @@ def test_main(monkeypatch, whlfile):
         (
             "foo.cfg",
             "[check-wheel-contents]\n" "package = missing\n",
-            "package: no such file or directory: '{tmp_path}/missing'",
+            "package: no such file or directory: {missing_path!r}",
         ),
         (
             "foo.cfg",
             "[check-wheel-contents]\n" "src_dir = missing\n",
-            "src_dir: not a directory: '{tmp_path}/missing'",
+            "src_dir: not a directory: {missing_path!r}",
         ),
     ],
 )
@@ -221,4 +221,4 @@ def test_bad_config_error(cfgname, cfgsrc, errmsg, monkeypatch, tmp_path):
     r = CliRunner().invoke(main, ["--config", cfgname])
     assert r.exit_code != 0, show_result(r)
     assert f"Error: {cfgname}: " in r.output
-    assert errmsg.format(tmp_path=tmp_path) in r.output
+    assert errmsg.format(missing_path=str(tmp_path / "missing")) in r.output

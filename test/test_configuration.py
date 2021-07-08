@@ -1,5 +1,6 @@
 import json
 from operator import attrgetter
+import os
 from pathlib import Path
 from shutil import copytree
 import textwrap
@@ -371,7 +372,9 @@ def test_resolve_paths_nonexistent(monkeypatch, tmp_path):
     with pytest.raises(UserInputError) as excinfo:
         cfg.resolve_paths(Path("path/foo.cfg"))
     assert str(excinfo.value) == (
-        f"package: no such file or directory: '{tmp_path}/path/quux'"
+        "package: no such file or directory: {!r}".format(
+            str(tmp_path / "path" / "quux")
+        )
     )
 
 
@@ -382,7 +385,9 @@ def test_resolve_paths_require_dir_not_a_dir(monkeypatch, tmp_path):
     cfg = Configuration(src_dirs="foo,bar,quux")
     with pytest.raises(UserInputError) as excinfo:
         cfg.resolve_paths(Path("path/foo.cfg"))
-    assert str(excinfo.value) == f"src_dir: not a directory: '{tmp_path}/path/foo'"
+    assert str(excinfo.value) == "src_dir: not a directory: {!r}".format(
+        str(tmp_path / "path" / "foo")
+    )
 
 
 @pytest.mark.parametrize(
@@ -828,7 +833,7 @@ def test_get_package_tree_package_paths_conflict(monkeypatch, tmp_path):
     with pytest.raises(UserInputError) as excinfo:
         cfg.get_package_tree()
     assert str(excinfo.value) == (
-        "`--package src/bar` adds 'bar' to file tree, but it is already"
+        f"`--package src{os.sep}bar` adds 'bar' to file tree, but it is already"
         " present from prior --package option"
     )
 
@@ -864,14 +869,16 @@ def test_get_package_tree_package_path_src_dir_conflict(monkeypatch, tmp_path):
 
 
 def test_toml_unicode(tmp_path):
-    configuration = textwrap.dedent("""
+    configuration = textwrap.dedent(
+        """
     [tool.check-wheel-contents]
     select = "W001"
 
     [project]
     description = "Factory ⸻ A code generator 🏭"
     authors = [{name = "Łukasz Langa"}]
-    """)
+    """
+    )
 
     create_file(tmp_path / "pyproject.toml", configuration)
     Configuration.from_file(tmp_path / "pyproject.toml")
