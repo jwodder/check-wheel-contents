@@ -4,6 +4,7 @@ v0.3.2 (in development)
   `cached-property` (pre-Python 3.8)
 - Open TOML files using UTF-8 (contributed by
   [@domdfcoding](https://github.com/domdfcoding))
+- Get tests to pass on Windows
 
 v0.3.1 (2021-07-02)
 -------------------
