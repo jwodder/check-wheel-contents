@@ -1,5 +1,5 @@
-v0.3.2 (in development)
------------------------
+v0.3.2 (2021-07-08)
+-------------------
 - Replace `property-manager` with `functools.cached_property` (Python 3.8+) /
   `cached-property` (pre-Python 3.8)
 - Open TOML files using UTF-8 (contributed by
