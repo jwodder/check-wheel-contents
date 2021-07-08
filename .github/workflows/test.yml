@@ -8,10 +8,14 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
         python-version:
           - '3.6'
           - '3.7'
@@ -22,10 +26,13 @@ jobs:
         include:
           - python-version: '3.8'
             toxenv: dogfood
+            os: ubuntu-latest
           - python-version: '3.6'
             toxenv: lint
+            os: ubuntu-latest
           - python-version: '3.8'
             toxenv: typing
+            os: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
