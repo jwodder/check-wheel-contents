@@ -1,3 +1,7 @@
+v0.3.3 (in development)
+-----------------------
+- Update for tomli 1.2.0
+
 v0.3.2 (2021-07-08)
 -------------------
 - Replace `property-manager` with `functools.cached_property` (Python 3.8+) /
