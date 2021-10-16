@@ -15,7 +15,7 @@ from .util import find_wheel_dirs, is_data_dir, is_dist_info_dir
 if sys.version_info[:2] >= (3, 8):
     from functools import cached_property
 else:
-    from cached_property import cached_property
+    from backports.cached_property import cached_property
 
 
 ROOT_IS_PURELIB_RGX = re.compile(r"Root-Is-Purelib\s*:\s*(.*?)\s*", flags=re.I)
