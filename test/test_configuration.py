@@ -3,7 +3,6 @@ from operator import attrgetter
 import os
 from pathlib import Path
 from shutil import copytree
-import textwrap
 from pydantic import ValidationError
 import pytest
 from check_wheel_contents.checks import Check
@@ -869,16 +868,13 @@ def test_get_package_tree_package_path_src_dir_conflict(monkeypatch, tmp_path):
 
 
 def test_toml_unicode(tmp_path):
-    configuration = textwrap.dedent(
-        """
-    [tool.check-wheel-contents]
-    select = "W001"
-
-    [project]
-    description = "Factory ⸻ A code generator 🏭"
-    authors = [{name = "Łukasz Langa"}]
-    """
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.check-wheel-contents]\n"
+        'select = "W001"\n'
+        "\n"
+        "[project]\n"
+        'description = "Factory ⸻ A code generator 🏭"\n'
+        'authors = [{name = "Łukasz Langa"}]\n',
+        encoding="utf-8",
     )
-
-    create_file(tmp_path / "pyproject.toml", configuration)
     Configuration.from_file(tmp_path / "pyproject.toml")
