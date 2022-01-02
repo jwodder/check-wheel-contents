@@ -1,5 +1,5 @@
-v0.3.4 (in development)
------------------------
+v0.3.4 (2022-01-02)
+-------------------
 - Support Python 3.10
 - Support tomli 2.0
 
