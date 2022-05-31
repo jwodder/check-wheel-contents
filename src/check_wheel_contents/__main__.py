@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Iterable, List, Optional, Set, Tuple
+from typing import Any, Iterator, List, Optional, Set, Tuple
 import click
 from wheel_filename import InvalidFilenameError
 from . import __version__
@@ -155,7 +155,7 @@ def main(
     ctx.exit(0 if ok else 1)
 
 
-def args2wheelpaths(args: List[str]) -> Iterable[Path]:
+def args2wheelpaths(args: List[str]) -> Iterator[Path]:
     """
     Convert a list of paths to `Path` objects and, if a given path is a
     directory, replace it with `Path`\\s to all wheels underneath it
