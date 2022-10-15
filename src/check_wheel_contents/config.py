@@ -1,7 +1,8 @@
+from __future__ import annotations
 from collections.abc import Sequence
 from configparser import ConfigParser
 from pathlib import Path
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any, List, Optional, Set
 from pydantic import BaseModel, Field, ValidationError, validator
 import tomli
 from .checks import Check, parse_check_prefix
@@ -89,8 +90,8 @@ class Configuration(BaseModel):
 
     @validator("toplevel")
     def _convert_toplevel(
-        cls, value: Optional[List[str]]  # noqa: B902, U100
-    ) -> Optional[List[str]]:
+        cls, value: Optional[list[str]]  # noqa: B902, U100
+    ) -> Optional[list[str]]:
         """
         Strip trailing forward slashes from the elements of a list, if defined
         """
@@ -101,13 +102,13 @@ class Configuration(BaseModel):
     @classmethod
     def from_command_options(
         cls,
-        select: Optional[Set[Check]] = None,
-        ignore: Optional[Set[Check]] = None,
-        toplevel: Optional[List[str]] = None,
-        package: Tuple[str, ...] = (),
-        src_dir: Tuple[str, ...] = (),
-        package_omit: Optional[List[str]] = None,
-    ) -> "Configuration":
+        select: Optional[set[Check]] = None,
+        ignore: Optional[set[Check]] = None,
+        toplevel: Optional[list[str]] = None,
+        package: tuple[str, ...] = (),
+        src_dir: tuple[str, ...] = (),
+        package_omit: Optional[list[str]] = None,
+    ) -> Configuration:
         """
         Construct a `Configuration` instance from option values passed in on
         the command line.  If either ``package`` or ``src_dir`` is an empty
@@ -124,7 +125,7 @@ class Configuration(BaseModel):
         )
 
     @classmethod
-    def from_config_file(cls, path: Optional[str] = None) -> "Configuration":
+    def from_config_file(cls, path: Optional[str] = None) -> Configuration:
         """
         Construct a `Configuration` instance from the configuration file at the
         given path.  If the path is `None`, read from the default configuration
@@ -207,7 +208,7 @@ class Configuration(BaseModel):
         """
         base = configpath.resolve().parent
         if self.package_paths is not None:
-            packages: List[Path] = []
+            packages: list[Path] = []
             for p in self.package_paths:
                 q = base / p
                 if not q.exists():
@@ -217,7 +218,7 @@ class Configuration(BaseModel):
                 packages.append(q)
             self.package_paths = packages
         if self.src_dirs is not None:
-            src_dirs: List[Path] = []
+            src_dirs: list[Path] = []
             for p in self.src_dirs:
                 q = base / p
                 if not q.is_dir():
@@ -225,7 +226,7 @@ class Configuration(BaseModel):
                 src_dirs.append(q)
             self.src_dirs = src_dirs
 
-    def update(self, cfg: "Configuration") -> None:
+    def update(self, cfg: Configuration) -> None:
         """
         Update this `Configuration` instance by copying over all non-`None`
         fields from ``cfg``
@@ -233,7 +234,7 @@ class Configuration(BaseModel):
         for field, value in cfg.dict(exclude_none=True).items():
             setattr(self, field, value)
 
-    def get_selected_checks(self) -> Set[Check]:
+    def get_selected_checks(self) -> set[Check]:
         """
         Return the final set of selected checks according to the ``select`` and
         ``ignore`` options.  This equals the set ``select`` (defaulting to all

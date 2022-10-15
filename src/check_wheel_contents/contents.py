@@ -1,10 +1,12 @@
+from __future__ import annotations
 from collections import defaultdict
+from collections.abc import Iterable
 import csv
 from io import TextIOWrapper
 import os
 import re
 import sys
-from typing import DefaultDict, Iterable, List, Optional, TextIO, Tuple, Union
+from typing import Optional, TextIO
 from zipfile import ZipFile
 import attr
 from wheel_filename import parse_wheel_filename
@@ -34,8 +36,8 @@ class WheelContents:
     root_is_purelib: bool = attr.ib(default=True)
     #: A mapping from ``File.signature`` values to lists of the `File` objects
     #: with those values
-    by_signature: DefaultDict[
-        Tuple[Optional[int], Optional[str]], List[File]
+    by_signature: defaultdict[
+        tuple[Optional[int], Optional[str]], list[File]
     ] = attr.ib(factory=lambda: defaultdict(list))
     #: The wheel's file tree
     filetree: Directory = attr.ib(factory=Directory)
@@ -93,7 +95,7 @@ class WheelContents:
                 return platlib
 
     @classmethod
-    def from_wheel(cls, path: Union[str, os.PathLike]) -> "WheelContents":
+    def from_wheel(cls, path: str | os.PathLike) -> WheelContents:
         """Construct a `WheelContents` from the wheel at the given path"""
         whlname = parse_wheel_filename(path)
         with open(path, "rb") as fp, ZipFile(fp) as zf:
@@ -144,20 +146,20 @@ class WheelContents:
         """
         self.add_record_rows(csv.reader(fp, delimiter=",", quotechar='"'))
 
-    def add_record_rows(self, rows: Iterable[List[str]]) -> None:
+    def add_record_rows(self, rows: Iterable[list[str]]) -> None:
         """
         Add the files & directories described by the rows of fields read from a
         wheel's :file:`RECORD` file to the `WheelContents`
         """
         for row in rows:
-            entry: Union[File, Directory]
+            entry: File | Directory
             if row and row[0].endswith("/"):
                 entry = Directory(row[0])
             else:
                 entry = File.from_record_row(row)
             self.add_entry(entry)
 
-    def add_entry(self, entry: Union["File", "Directory"]) -> None:
+    def add_entry(self, entry: File | Directory) -> None:
         """Add a `File` or `Directory` to the `WheelContents`' file tree"""
         self.filetree.add_entry(entry)
         if isinstance(entry, File):

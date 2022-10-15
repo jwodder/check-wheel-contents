@@ -1,5 +1,7 @@
+from __future__ import annotations
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Iterator, List, Optional, Set, Tuple
+from typing import Any, Optional
 import click
 from wheel_filename import InvalidFilenameError
 from . import __version__
@@ -18,7 +20,7 @@ class ChecksParamType(click.ParamType):
         value: str,
         param: Optional[click.Parameter],
         ctx: Optional[click.Context],
-    ) -> Set[Check]:
+    ) -> set[Check]:
         try:
             return parse_checks_string(value)
         except UserInputError as e:
@@ -105,14 +107,14 @@ class ConfigParamType(click.ParamType):
 @click.pass_context
 def main(
     ctx: click.Context,
-    wheel: List[str],
+    wheel: list[str],
     config: Any,
-    select: Optional[Set[Check]],
-    ignore: Optional[Set[Check]],
-    toplevel: Optional[List[str]],
-    package: Tuple[str, ...],
-    src_dir: Tuple[str, ...],
-    package_omit: Optional[List[str]],
+    select: Optional[set[Check]],
+    ignore: Optional[set[Check]],
+    toplevel: Optional[list[str]],
+    package: tuple[str, ...],
+    src_dir: tuple[str, ...],
+    package_omit: Optional[list[str]],
 ) -> None:
     """
     Check that your wheels have the right contents.
@@ -155,7 +157,7 @@ def main(
     ctx.exit(0 if ok else 1)
 
 
-def args2wheelpaths(args: List[str]) -> Iterator[Path]:
+def args2wheelpaths(args: list[str]) -> Iterator[Path]:
     """
     Convert a list of paths to `Path` objects and, if a given path is a
     directory, replace it with `Path`\\s to all wheels underneath it

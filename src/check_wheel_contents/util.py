@@ -1,8 +1,9 @@
+from __future__ import annotations
 import base64
 import hashlib
 from keyword import iskeyword
 import re
-from typing import List, Optional, Tuple
+from typing import Optional
 from packaging.utils import canonicalize_name, canonicalize_version
 from .errors import WheelValidationError
 
@@ -18,7 +19,7 @@ DATA_DIR_RGX = re.compile(
 )
 
 
-def comma_split(s: str) -> List[str]:
+def comma_split(s: str) -> list[str]:
     """
     Split apart a string on commas, discarding leading & trailing whitespace
     from all parts and discarding empty parts
@@ -26,7 +27,7 @@ def comma_split(s: str) -> List[str]:
     return [k for k in map(str.strip, s.split(",")) if k]
 
 
-def bytes_signature(b: bytes) -> Tuple[int, str]:
+def bytes_signature(b: bytes) -> tuple[int, str]:
     return (
         len(b),
         "sha256=" + urlsafe_b64encode_nopad(hashlib.sha256(b).digest()),
@@ -78,8 +79,8 @@ def is_stubs_dir(name: str) -> bool:
 
 
 def find_wheel_dirs(
-    namelist: List[str], project: str, version: str
-) -> Tuple[str, Optional[str]]:
+    namelist: list[str], project: str, version: str
+) -> tuple[str, Optional[str]]:
     """
     Given a list ``namelist`` of files in a wheel for a project ``project`` and
     version ``version``, find & return the name of the wheel's ``.dist-info``

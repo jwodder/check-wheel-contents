@@ -1,9 +1,11 @@
+from __future__ import annotations
+from collections.abc import Iterator
 import errno
 from keyword import iskeyword
 import os
 from os.path import splitext
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Optional
 import attr
 from .errors import WheelValidationError
 from .util import is_data_dir, is_dist_info_dir, pymodule_basename, validate_path
@@ -14,7 +16,7 @@ class File:
     """Representation of a file in a file tree"""
 
     #: The components of the file's path within the file tree
-    parts: Tuple[str, ...]
+    parts: tuple[str, ...]
     #: The file's size, or `None` if unknown/irrelevant
     size: Optional[int]
     #: A hash of the file's contents in the same ``{alg}={digest}`` form as
@@ -22,7 +24,7 @@ class File:
     hashsum: Optional[str]
 
     @classmethod
-    def from_record_row(cls, row: List[str]) -> "File":
+    def from_record_row(cls, row: list[str]) -> File:
         """
         Construct a `File` object from a row of fields in a wheel's
         :file:`RECORD` file
@@ -57,12 +59,12 @@ class File:
         return "/".join(self.parts)
 
     @property
-    def signature(self) -> Tuple[Optional[int], Optional[str]]:
+    def signature(self) -> tuple[Optional[int], Optional[str]]:
         """A tuple of the file's ``size`` and ``hashsum`` fields"""
         return (self.size, self.hashsum)
 
     @property
-    def libparts(self) -> Optional[Tuple[str, ...]]:
+    def libparts(self) -> Optional[tuple[str, ...]]:
         """
         The path components of the file relative to the root of the purelib or
         platlib folder, whichever contains it.  If the file is in neither the
@@ -128,7 +130,7 @@ class Directory:
     #: this directory is the root of the tree
     path: Optional[str] = attr.ib(default=None)
     #: Entries in the directory, as a mapping from basenames to entries
-    entries: Dict[str, Union[File, "Directory"]] = attr.Factory(dict)
+    entries: dict[str, File | Directory] = attr.Factory(dict)
 
     @path.validator
     def _validate_path(self, _attribute: attr.Attribute, value: Optional[str]) -> None:
@@ -140,7 +142,7 @@ class Directory:
             validate_path(value)
 
     @property
-    def parts(self) -> Tuple[str, ...]:
+    def parts(self) -> tuple[str, ...]:
         """
         The components of the directory's path within the file tree.  For the
         root of a file tree, this is the empty tuple.
@@ -151,7 +153,7 @@ class Directory:
             return tuple(self.path.rstrip("/").split("/"))
 
     @property
-    def subdirectories(self) -> Dict[str, "Directory"]:
+    def subdirectories(self) -> dict[str, "Directory"]:
         """
         The directories in the directory, as a mapping from basenames to
         `Directory` objects
@@ -160,7 +162,7 @@ class Directory:
         return {k: v for k, v in self.entries.items() if isinstance(v, Directory)}
 
     @property
-    def files(self) -> Dict[str, File]:
+    def files(self) -> dict[str, File]:
         """
         The files in the directory, as a mapping from basenames to `File`
         objects
@@ -172,7 +174,7 @@ class Directory:
         """A `Directory` is true iff it is nonempty."""
         return bool(self.entries)
 
-    def __getitem__(self, value: str) -> Union[File, "Directory"]:
+    def __getitem__(self, value: str) -> File | Directory:
         """Retrieve an entry from the directory by basename"""
         return self.entries[value]
 
@@ -183,7 +185,7 @@ class Directory:
         """
         return value in self.entries
 
-    def add_entry(self, entry: Union[File, "Directory"]) -> None:
+    def add_entry(self, entry: File | Directory) -> None:
         """
         Insert a `File` or empty `Directory` into the file tree rooted at the
         directory, creating intermediate subdirectories as needed.  If ``path``
@@ -239,9 +241,9 @@ class Directory:
     def from_local_tree(
         cls,
         root: Path,
-        exclude: Optional[List[str]] = None,
+        exclude: Optional[list[str]] = None,
         include_root: bool = True,
-    ) -> "Directory":
+    ) -> Directory:
         """
         Construct a file tree mirroring the structure on the local disk at
         ``root``.
@@ -288,7 +290,7 @@ class Directory:
                 d1 = dir_root
                 relroot = root
 
-            def add_tree(d: "Directory", path: Path) -> None:
+            def add_tree(d: Directory, path: Path) -> None:
                 """Adds the contents of the directory ``path`` to ``d``"""
                 for p in path.iterdir():
                     if not any(p.match(e) for e in exclude_list):

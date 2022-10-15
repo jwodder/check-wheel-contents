@@ -1,7 +1,8 @@
+from __future__ import annotations
 from enum import Enum
 from functools import reduce
 from operator import or_
-from typing import List, Optional, Set
+from typing import Optional
 import attr
 from .errors import UserInputError
 from .util import comma_split
@@ -35,7 +36,7 @@ class FailedCheck:
     #: The check that failed
     check: Check
     #: The relevant filepaths, if any
-    args: List[str] = attr.Factory(list)
+    args: list[str] = attr.Factory(list)
 
     def show(self, filename: Optional[str] = None) -> str:
         """
@@ -55,7 +56,7 @@ class FailedCheck:
         return s
 
 
-def parse_checks_string(s: str) -> Set[Check]:
+def parse_checks_string(s: str) -> set[Check]:
     """
     Convert a string of comma-separated check names & check name prefixes to a
     set of `Check`\\ s
@@ -63,14 +64,14 @@ def parse_checks_string(s: str) -> Set[Check]:
     return parse_check_prefixes(comma_split(s))
 
 
-def parse_check_prefixes(prefixes: List[str]) -> Set[Check]:
+def parse_check_prefixes(prefixes: list[str]) -> set[Check]:
     """
     Convert a list of check names & check name prefixes to a set of `Check`\\ s
     """
     return reduce(or_, map(parse_check_prefix, prefixes), set())
 
 
-def parse_check_prefix(s: str) -> Set[Check]:
+def parse_check_prefix(s: str) -> set[Check]:
     """
     Convert a check name or check name prefix to the set of `Check`\\ s that it
     represents

@@ -1,7 +1,8 @@
+from __future__ import annotations
 from operator import attrgetter
 import re
 import sys
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any, Optional
 import attr
 from .checks import Check, FailedCheck
 from .config import Configuration
@@ -43,25 +44,25 @@ class WheelChecker:
     """A class for performing various checks on a `WheelContents` instance"""
 
     #: The set of selected (active) checks
-    selected: Set[Check] = attr.ib()
+    selected: set[Check] = attr.ib()
     #: The toplevel names to expect for W2, or `None` to disable the checks
-    toplevel: Optional[List[str]] = None
+    toplevel: Optional[list[str]] = None
     #: The package tree to expect for W1, or `None` to disable the checks
     pkgtree: Optional[Directory] = None
 
     @selected.default
-    def _selected_default(self) -> Set[Check]:
+    def _selected_default(self) -> set[Check]:
         return set(Check)
 
     def configure_options(
         self,
         configpath: Any = NO_CONFIG,
-        select: Optional[Set[Check]] = None,
-        ignore: Optional[Set[Check]] = None,
-        toplevel: Optional[List[str]] = None,
-        package: Tuple[str, ...] = (),
-        src_dir: Tuple[str, ...] = (),
-        package_omit: Optional[List[str]] = None,
+        select: Optional[set[Check]] = None,
+        ignore: Optional[set[Check]] = None,
+        toplevel: Optional[list[str]] = None,
+        package: tuple[str, ...] = (),
+        src_dir: tuple[str, ...] = (),
+        package_omit: Optional[list[str]] = None,
     ) -> None:
         """
         Configure the `WheelChecker` according to the given command-line
@@ -101,7 +102,7 @@ class WheelChecker:
                 file=sys.stderr,
             )
 
-    def check_contents(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_contents(self, contents: WheelContents) -> list[FailedCheck]:
         """
         Check a given `WheelContents` against the checks in ``selected``.  For
         each check, the method ``check_{checkname}()`` of the `WheelChecker` is
@@ -115,7 +116,7 @@ class WheelChecker:
             failures.extend(method(contents))
         return failures
 
-    def check_W001(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W001(self, contents: WheelContents) -> list[FailedCheck]:
         """Check W001 — Wheel contains .pyc/.pyo files"""
         badfiles = []
         for f in contents.filetree.all_files():
@@ -126,7 +127,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W002(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W002(self, contents: WheelContents) -> list[FailedCheck]:
         """
         Check W002 — Wheel contains duplicate files
 
@@ -139,7 +140,7 @@ class WheelChecker:
                 dups.append(FailedCheck(Check.W002, [f.path for f in files]))
         return dups
 
-    def check_W003(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W003(self, contents: WheelContents) -> list[FailedCheck]:
         """
         Check W003 — Wheel contains non-module at library toplevel
 
@@ -164,7 +165,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W004(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W004(self, contents: WheelContents) -> list[FailedCheck]:
         """
         Check W004 — Module is not located at importable path
 
@@ -182,7 +183,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W005(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W005(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W005 — Wheel contains common toplevel name in library
 
@@ -205,7 +206,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W006(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W006(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W006 — ``__init__.py`` at top level of library
 
@@ -224,7 +225,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W007(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W007(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W007 — Wheel library is empty
 
@@ -235,7 +236,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W008(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W008(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W008 — Wheel is empty
 
@@ -246,7 +247,7 @@ class WheelChecker:
                 return []
         return [FailedCheck(Check.W008)]
 
-    def check_W009(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W009(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W009 — Wheel contains multiple toplevel library entries
 
@@ -272,7 +273,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W010(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W010(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W010 — Toplevel library directory contains no Python modules
 
@@ -293,7 +294,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W101(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W101(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W101 — Wheel library is missing files in package tree
 
@@ -313,7 +314,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W102(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W102(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W102 — Wheel library contains files not in package tree
 
@@ -334,7 +335,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W201(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W201(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W201 — Wheel library is missing specified toplevel entry
 
@@ -351,7 +352,7 @@ class WheelChecker:
         else:
             return []
 
-    def check_W202(self, contents: WheelContents) -> List[FailedCheck]:
+    def check_W202(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W202 — Wheel library has undeclared toplevel entry
 
