@@ -2,13 +2,18 @@ from __future__ import annotations
 from collections.abc import Sequence
 from configparser import ConfigParser
 from pathlib import Path
+import sys
 from typing import Any, List, Optional, Set
 from pydantic import BaseModel, Field, ValidationError, validator
-import tomli
 from .checks import Check, parse_check_prefix
 from .errors import UserInputError
 from .filetree import Directory
 from .util import comma_split
+
+if sys.version_info[:2] >= (3, 11):
+    from tomllib import load as toml_load
+else:
+    from tomli import load as toml_load
 
 #: The filenames that configuration is read from by default, in descending
 #: order of preference
@@ -167,7 +172,7 @@ class Configuration(BaseModel):
         """
         if path.suffix == ".toml":
             with path.open("rb") as fb:
-                tdata = tomli.load(fb)
+                tdata = toml_load(fb)
             tool = tdata.get("tool")
             if not isinstance(tool, dict):
                 return None

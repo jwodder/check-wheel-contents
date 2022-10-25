@@ -2,6 +2,7 @@ v0.4.0 (in development)
 -----------------------
 - Drop support for Python 3.6
 - Support Python 3.11
+- Use `tomllib` on Python 3.11
 
 v0.3.4 (2022-01-02)
 -------------------
