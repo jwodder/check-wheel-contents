@@ -514,14 +514,15 @@ def test_check_W004(paths, failures):
 @pytest.mark.parametrize(
     "paths,failures",
     [
-        (["{}/foo.py", "not_{}/foo.py", "{}.py"], [FailedCheck(Check.W005, ["{}/"])]),
-        (["quux/{}/foo.py"], []),
-        (["{}"], [FailedCheck(Check.W005, ["{}"])]),
-        (
+        pytest.param(["{}/foo.py", "not_{}/foo.py", "{}.py"], [FailedCheck(Check.W005, ["{}/"])], id="root"),
+        pytest.param(["quux/{}/foo.py"], [], id="nested"),
+        pytest.param(["{}"], [FailedCheck(Check.W005, ["{}"])], id="root_dir"),
+        pytest.param(
             ["foo-1.0.data/platlib/{}/foo.py"],
             [FailedCheck(Check.W005, ["foo-1.0.data/platlib/{}/"])],
+            id='deeply_nested'
         ),
-        (["foo-1.0.data/scripts/{}/foo.py"], []),
+        pytest.param(["foo-1.0.data/scripts/{}/foo.py"], [], id="data"),
     ],
 )
 def test_check_W005(name, paths, failures):
@@ -532,6 +533,14 @@ def test_check_W005(name, paths, failures):
     assert (
         checker.check_W005(wheel_from_paths(p.format(name) for p in paths)) == failures
     )
+
+
+@pytest.mark.parametrize("name", COMMON_NAMES)
+def test_check_W005_exclude_toplevel(name: str) -> None:
+    checker = WheelChecker()
+    checker.toplevel = [name]
+    failures = checker.check_W005(wheel_from_paths([name]))
+    assert not failures
 
 
 @pytest.mark.parametrize(
