@@ -4,7 +4,7 @@ from configparser import ConfigParser
 from pathlib import Path
 import sys
 from typing import Any, List, Optional, Set
-from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from .checks import Check, parse_check_prefix
 from .errors import UserInputError
 from .filetree import Directory
@@ -34,7 +34,7 @@ CONFIG_SECTION = "check-wheel-contents"
 TRAVERSAL_EXCLUSIONS = [".*", "CVS", "RCS", "*.pyc", "*.pyo", "*.egg-info"]
 
 
-class Configuration(BaseModel):
+class Configuration(BaseModel, populate_by_name=True):
     """A container for a `WheelChecker`'s raw configuration values"""
 
     #: The set of selected checks, or `None` if not specified
@@ -54,30 +54,9 @@ class Configuration(BaseModel):
     #: ``src_dirs``, or `None` if not specified
     package_omit: Optional[List[str]] = None
 
-    class Config:
-        allow_population_by_field_name = True
-
-    @validator(
-        "select",
-        "ignore",
-        "toplevel",
-        "package_paths",
-        "src_dirs",
-        "package_omit",
-        pre=True,
-    )
-    def _convert_comma_list(cls, value: Any) -> Any:  # noqa: B902, U100
-        """
-        Convert strings to lists by splitting on commas.  Leave everything else
-        untouched.
-        """
-        if isinstance(value, str):
-            return comma_split(value)
-        else:
-            return value
-
-    @validator("select", "ignore", pre=True)
-    def _convert_check_set(cls, value: Any) -> Any:  # noqa: B902, U100
+    @field_validator("select", "ignore", mode="before")
+    @classmethod
+    def _convert_check_set(cls, value: Any) -> Any:
         """
         If the input is a sequence, convert it to a `set` with any strings
         converted from check names & check name prefixes to `Check` objects.
@@ -93,10 +72,29 @@ class Configuration(BaseModel):
         else:
             return value
 
-    @validator("toplevel")
-    def _convert_toplevel(
-        cls, value: Optional[list[str]]  # noqa: B902, U100
-    ) -> Optional[list[str]]:
+    @field_validator(
+        "select",
+        "ignore",
+        "toplevel",
+        "package_paths",
+        "src_dirs",
+        "package_omit",
+        mode="before",
+    )
+    @classmethod
+    def _convert_comma_list(cls, value: Any) -> Any:
+        """
+        Convert strings to lists by splitting on commas.  Leave everything else
+        untouched.
+        """
+        if isinstance(value, str):
+            return comma_split(value)
+        else:
+            return value
+
+    @field_validator("toplevel")
+    @classmethod
+    def _convert_toplevel(cls, value: Optional[list[str]]) -> Optional[list[str]]:
         """
         Strip trailing forward slashes from the elements of a list, if defined
         """
@@ -181,7 +179,7 @@ class Configuration(BaseModel):
                 return None
             else:
                 try:
-                    config = cls.parse_obj(cfg)
+                    config = cls.model_validate(cfg)
                     config.resolve_paths(path)
                 except (UserInputError, ValidationError) as e:
                     raise UserInputError(f"{path}: {e}")
@@ -196,7 +194,7 @@ class Configuration(BaseModel):
                 section = CONFIG_SECTION
             if cdata.has_section(section):
                 try:
-                    config = cls.parse_obj(cdata[section])
+                    config = cls.model_validate(cdata[section])
                     config.resolve_paths(path)
                 except (UserInputError, ValidationError) as e:
                     raise UserInputError(f"{path}: {e}")
@@ -236,7 +234,7 @@ class Configuration(BaseModel):
         Update this `Configuration` instance by copying over all non-`None`
         fields from ``cfg``
         """
-        for field, value in cfg.dict(exclude_none=True).items():
+        for field, value in cfg.model_dump(exclude_none=True).items():
             setattr(self, field, value)
 
     def get_selected_checks(self) -> set[Check]:

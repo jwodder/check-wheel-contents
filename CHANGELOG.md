@@ -1,3 +1,7 @@
+v0.5.0 (in development)
+-----------------------
+- Update pydantic to v2.0
+
 v0.4.0 (2022-10-25)
 -------------------
 - Drop support for Python 3.6

@@ -199,7 +199,7 @@ def test_from_file(path):
     except FileNotFoundError:
         cfg = None
     else:
-        cfg = Configuration.parse_obj(data)
+        cfg = Configuration.model_validate(data)
     assert Configuration.from_file(path) == cfg
 
 
@@ -262,7 +262,7 @@ def test_from_file_bad_tool_section():
     ],
 )
 def test_convert_comma_list(data, expected):
-    cfg = Configuration.parse_obj(data)
+    cfg = Configuration.model_validate(data)
     assert cfg.package_omit == expected
 
 
@@ -291,7 +291,7 @@ def test_convert_comma_list_error(field, value):
     if field in ("toplevel", "package_omit") and value in ([42], ["foo", 42]):
         pytest.skip("pydantic allows int input to string fields")
     with pytest.raises(ValidationError):
-        Configuration.parse_obj({field: value})
+        Configuration.model_validate({field: value})
 
 
 @pytest.mark.parametrize(
@@ -305,7 +305,7 @@ def test_convert_comma_list_error(field, value):
     ],
 )
 def test_convert_check_set(data, expected):
-    cfg = Configuration.parse_obj(data)
+    cfg = Configuration.model_validate(data)
     assert cfg.select == expected
 
 
@@ -320,7 +320,7 @@ def test_convert_check_set(data, expected):
 )
 def test_convert_check_set_error(field, value, badbit):
     with pytest.raises(ValidationError) as excinfo:
-        Configuration.parse_obj({field: value})
+        Configuration.model_validate({field: value})
     assert f"Unknown/invalid check prefix: {badbit!r}" in str(excinfo.value)
 
 
@@ -356,7 +356,7 @@ def test_resolve_paths(data, expected, monkeypatch, tmp_path):
         data["package"] = data["package"].format(tmp_path=tmp_path)
     elif isinstance(data.get("package"), list):
         data["package"] = [p.format(tmp_path=tmp_path) for p in data["package"]]
-    cfg = Configuration.parse_obj(data)
+    cfg = Configuration.model_validate(data)
     cfg.resolve_paths(Path("path/foo.cfg"))
     if expected is not None:
         expected = [tmp_path / p for p in expected]
@@ -437,7 +437,7 @@ def test_from_command_options(
         src_dir=src_dir_in,
         package_omit=package_omit_in,
     )
-    assert cfg.dict() == {
+    assert cfg.model_dump() == {
         "select": {Check.W001, Check.W002},
         "ignore": {Check.W003, Check.W004},
         "toplevel": toplevel_out,
@@ -449,7 +449,7 @@ def test_from_command_options(
 
 def test_from_command_options_default():
     cfg = Configuration.from_command_options()
-    assert cfg.dict() == {
+    assert cfg.model_dump() == {
         "select": None,
         "ignore": None,
         "toplevel": None,
