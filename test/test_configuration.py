@@ -288,8 +288,6 @@ def test_convert_comma_list(data, expected):
     ],
 )
 def test_convert_comma_list_error(field, value):
-    if field in ("toplevel", "package_omit") and value in ([42], ["foo", 42]):
-        pytest.skip("pydantic allows int input to string fields")
     with pytest.raises(ValidationError):
         Configuration.model_validate({field: value})
 
