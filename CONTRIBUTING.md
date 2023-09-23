@@ -96,10 +96,10 @@ Adding a new configuration option involves updating the following locations:
 
 - `config.py`:
     - Add the option as an attribute on `Configuration`.  For nontrivial types,
-      a [pydantic](http://pydantic-docs.helpmanual.io) pre-validator should be
-      added that parses string values from `.cfg`/`.ini` files (and, if
-      necessary, structures found on the command line or in `pyproject.toml`)
-      into a form that pydantic can convert into the attribute's final value.
+      a [pydantic](https://docs.pydantic.dev) pre-validator should be added
+      that parses string values from `.cfg`/`.ini` files (and, if necessary,
+      structures found on the command line or in `pyproject.toml`) into a form
+      that pydantic can convert into the attribute's final value.
     - Add the option as a parameter to `Configuration.from_command_options()`
 
 - `checker.py`:
