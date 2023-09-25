@@ -3,8 +3,14 @@ name: Test
 on:
   pull_request:
   push:
+    branches-ignore:
+      - 'dependabot/**'
   schedule:
     - cron: '0 6 * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   test:
