@@ -1,3 +1,7 @@
+v0.6.0 (in development)
+-----------------------
+- Support Python 3.12
+
 v0.5.0 (2023-09-23)
 -------------------
 - Update pydantic to v2.0
