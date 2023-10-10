@@ -195,22 +195,22 @@ def test_main(monkeypatch, whlfile):
     [
         (
             "foo.ini",
-            "[check-wheel-contents]\n" "select = W9\n",
+            "[check-wheel-contents]\nselect = W9\n",
             "Unknown/invalid check prefix: 'W9'",
         ),
         (
             "foo.toml",
-            "[tool.check-wheel-contents]\n" 'ignore = [""]\n',
+            '[tool.check-wheel-contents]\nignore = [""]\n',
             "Unknown/invalid check prefix: ''",
         ),
         (
             "foo.cfg",
-            "[check-wheel-contents]\n" "package = missing\n",
+            "[check-wheel-contents]\npackage = missing\n",
             "package: no such file or directory: {missing_path!r}",
         ),
         (
             "foo.cfg",
-            "[check-wheel-contents]\n" "src_dir = missing\n",
+            "[check-wheel-contents]\nsrc_dir = missing\n",
             "src_dir: not a directory: {missing_path!r}",
         ),
     ],

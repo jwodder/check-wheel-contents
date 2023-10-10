@@ -27,97 +27,119 @@ def create_file(p, contents=None):
     [
         (
             {
-                "usr/src/project/pyproject.toml": "[tool.check-wheel-contents]\n"
-                'select = "W001"\n',
-                "usr/src/project/tox.ini": "[check-wheel-contents]\n" "select = W002\n",
-                "usr/src/project/setup.cfg": "[tool:check-wheel-contents]\n"
-                "select = W003\n",
-                "usr/src/project/check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W004\n",
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/pyproject.toml": (
+                    '[tool.check-wheel-contents]\nselect = "W001"\n'
+                ),
+                "usr/src/project/tox.ini": "[check-wheel-contents]\nselect = W002\n",
+                "usr/src/project/setup.cfg": (
+                    "[tool:check-wheel-contents]\nselect = W003\n"
+                ),
+                "usr/src/project/check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W004\n"
+                ),
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W001}),
         ),
         (
             {
                 "usr/src/project/pyproject.toml": "",
-                "usr/src/project/tox.ini": "[check-wheel-contents]\n" "select = W002\n",
-                "usr/src/project/setup.cfg": "[tool:check-wheel-contents]\n"
-                "select = W003\n",
-                "usr/src/project/check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W004\n",
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/tox.ini": "[check-wheel-contents]\nselect = W002\n",
+                "usr/src/project/setup.cfg": (
+                    "[tool:check-wheel-contents]\nselect = W003\n"
+                ),
+                "usr/src/project/check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W004\n"
+                ),
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W002}),
         ),
         (
             {
-                "usr/src/project/tox.ini": "[check-wheel-contents]\n" "select = W002\n",
-                "usr/src/project/setup.cfg": "[tool:check-wheel-contents]\n"
-                "select = W003\n",
-                "usr/src/project/check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W004\n",
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/tox.ini": "[check-wheel-contents]\nselect = W002\n",
+                "usr/src/project/setup.cfg": (
+                    "[tool:check-wheel-contents]\nselect = W003\n"
+                ),
+                "usr/src/project/check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W004\n"
+                ),
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W002}),
         ),
         (
             {
                 "usr/src/project/tox.ini": "",
-                "usr/src/project/setup.cfg": "[tool:check-wheel-contents]\n"
-                "select = W003\n",
-                "usr/src/project/check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W004\n",
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/setup.cfg": (
+                    "[tool:check-wheel-contents]\nselect = W003\n"
+                ),
+                "usr/src/project/check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W004\n"
+                ),
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W003}),
         ),
         (
             {
-                "usr/src/project/setup.cfg": "[tool:check-wheel-contents]\n"
-                "select = W003\n",
-                "usr/src/project/check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W004\n",
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/setup.cfg": (
+                    "[tool:check-wheel-contents]\nselect = W003\n"
+                ),
+                "usr/src/project/check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W004\n"
+                ),
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W003}),
         ),
         (
             {
                 "usr/src/project/setup.cfg": "",
-                "usr/src/project/check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W004\n",
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W004\n"
+                ),
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W004}),
         ),
         (
             {
-                "usr/src/project/check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W004\n",
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W004\n"
+                ),
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W004}),
         ),
         (
             {
                 "usr/src/project/check-wheel-contents.cfg": "",
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W005}),
         ),
         (
             {
-                "usr/src/project/.check-wheel-contents.cfg": "[check-wheel-contents]\n"
-                "select = W005\n",
+                "usr/src/project/.check-wheel-contents.cfg": (
+                    "[check-wheel-contents]\nselect = W005\n"
+                ),
             },
             Configuration(select={Check.W005}),
         ),
@@ -128,51 +150,55 @@ def create_file(p, contents=None):
         ({}, None),
         (
             {
-                "usr/src/tox.ini": "[check-wheel-contents]\n" "select = W002\n",
-                "usr/src/project/setup.cfg": "[tool:check-wheel-contents]\n"
-                "select = W003\n",
+                "usr/src/tox.ini": "[check-wheel-contents]\nselect = W002\n",
+                "usr/src/project/setup.cfg": (
+                    "[tool:check-wheel-contents]\nselect = W003\n"
+                ),
             },
             Configuration(select={Check.W003}),
         ),
         (
             {
-                "usr/src/tox.ini": "[check-wheel-contents]\n" "select = W002\n",
+                "usr/src/tox.ini": "[check-wheel-contents]\nselect = W002\n",
                 "usr/src/project/setup.cfg": "",
             },
             None,
         ),
         (
             {
-                "usr/src/tox.ini": "[check-wheel-contents]\n" "select = W002\n",
+                "usr/src/tox.ini": "[check-wheel-contents]\nselect = W002\n",
             },
             Configuration(select={Check.W002}),
         ),
         (
             {
-                "usr/src/tox.ini": "[check-wheel-contents]\n" "select = W002\n",
-                "usr/pyproject.toml": "[tool.check-wheel-contents]\n"
-                'select = "W001"\n',
+                "usr/src/tox.ini": "[check-wheel-contents]\nselect = W002\n",
+                "usr/pyproject.toml": (
+                    '[tool.check-wheel-contents]\nselect = "W001"\n'
+                ),
             },
             Configuration(select={Check.W002}),
         ),
         (
             {
                 "usr/src/tox.ini": "",
-                "usr/pyproject.toml": "[tool.check-wheel-contents]\n"
-                'select = "W001"\n',
+                "usr/pyproject.toml": (
+                    '[tool.check-wheel-contents]\nselect = "W001"\n'
+                ),
             },
             None,
         ),
         (
             {
-                "usr/pyproject.toml": "[tool.check-wheel-contents]\n"
-                'select = "W001"\n',
+                "usr/pyproject.toml": (
+                    '[tool.check-wheel-contents]\nselect = "W001"\n'
+                ),
             },
             Configuration(select={Check.W001}),
         ),
         (
             {
-                "usr/src/setup.cfg": "[tool:check-wheel-contents]\n" "select = W003\n",
+                "usr/src/setup.cfg": "[tool:check-wheel-contents]\nselect = W003\n",
             },
             Configuration(select={Check.W003}),
         ),

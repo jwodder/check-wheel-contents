@@ -81,11 +81,9 @@ def test_defaults():
 )
 def test_configure_options(mocker, monkeypatch, kwargs, cfg, tmp_path):
     (tmp_path / "check-wheel-contents.cfg").write_text(
-        "[check-wheel-contents]\n" "select = W001,W002\n"
+        "[check-wheel-contents]\nselect = W001,W002\n"
     )
-    (tmp_path / "custom.cfg").write_text(
-        "[check-wheel-contents]\n" "ignore = W001,W002\n"
-    )
+    (tmp_path / "custom.cfg").write_text("[check-wheel-contents]\nignore = W001,W002\n")
     monkeypatch.chdir(tmp_path)
     checker = WheelChecker()
     apply_mock = mocker.patch.object(checker, "apply_config")
