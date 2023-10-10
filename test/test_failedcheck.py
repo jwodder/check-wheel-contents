@@ -9,9 +9,7 @@ def test_show_no_args_no_filename() -> None:
 
 def test_show_args_no_filename() -> None:
     fc = FailedCheck(Check.W001, ["foo.pyc", "bar/glarch.pyo"])
-    assert fc.show() == (
-        f"W001: {Check.W001.value}:\n" "  foo.pyc\n" "  bar/glarch.pyo"
-    )
+    assert fc.show() == f"W001: {Check.W001.value}:\n  foo.pyc\n  bar/glarch.pyo"
 
 
 def test_show_args_filename() -> None:
