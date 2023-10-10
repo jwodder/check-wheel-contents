@@ -1,6 +1,7 @@
 v0.6.0 (in development)
 -----------------------
 - Support Python 3.12
+- Add type annotations to tests
 
 v0.5.0 (2023-09-23)
 -------------------

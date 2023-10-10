@@ -1,10 +1,13 @@
+from __future__ import annotations
 import json
 from operator import attrgetter
 import os
 from pathlib import Path
 from shutil import copytree
+from typing import Any
 from pydantic import ValidationError
 import pytest
+from pytest_mock import MockerFixture
 from check_wheel_contents.checks import Check
 from check_wheel_contents.config import TRAVERSAL_EXCLUSIONS, Configuration
 from check_wheel_contents.errors import UserInputError
@@ -14,7 +17,7 @@ DATA_DIR = Path(__file__).with_name("data")
 PROJECT_TREE = DATA_DIR / "project-tree"
 
 
-def create_file(p, contents=None):
+def create_file(p: Path, contents: str | None = None) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     if contents is not None:
         p.write_text(contents, encoding="UTF-8")
@@ -204,7 +207,12 @@ def create_file(p, contents=None):
         ),
     ],
 )
-def test_find_default(files, cfg, monkeypatch, tmp_path):
+def test_find_default(
+    files: dict[str, str],
+    cfg: Configuration,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
     for path, text in files.items():
         create_file(tmp_path / path, text)
     pwd = tmp_path / "usr" / "src" / "project"
@@ -218,7 +226,7 @@ def test_find_default(files, cfg, monkeypatch, tmp_path):
     [p for p in (DATA_DIR / "configfiles").iterdir() if p.suffix != ".json"],
     ids=attrgetter("name"),
 )
-def test_from_file(path):
+def test_from_file(path: Path) -> None:
     datafile = path.with_suffix(".json")
     try:
         data = json.loads(datafile.read_text())
@@ -254,7 +262,7 @@ def test_from_file(path):
         ),
     ],
 )
-def test_from_file_in_project(cfgname, cfgsrc, tmp_path):
+def test_from_file_in_project(cfgname: str, cfgsrc: str, tmp_path: Path) -> None:
     project_dir = tmp_path / "project"
     copytree(PROJECT_TREE, project_dir)
     cfgpath = project_dir / cfgname
@@ -269,7 +277,7 @@ def test_from_file_in_project(cfgname, cfgsrc, tmp_path):
     )
 
 
-def test_from_file_bad_tool_section():
+def test_from_file_bad_tool_section() -> None:
     path = DATA_DIR / "bad-tool-sect.toml"
     with pytest.raises(UserInputError) as excinfo:
         Configuration.from_file(path)
@@ -287,7 +295,7 @@ def test_from_file_bad_tool_section():
         ({"package_omit": ["foo, bar,"]}, ["foo, bar,"]),
     ],
 )
-def test_convert_comma_list(data, expected):
+def test_convert_comma_list(data: dict[str, Any], expected: list[str] | None) -> None:
     cfg = Configuration.model_validate(data)
     assert cfg.package_omit == expected
 
@@ -313,7 +321,7 @@ def test_convert_comma_list(data, expected):
         ["foo", None],
     ],
 )
-def test_convert_comma_list_error(field, value):
+def test_convert_comma_list_error(field: str, value: Any) -> None:
     with pytest.raises(ValidationError):
         Configuration.model_validate({field: value})
 
@@ -328,7 +336,7 @@ def test_convert_comma_list_error(field, value):
         ({"select": ["W001", "W002"]}, {Check.W001, Check.W002}),
     ],
 )
-def test_convert_check_set(data, expected):
+def test_convert_check_set(data: dict[str, Any], expected: set[Check] | None) -> None:
     cfg = Configuration.model_validate(data)
     assert cfg.select == expected
 
@@ -342,7 +350,7 @@ def test_convert_check_set(data, expected):
         (["W9", ""], "W9"),
     ],
 )
-def test_convert_check_set_error(field, value, badbit):
+def test_convert_check_set_error(field: str, value: list[str], badbit: str) -> None:
     with pytest.raises(ValidationError) as excinfo:
         Configuration.model_validate({field: value})
     assert f"Unknown/invalid check prefix: {badbit!r}" in str(excinfo.value)
@@ -367,7 +375,12 @@ BASE = Path("usr/src/project/path")
         ),
     ],
 )
-def test_resolve_paths(data, expected, monkeypatch, tmp_path):
+def test_resolve_paths(
+    data: dict[str, str | list[str]],
+    expected: list[Path] | None,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
     for path in [
         "usr/src/project/path/foo",
         "usr/src/project/path/bar",
@@ -376,10 +389,11 @@ def test_resolve_paths(data, expected, monkeypatch, tmp_path):
     ]:
         create_file(tmp_path / path)
     monkeypatch.chdir(tmp_path / "usr" / "src" / "project")
-    if isinstance(data.get("package"), str):
-        data["package"] = data["package"].format(tmp_path=tmp_path)
-    elif isinstance(data.get("package"), list):
-        data["package"] = [p.format(tmp_path=tmp_path) for p in data["package"]]
+    if "package" in data:
+        if isinstance(data["package"], str):
+            data["package"] = data["package"].format(tmp_path=tmp_path)
+        elif isinstance(data["package"], list):
+            data["package"] = [p.format(tmp_path=tmp_path) for p in data["package"]]
     cfg = Configuration.model_validate(data)
     cfg.resolve_paths(Path("path/foo.cfg"))
     if expected is not None:
@@ -387,7 +401,9 @@ def test_resolve_paths(data, expected, monkeypatch, tmp_path):
     assert cfg.package_paths == expected
 
 
-def test_resolve_paths_nonexistent(monkeypatch, tmp_path):
+def test_resolve_paths_nonexistent(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     create_file(tmp_path / "path/foo")
     create_file(tmp_path / "path/bar")
     monkeypatch.chdir(tmp_path)
@@ -401,7 +417,9 @@ def test_resolve_paths_nonexistent(monkeypatch, tmp_path):
     )
 
 
-def test_resolve_paths_require_dir_not_a_dir(monkeypatch, tmp_path):
+def test_resolve_paths_require_dir_not_a_dir(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     create_file(tmp_path / "path/foo")
     create_file(tmp_path / "path/bar")
     monkeypatch.chdir(tmp_path)
@@ -444,15 +462,15 @@ def test_resolve_paths_require_dir_not_a_dir(monkeypatch, tmp_path):
     ],
 )
 def test_from_command_options(
-    toplevel_in,
-    toplevel_out,
-    package_in,
-    package_out,
-    src_dir_in,
-    src_dir_out,
-    package_omit_in,
-    package_omit_out,
-):
+    toplevel_in: list[str] | None,
+    toplevel_out: list[str] | None,
+    package_in: tuple[str, ...],
+    package_out: list[Path] | None,
+    src_dir_in: tuple[str, ...],
+    src_dir_out: list[Path] | None,
+    package_omit_in: list[str] | None,
+    package_omit_out: list[str] | None,
+) -> None:
     cfg = Configuration.from_command_options(
         select={Check.W001, Check.W002},
         ignore={Check.W003, Check.W004},
@@ -471,7 +489,7 @@ def test_from_command_options(
     }
 
 
-def test_from_command_options_default():
+def test_from_command_options_default() -> None:
     cfg = Configuration.from_command_options()
     assert cfg.model_dump() == {
         "select": None,
@@ -497,7 +515,7 @@ def test_from_command_options_default():
         ),
     ],
 )
-def test_from_config_file(mocker, cfg):
+def test_from_config_file(mocker: MockerFixture, cfg: Configuration | None) -> None:
     """
     Test that calling ``Configuration.from_config_file(path)`` delegates to
     ``Configuration.from_file()`` and that `None` return values are converted
@@ -527,7 +545,9 @@ def test_from_config_file(mocker, cfg):
         ),
     ],
 )
-def test_from_config_file_none_path(mocker, cfg):
+def test_from_config_file_none_path(
+    mocker: MockerFixture, cfg: Configuration | None
+) -> None:
     """
     Test that calling ``Configuration.from_config_file(None)`` delegates to
     ``Configuration.find_default()`` and that `None` return values are
@@ -556,7 +576,9 @@ def test_from_config_file_none_path(mocker, cfg):
         ),
     ],
 )
-def test_from_config_file_no_arg(mocker, cfg):
+def test_from_config_file_no_arg(
+    mocker: MockerFixture, cfg: Configuration | None
+) -> None:
     """
     Test that calling ``Configuration.from_config_file()`` with no arguments
     delegates to ``Configuration.find_default()`` and that `None` return values
@@ -681,7 +703,9 @@ def test_from_config_file_no_arg(mocker, cfg):
         ),
     ],
 )
-def test_update(left, right, expected):
+def test_update(
+    left: Configuration, right: Configuration, expected: Configuration
+) -> None:
     left.update(right)
     assert left == expected
 
@@ -695,14 +719,16 @@ def test_update(left, right, expected):
         ({Check.W201, Check.W202}, {Check.W001, Check.W201}, {Check.W202}),
     ],
 )
-def test_get_selected_checks(select, ignore, expected):
+def test_get_selected_checks(
+    select: set[Check] | None, ignore: set[Check] | None, expected: set[Check]
+) -> None:
     select_copy = select and select.copy()
     cfg = Configuration(select=select, ignore=ignore)
     assert cfg.get_selected_checks() == expected
     assert cfg.select == select_copy
 
 
-def test_get_package_tree_both_none():
+def test_get_package_tree_both_none() -> None:
     cfg = Configuration(package_paths=None, src_dirs=None)
     assert cfg.get_package_tree() is None
 
@@ -715,7 +741,9 @@ def test_get_package_tree_both_none():
         (["__pycache__", "RCS"], ["__pycache__", "RCS"]),
     ],
 )
-def test_get_package_tree_package_path(mocker, package_omit, exclude):
+def test_get_package_tree_package_path(
+    mocker: MockerFixture, package_omit: list[str] | None, exclude: list[str]
+) -> None:
     path = Path("foobar")
     cfg = Configuration(package_paths=[path], package_omit=package_omit)
     tree = Directory(
@@ -756,7 +784,9 @@ def test_get_package_tree_package_path(mocker, package_omit, exclude):
         (["__pycache__", "RCS"], ["__pycache__", "RCS"]),
     ],
 )
-def test_get_package_tree_src_dir(mocker, package_omit, exclude):
+def test_get_package_tree_src_dir(
+    mocker: MockerFixture, package_omit: list[str] | None, exclude: list[str]
+) -> None:
     path = Path("src")
     cfg = Configuration(src_dirs=[path], package_omit=package_omit)
     tree = Directory(
@@ -777,7 +807,9 @@ def test_get_package_tree_src_dir(mocker, package_omit, exclude):
     fltmock.assert_called_once_with(path, exclude=exclude, include_root=False)
 
 
-def test_get_package_tree_multiple_package_paths(monkeypatch, tmp_path):
+def test_get_package_tree_multiple_package_paths(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     create_file(tmp_path / "foo.py")
     create_file(tmp_path / "bar/__init__.py")
     create_file(tmp_path / "bar/quux.py")
@@ -800,7 +832,9 @@ def test_get_package_tree_multiple_package_paths(monkeypatch, tmp_path):
     )
 
 
-def test_get_package_tree_multiple_src_dirs(monkeypatch, tmp_path):
+def test_get_package_tree_multiple_src_dirs(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     create_file(tmp_path / "src/foo.py")
     create_file(tmp_path / "source/bar/__init__.py")
     create_file(tmp_path / "source/bar/quux.py")
@@ -823,7 +857,9 @@ def test_get_package_tree_multiple_src_dirs(monkeypatch, tmp_path):
     )
 
 
-def test_get_package_tree_package_path_and_src_dir(monkeypatch, tmp_path):
+def test_get_package_tree_package_path_and_src_dir(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     create_file(tmp_path / "src/foo.py")
     create_file(tmp_path / "bar/__init__.py")
     create_file(tmp_path / "bar/quux.py")
@@ -846,7 +882,9 @@ def test_get_package_tree_package_path_and_src_dir(monkeypatch, tmp_path):
     )
 
 
-def test_get_package_tree_package_paths_conflict(monkeypatch, tmp_path):
+def test_get_package_tree_package_paths_conflict(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     create_file(tmp_path / "bar/__init__.py")
     create_file(tmp_path / "bar/quux.py")
     create_file(tmp_path / "bar/glarch.py")
@@ -861,7 +899,9 @@ def test_get_package_tree_package_paths_conflict(monkeypatch, tmp_path):
     )
 
 
-def test_get_package_tree_src_dirs_conflict(monkeypatch, tmp_path):
+def test_get_package_tree_src_dirs_conflict(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     create_file(tmp_path / "source/bar/__init__.py")
     create_file(tmp_path / "source/bar/quux.py")
     create_file(tmp_path / "source/bar/glarch.py")
@@ -876,7 +916,9 @@ def test_get_package_tree_src_dirs_conflict(monkeypatch, tmp_path):
     )
 
 
-def test_get_package_tree_package_path_src_dir_conflict(monkeypatch, tmp_path):
+def test_get_package_tree_package_path_src_dir_conflict(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     create_file(tmp_path / "bar/__init__.py")
     create_file(tmp_path / "bar/quux.py")
     create_file(tmp_path / "bar/glarch.py")
@@ -891,7 +933,7 @@ def test_get_package_tree_package_path_src_dir_conflict(monkeypatch, tmp_path):
     )
 
 
-def test_toml_unicode(tmp_path):
+def test_toml_unicode(tmp_path: Path) -> None:
     (tmp_path / "pyproject.toml").write_text(
         "[tool.check-wheel-contents]\n"
         'select = "W001"\n'

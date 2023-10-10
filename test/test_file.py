@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 from check_wheel_contents.errors import WheelValidationError
 from check_wheel_contents.filetree import File
@@ -22,7 +23,7 @@ from check_wheel_contents.filetree import File
         ),
     ],
 )
-def test_from_record_row(row, expected):
+def test_from_record_row(row: list[str], expected: File) -> None:
     assert File.from_record_row(row) == expected
 
 
@@ -37,13 +38,13 @@ def test_from_record_row(row, expected):
         ["foo.py", "sha256=...", "42a"],
     ],
 )
-def test_from_record_row_bad_row(row):
+def test_from_record_row_bad_row(row: list[str]) -> None:
     with pytest.raises(WheelValidationError) as excinfo:
         File.from_record_row(row)
     assert str(excinfo.value) == f"Invalid RECORD entry: {row!r}"
 
 
-def test_from_record_row_dirpath_error():
+def test_from_record_row_dirpath_error() -> None:
     with pytest.raises(ValueError) as excinfo:
         File.from_record_row(["foo/", "", ""])
     assert (
@@ -66,7 +67,7 @@ def test_from_record_row_dirpath_error():
         ("foo/..", "Non-normalized path in RECORD: 'foo/..'"),
     ],
 )
-def test_from_record_row_path_validation_error(path, errmsg):
+def test_from_record_row_path_validation_error(path: str, errmsg: str) -> None:
     with pytest.raises(WheelValidationError) as excinfo:
         File.from_record_row([path, "", ""])
     assert str(excinfo.value) == errmsg
@@ -112,7 +113,7 @@ def test_from_record_row_path_validation_error(path, errmsg):
         ),
     ],
 )
-def test_libparts(path, expected):
+def test_libparts(path: str, expected: tuple[str, ...] | None) -> None:
     assert File.from_record_row([path, "", ""]).libparts == expected
 
 
@@ -156,7 +157,7 @@ def test_libparts(path, expected):
         ),
     ],
 )
-def test_libpath(path, expected):
+def test_libpath(path: str, expected: str | None) -> None:
     assert File.from_record_row([path, "", ""]).libpath == expected
 
 
@@ -183,7 +184,7 @@ def test_libpath(path, expected):
         ("_ffi.abi3.so", True),
     ],
 )
-def test_has_module_ext(path, expected):
+def test_has_module_ext(path: str, expected: bool) -> None:
     assert File.from_record_row([path, "", ""]).has_module_ext() is expected
 
 
@@ -216,7 +217,9 @@ def test_has_module_ext(path, expected):
         ("foo-bar/baz.py", False),
     ],
 )
-def test_is_valid_module_path(prefix, path, prebool, pathbool):
+def test_is_valid_module_path(
+    prefix: str, path: str, prebool: bool, pathbool: bool
+) -> None:
     f = File.from_record_row([prefix + path, "", ""])
     assert f.is_valid_module_path() is (prebool and pathbool)
 
@@ -242,11 +245,11 @@ def test_is_valid_module_path(prefix, path, prebool, pathbool):
         ("_ffi.abi3.so", ".so"),
     ],
 )
-def test_extension(path, ext):
+def test_extension(path: str, ext: str) -> None:
     assert File.from_record_row([path, "", ""]).extension == ext
 
 
-def test_signature():
+def test_signature() -> None:
     assert File.from_record_row(["foo.py", "sha256=abc", "42"]).signature == (
         42,
         "sha256=abc",
@@ -262,7 +265,7 @@ def test_signature():
         ("foo/bar/baz", ("foo", "bar", "baz")),
     ],
 )
-def test_str_path_parts(path, parts):
+def test_str_path_parts(path: str, parts: tuple[str, ...]) -> None:
     f = File.from_record_row([path, "", ""])
     assert str(f) == path
     assert f.path == path

@@ -15,11 +15,7 @@ Golden Rules
    `test/`, are written using [pytest](https://docs.pytest.org), and are run
    using [tox](http://tox.readthedocs.org).
 
-4. Use type annotations in the main code!  Type checking is run via tox.
-
-    - The tests do not need type annotations, but that's only because I didn't
-      add any when I first wrote them, and adding annotations now would be a
-      lot of work for very little payoff.
+4. Use type annotations!  Type checking is run via tox.
 
 5. If adding or changing a feature, update the documentation in `README.rst`
 
@@ -76,7 +72,7 @@ filepaths in a wheel looks like this:
         # etc.
     ],
 )
-def test_check_W999(paths, failures):
+def test_check_W999(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W999(wheel_from_paths(paths)) == failures
 ```

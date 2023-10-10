@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 from check_wheel_contents.checks import (
     Check,
@@ -35,7 +36,7 @@ from check_wheel_contents.errors import UserInputError
         ("W004, W", set(Check)),
     ],
 )
-def test_parse_checks_string(s, checks):
+def test_parse_checks_string(s: str, checks: set[Check]) -> None:
     assert parse_checks_string(s) == checks
 
 
@@ -51,7 +52,7 @@ def test_parse_checks_string(s, checks):
         ("W999", "W999"),
     ],
 )
-def test_parse_checks_string_error(s, badbit):
+def test_parse_checks_string_error(s: str, badbit: str) -> None:
     with pytest.raises(UserInputError) as excinfo:
         parse_checks_string(s)
     assert str(excinfo.value) == f"Unknown/invalid check prefix: {badbit!r}"
@@ -79,7 +80,7 @@ def test_parse_checks_string_error(s, badbit):
         ("W", set(Check)),
     ],
 )
-def test_parse_check_prefix(s, checks):
+def test_parse_check_prefix(s: str, checks: set[Check]) -> None:
     assert parse_check_prefix(s) == checks
 
 
@@ -97,7 +98,7 @@ def test_parse_check_prefix(s, checks):
         "W999",
     ],
 )
-def test_parse_check_prefix_error(s):
+def test_parse_check_prefix_error(s: str) -> None:
     with pytest.raises(UserInputError) as excinfo:
         parse_check_prefix(s)
     assert str(excinfo.value) == f"Unknown/invalid check prefix: {s!r}"
@@ -128,7 +129,7 @@ def test_parse_check_prefix_error(s):
         (["W004", "W"], set(Check)),
     ],
 )
-def test_parse_check_prefixes(lst, checks):
+def test_parse_check_prefixes(lst: list[str], checks: set[Check]) -> None:
     assert parse_check_prefixes(lst) == checks
 
 
@@ -146,7 +147,7 @@ def test_parse_check_prefixes(lst, checks):
         (["W", "W9"], "W9"),
     ],
 )
-def test_parse_check_prefixes_error(lst, badbit):
+def test_parse_check_prefixes_error(lst: list[str], badbit: str) -> None:
     with pytest.raises(UserInputError) as excinfo:
         parse_check_prefixes(lst)
     assert str(excinfo.value) == f"Unknown/invalid check prefix: {badbit!r}"

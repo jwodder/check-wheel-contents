@@ -1,3 +1,5 @@
+from __future__ import annotations
+from collections.abc import Callable, Iterable
 import pytest
 from check_wheel_contents.checker import COMMON_NAMES, WheelChecker
 from check_wheel_contents.checks import Check, FailedCheck
@@ -8,7 +10,7 @@ DUMMY_HASH = "sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk"
 DUMMY_SIZE = "69105"
 
 
-def wheel_from_paths(paths):
+def wheel_from_paths(paths: Iterable[str]) -> WheelContents:
     whlcon = WheelContents(
         dist_info_dir="foo-1.0.dist-info",
         data_dir="foo-1.0.data",
@@ -87,7 +89,7 @@ def wheel_from_paths(paths):
         ),
     ],
 )
-def test_check_W001(paths, failures):
+def test_check_W001(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W001(wheel_from_paths(paths)) == failures
 
@@ -314,7 +316,7 @@ def test_check_W001(paths, failures):
         ),
     ],
 )
-def test_check_W002(rows, failures):
+def test_check_W002(rows: list[list[str]], failures: list[FailedCheck]) -> None:
     whlcon = WheelContents(
         dist_info_dir="foo-1.0.dist-info",
         data_dir="foo-1.0.data",
@@ -417,7 +419,7 @@ def test_check_W002(rows, failures):
         ),
     ],
 )
-def test_check_W003(paths, failures):
+def test_check_W003(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W003(wheel_from_paths(paths)) == failures
 
@@ -505,7 +507,7 @@ def test_check_W003(paths, failures):
         ),
     ],
 )
-def test_check_W004(paths, failures):
+def test_check_W004(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W004(wheel_from_paths(paths)) == failures
 
@@ -524,7 +526,7 @@ def test_check_W004(paths, failures):
         (["foo-1.0.data/scripts/{}/foo.py"], []),
     ],
 )
-def test_check_W005(name, paths, failures):
+def test_check_W005(name: str, paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     failures = [
         FailedCheck(f.check, [a.format(name) for a in f.args]) for f in failures
@@ -547,7 +549,7 @@ def test_check_W005(name, paths, failures):
         (["foo-1.0.data/scripts/__init__.py"], []),
     ],
 )
-def test_check_W006(paths, failures):
+def test_check_W006(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W006(wheel_from_paths(paths)) == failures
 
@@ -562,7 +564,7 @@ def test_check_W006(paths, failures):
         (["foo-1.0.data/scripts/foo.py"], [FailedCheck(Check.W007)]),
     ],
 )
-def test_check_W007(paths, failures):
+def test_check_W007(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W007(wheel_from_paths(paths)) == failures
 
@@ -578,7 +580,7 @@ def test_check_W007(paths, failures):
         (["foo-1.0.dist-info/foo.py"], [FailedCheck(Check.W008)]),
     ],
 )
-def test_check_W008(paths, failures):
+def test_check_W008(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W008(wheel_from_paths(paths)) == failures
 
@@ -601,7 +603,7 @@ def test_check_W008(paths, failures):
         (["_foo.py", "foo-1.0.data/platlib/bar.py"], []),
     ],
 )
-def test_check_W009(paths, failures):
+def test_check_W009(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W009(wheel_from_paths(paths)) == failures
 
@@ -619,7 +621,7 @@ def test_check_W009(paths, failures):
         ["_foo.py", "foo-1.0.data/platlib/bar.py"],
     ],
 )
-def test_check_W009_toplevel_set(paths):
+def test_check_W009_toplevel_set(paths: list[str]) -> None:
     checker = WheelChecker()
     checker.configure_options(toplevel=["foo.py", "bar"])
     assert checker.check_W009(wheel_from_paths(paths)) == []
@@ -638,7 +640,7 @@ def test_check_W009_toplevel_set(paths):
         ["_foo.py", "foo-1.0.data/platlib/bar.py"],
     ],
 )
-def test_check_W009_pkgtree_set(paths):
+def test_check_W009_pkgtree_set(paths: list[str]) -> None:
     checker = WheelChecker(pkgtree=Directory())
     assert checker.check_W009(wheel_from_paths(paths)) == []
 
@@ -660,7 +662,7 @@ def test_check_W009_pkgtree_set(paths):
         (["-stubs/bar.pyi"], [FailedCheck(Check.W010, ["-stubs/"])]),
     ],
 )
-def test_check_W010(paths, failures):
+def test_check_W010(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker()
     assert checker.check_W010(wheel_from_paths(paths)) == failures
 
@@ -685,7 +687,10 @@ def test_check_W010(paths, failures):
         WheelChecker.check_W102,
     ],
 )
-def test_check_W1_pkgtree_not_set(paths, check_method):
+def test_check_W1_pkgtree_not_set(
+    paths: list[str],
+    check_method: Callable[[WheelChecker, WheelContents], list[FailedCheck]],
+) -> None:
     checker = WheelChecker()
     assert check_method(checker, wheel_from_paths(paths)) == []
 
@@ -723,7 +728,7 @@ def test_check_W1_pkgtree_not_set(paths, check_method):
         ),
     ],
 )
-def test_check_W101(paths, failures):
+def test_check_W101(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker(
         pkgtree=Directory(
             path=None,
@@ -768,7 +773,7 @@ def test_check_W101(paths, failures):
         (["foo.py", "foo-1.0.dist-info/quux.py"], []),
     ],
 )
-def test_check_W102(paths, failures):
+def test_check_W102(paths: list[str], failures: list[FailedCheck]) -> None:
     checker = WheelChecker(
         pkgtree=Directory(
             path=None,
@@ -804,7 +809,10 @@ def test_check_W102(paths, failures):
 @pytest.mark.parametrize(
     "check_method", [WheelChecker.check_W201, WheelChecker.check_W202]
 )
-def test_check_W2_toplevel_not_set(paths, check_method):
+def test_check_W2_toplevel_not_set(
+    paths: list[str],
+    check_method: Callable[[WheelChecker, WheelContents], list[FailedCheck]],
+) -> None:
     checker = WheelChecker()
     assert check_method(checker, wheel_from_paths(paths)) == []
 
@@ -842,7 +850,9 @@ def test_check_W2_toplevel_not_set(paths, check_method):
     ],
 )
 @pytest.mark.parametrize("toplevel", [["foo.py", "bar"], ["foo.py", "bar/"]])
-def test_check_W201(paths, failures, toplevel):
+def test_check_W201(
+    paths: list[str], failures: list[FailedCheck], toplevel: list[str]
+) -> None:
     checker = WheelChecker()
     checker.configure_options(toplevel=toplevel)
     assert checker.check_W201(wheel_from_paths(paths)) == failures
@@ -890,7 +900,9 @@ def test_check_W201(paths, failures, toplevel):
     ],
 )
 @pytest.mark.parametrize("toplevel", [["foo.py", "bar"], ["foo.py", "bar/"]])
-def test_check_W202(paths, failures, toplevel):
+def test_check_W202(
+    paths: list[str], failures: list[FailedCheck], toplevel: list[str]
+) -> None:
     checker = WheelChecker()
     checker.configure_options(toplevel=toplevel)
     assert checker.check_W202(wheel_from_paths(paths)) == failures

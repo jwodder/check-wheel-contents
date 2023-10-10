@@ -1,3 +1,4 @@
+from __future__ import annotations
 from pathlib import Path
 import pytest
 from check_wheel_contents.contents import WheelContents
@@ -7,7 +8,7 @@ from check_wheel_contents.filetree import Directory, File
 WHEEL_DIR = Path(__file__).with_name("data") / "wheels"
 
 
-def test_from_wheel_purelib():
+def test_from_wheel_purelib() -> None:
     whlcon = WheelContents.from_wheel(
         WHEEL_DIR / "ttyrec2video-0.1.0.dev1-py3-none-any.whl"
     )
@@ -131,45 +132,47 @@ def test_from_wheel_purelib():
     )
     assert whlcon.by_signature == {
         (322, "sha256=Hsh34fgmI71Le1sOCameXxLmc01bHIwLd1EczCvLPfk"): [
-            whlcon.filetree["ttyrec2video"]["__init__.py"]
+            whlcon.filetree["ttyrec2video"]["__init__.py"]  # type: ignore[index]
         ],
         (5740, "sha256=Twv8iXPtwJrGSlSnM4iF31heGfNtU0Wc9reUlSVebzE"): [
-            whlcon.filetree["ttyrec2video"]["__main__.py"]
+            whlcon.filetree["ttyrec2video"]["__main__.py"]  # type: ignore[index]
         ],
         (1440, "sha256=F29z_79pvjQv3_EXDGqsm47SIsRvRzwr6YlISUSqQrI"): [
-            whlcon.filetree["ttyrec2video"]["reader.py"]
+            whlcon.filetree["ttyrec2video"]["reader.py"]  # type: ignore[index]
         ],
         (3873, "sha256=OWBPDb5D2QXrOW77sCf3RU9BQoJAutMvEcbPuWfE96Q"): [
-            whlcon.filetree["ttyrec2video"]["renderer.py"]
+            whlcon.filetree["ttyrec2video"]["renderer.py"]  # type: ignore[index]
         ],
         (4673, "sha256=LwAVEI1oYnvXiNMT9SnCH_TaLCxCpeHziDrMg0gPkAI"): [
-            whlcon.filetree["ttyrec2video"]["data"]["ubuntu-font"]["LICENCE.txt"]
+            whlcon.filetree["ttyrec2video"]["data"]["ubuntu-font"]["LICENCE.txt"]  # type: ignore[index]
         ],
         (191400, "sha256=EfFcOmu9mYqGlf3vs0dZMcN4mqA111RvLv546Ds1L2s"): [
-            whlcon.filetree["ttyrec2video"]["data"]["ubuntu-font"]["UbuntuMono-B.ttf"]
+            whlcon.filetree["ttyrec2video"]["data"]["ubuntu-font"]["UbuntuMono-B.ttf"]  # type: ignore[index]
         ],
         (205748, "sha256=s13Z0hMdXYOpuH_prSLGKI-j0XaI1DMCwU2imBJBfWM"): [
-            whlcon.filetree["ttyrec2video"]["data"]["ubuntu-font"]["UbuntuMono-R.ttf"]
+            whlcon.filetree["ttyrec2video"]["data"]["ubuntu-font"]["UbuntuMono-R.ttf"]  # type: ignore[index]
         ],
         (155, "sha256=cVepFSJyTOB53fpTOhsQJeMdOyJ-GUz42AFZO6aSkUc"): [
-            whlcon.filetree["ttyrec2video"]["data"]["ubuntu-font"]["copyright.txt"]
+            whlcon.filetree["ttyrec2video"]["data"]["ubuntu-font"]["copyright.txt"]  # type: ignore[index]
         ],
         (1090, "sha256=SDaeT4Cm3ZeLgPOOL_f9BliMMHH_GVwqJa6czCztoS0"): [
-            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["LICENSE"]
+            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["LICENSE"]  # type: ignore[index]
         ],
         (6269, "sha256=ygypUvb3Lxe6WESfxHSy4-io4OKIeX4vNFo9i-SHnCs"): [
-            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["METADATA"]
+            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["METADATA"]  # type: ignore[index]
         ],
         (92, "sha256=p46_5Uhzqz6AzeSosiOnxK-zmFja1i22CrQCjmYe8ec"): [
-            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["WHEEL"]
+            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["WHEEL"]  # type: ignore[index]
         ],
         (61, "sha256=471F-9Jb_a39olsyfq1Dy9lLnXHzPrlbYFiJM6Z3UJU"): [
-            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["entry_points.txt"]
+            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["entry_points.txt"]  # type: ignore[index]
         ],
         (13, "sha256=FPSSfqt5fY1q0yYG27bAcWDPnkWB528v1lZg9meePUw"): [
-            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["top_level.txt"]
+            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["top_level.txt"]  # type: ignore[index]
         ],
-        (None, None): [whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["RECORD"]],
+        (None, None): [
+            whlcon.filetree["ttyrec2video-0.1.0.dev1.dist-info"]["RECORD"]  # type: ignore[index]
+        ],
     }
     assert whlcon.purelib_tree == Directory(
         path=None,
@@ -181,7 +184,7 @@ def test_from_wheel_purelib():
     )
 
 
-def test_from_wheel_normalized_dist_info():
+def test_from_wheel_normalized_dist_info() -> None:
     whlcon = WheelContents.from_wheel(WHEEL_DIR / "NLPTriples-0.1.7-py3-none-any.whl")
     assert whlcon.dist_info_dir == "nlptriples-0.1.7.dist-info"
     assert whlcon.data_dir == "NLPTriples-0.1.7.data"
@@ -243,27 +246,29 @@ def test_from_wheel_normalized_dist_info():
     )
     assert whlcon.by_signature == {
         (22, "sha256=ls1camlIoMxEZz9gSkZ1OJo-MXqHWwKPtdPbZJmwp7E"): [
-            whlcon.filetree["nlptriples"]["__init__.py"]
+            whlcon.filetree["nlptriples"]["__init__.py"]  # type: ignore[index]
         ],
         (1344, "sha256=EVaZLOTa-2K88oXy105KFitx1nrkxW5Kj7bNABp_JH4"): [
-            whlcon.filetree["nlptriples"]["parse_tree.py"]
+            whlcon.filetree["nlptriples"]["parse_tree.py"]  # type: ignore[index]
         ],
         (58, "sha256=vYdNPB1dWAxaP0dZzTxFxYHCaeZ2EICCJWsIY26UpOc"): [
-            whlcon.filetree["nlptriples"]["setup.py"]
+            whlcon.filetree["nlptriples"]["setup.py"]  # type: ignore[index]
         ],
         (7765, "sha256=dmwUnDeO9z0nuF3oDiFlKXTjj0XlH9gG3cfo0Z-ylrE"): [
-            whlcon.filetree["nlptriples"]["triples.py"]
+            whlcon.filetree["nlptriples"]["triples.py"]  # type: ignore[index]
         ],
         (1070, "sha256=VC7YIze9O5Ts59woVlji8eLn1GDvQCbCAXhG66uWFrE"): [
-            whlcon.filetree["nlptriples-0.1.7.dist-info"]["LICENSE"]
+            whlcon.filetree["nlptriples-0.1.7.dist-info"]["LICENSE"]  # type: ignore[index]
         ],
         (84, "sha256=Q99itqWYDhV793oHzqzi24q7L7Kdiz6cb55YDfTXphE"): [
-            whlcon.filetree["nlptriples-0.1.7.dist-info"]["WHEEL"]
+            whlcon.filetree["nlptriples-0.1.7.dist-info"]["WHEEL"]  # type: ignore[index]
         ],
         (1603, "sha256=dZ2YtcY8Gx3QiUFNjxqfQ4KRJAydb6-vCb2V0QYGe2U"): [
-            whlcon.filetree["nlptriples-0.1.7.dist-info"]["METADATA"]
+            whlcon.filetree["nlptriples-0.1.7.dist-info"]["METADATA"]  # type: ignore[index]
         ],
-        (None, None): [whlcon.filetree["nlptriples-0.1.7.dist-info"]["RECORD"]],
+        (None, None): [
+            whlcon.filetree["nlptriples-0.1.7.dist-info"]["RECORD"]  # type: ignore[index]
+        ],
     }
     assert whlcon.purelib_tree == Directory(
         path=None,
@@ -275,7 +280,7 @@ def test_from_wheel_normalized_dist_info():
     )
 
 
-def test_trees_data_platlib():
+def test_trees_data_platlib() -> None:
     """
     Test the ``purelib_tree`` and ``platlib_tree`` attributes of a purelib
     wheel containing an empty purelib and a nonempty platlib
@@ -337,7 +342,7 @@ def test_trees_data_platlib():
     )
 
 
-def test_trees_data_purelib():
+def test_trees_data_purelib() -> None:
     """
     Test the ``purelib_tree`` and ``platlib_tree`` attributes of a platlib
     wheel containing a nonempty purelib and an empty platlib
@@ -411,7 +416,7 @@ def test_trees_data_purelib():
     assert whlcon.platlib_tree == Directory()
 
 
-def test_trees_platlib():
+def test_trees_platlib() -> None:
     """
     Test the ``purelib_tree`` and ``platlib_tree`` attributes of a platlib
     wheel containing an empty purelib and a nonempty platlib
@@ -522,7 +527,7 @@ def test_trees_platlib():
     ],
 )
 @pytest.mark.parametrize("purelib", [True, False])
-def test_validate_tree_error(rows, errmsg, purelib):
+def test_validate_tree_error(rows: list[list[str]], errmsg: str, purelib: bool) -> None:
     whlcon = WheelContents(
         dist_info_dir="foo-1.0.dist-info",
         data_dir="foo-1.0.data",
@@ -584,7 +589,7 @@ def test_validate_tree_error(rows, errmsg, purelib):
         ),
     ],
 )
-def test_validate_tree_error_purelib(rows, errmsg):
+def test_validate_tree_error_purelib(rows: list[list[str]], errmsg: str) -> None:
     whlcon = WheelContents(
         dist_info_dir="foo-1.0.dist-info",
         data_dir="foo-1.0.data",
@@ -646,7 +651,7 @@ def test_validate_tree_error_purelib(rows, errmsg):
         ),
     ],
 )
-def test_validate_tree_error_platlib(rows, errmsg):
+def test_validate_tree_error_platlib(rows: list[list[str]], errmsg: str) -> None:
     whlcon = WheelContents(
         dist_info_dir="foo-1.0.dist-info",
         data_dir="foo-1.0.data",
@@ -659,7 +664,7 @@ def test_validate_tree_error_platlib(rows, errmsg):
 
 
 @pytest.mark.parametrize("purelib", [True, False])
-def test_validate_tree_data_no_datalib(purelib):
+def test_validate_tree_data_no_datalib(purelib: bool) -> None:
     whlcon = WheelContents(
         dist_info_dir="foo-1.0.dist-info",
         data_dir="foo-1.0.data",
@@ -683,7 +688,7 @@ def test_validate_tree_data_no_datalib(purelib):
 
 
 @pytest.mark.parametrize("purelib", [True, False])
-def test_validate_tree_dir_rows(purelib):
+def test_validate_tree_dir_rows(purelib: bool) -> None:
     whlcon = WheelContents(
         dist_info_dir="foo-1.0.dist-info",
         data_dir="foo-1.0.data",
@@ -718,18 +723,18 @@ def test_validate_tree_dir_rows(purelib):
     )
     assert whlcon.by_signature == {
         (950, "sha256=NVefY26xjCmYCQCnZaKUTNc5WaqZHDKxVde8l72cVOk"): [
-            whlcon.filetree["foo-1.0.dist-info"]["METADATA"]
+            whlcon.filetree["foo-1.0.dist-info"]["METADATA"]  # type: ignore[index]
         ],
     }
 
 
-def test_from_wheel_no_purelib_line():
+def test_from_wheel_no_purelib_line() -> None:
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(WHEEL_DIR / "no_purelib_line-1.0.0-py3-none-any.whl")
     assert str(excinfo.value) == "Root-Is-Purelib header not found in WHEEL file"
 
 
-def test_from_wheel_empty_purelib_line():
+def test_from_wheel_empty_purelib_line() -> None:
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(
             WHEEL_DIR / "empty_purelib_line-1.0.0-py3-none-any.whl"
@@ -737,7 +742,7 @@ def test_from_wheel_empty_purelib_line():
     assert str(excinfo.value) == "Invalid Root-Is-Purelib value in WHEEL file: ''"
 
 
-def test_from_wheel_bad_purelib_line():
+def test_from_wheel_bad_purelib_line() -> None:
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(WHEEL_DIR / "bad_purelib_line-1.0.0-py3-none-any.whl")
     assert (
@@ -745,19 +750,19 @@ def test_from_wheel_bad_purelib_line():
     )
 
 
-def test_from_wheel_no_record_file():
+def test_from_wheel_no_record_file() -> None:
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(WHEEL_DIR / "no_record-1.0.0-py3-none-any.whl")
     assert str(excinfo.value) == "No RECORD file in wheel"
 
 
-def test_from_wheel_no_wheel_file():
+def test_from_wheel_no_wheel_file() -> None:
     with pytest.raises(WheelValidationError) as excinfo:
         WheelContents.from_wheel(WHEEL_DIR / "no_wheel_file-1.0.0-py3-none-any.whl")
     assert str(excinfo.value) == "No WHEEL file in wheel"
 
 
-def test_by_signature_dup_files():
+def test_by_signature_dup_files() -> None:
     whlcon = WheelContents(
         dist_info_dir="foo-1.0.dist-info",
         data_dir="foo-1.0.data",

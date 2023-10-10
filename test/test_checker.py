@@ -1,13 +1,16 @@
+from __future__ import annotations
 from pathlib import Path
+from typing import Any
 import attr
 import pytest
+from pytest_mock import MockerFixture
 from check_wheel_contents.checker import NO_CONFIG, WheelChecker
 from check_wheel_contents.checks import Check
 from check_wheel_contents.config import Configuration
 from check_wheel_contents.filetree import Directory, File
 
 
-def test_defaults():
+def test_defaults() -> None:
     checker = WheelChecker()
     assert attr.asdict(checker, recurse=False) == {
         "selected": set(Check),
@@ -79,7 +82,13 @@ def test_defaults():
         ),
     ],
 )
-def test_configure_options(mocker, monkeypatch, kwargs, cfg, tmp_path):
+def test_configure_options(
+    mocker: MockerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    kwargs: dict[str, Any],
+    cfg: Configuration,
+    tmp_path: Path,
+) -> None:
     (tmp_path / "check-wheel-contents.cfg").write_text(
         "[check-wheel-contents]\nselect = W001,W002\n"
     )
@@ -91,7 +100,7 @@ def test_configure_options(mocker, monkeypatch, kwargs, cfg, tmp_path):
     apply_mock.assert_called_once_with(cfg)
 
 
-def test_apply_config_calls(mocker):
+def test_apply_config_calls(mocker: MockerFixture) -> None:
     pkgtree = Directory(
         path=None,
         entries={"TOPLEVEL": Directory(path="TOPLEVEL/")},
@@ -112,11 +121,13 @@ def test_apply_config_calls(mocker):
     }
 
 
-def test_apply_config_toplevel_pkgtree_mismatch_warning(capsys, mocker):
+def test_apply_config_toplevel_pkgtree_mismatch_warning(
+    capsys: pytest.CaptureFixture[str], mocker: MockerFixture
+) -> None:
     pkgtree = Directory(
         path=None,
         entries={
-            "foo.py": File(("foo.py"), None, None),
+            "foo.py": File(("foo.py",), None, None),
             "bar": Directory(path="bar/"),
         },
     )
@@ -152,7 +163,7 @@ def test_apply_config_toplevel_pkgtree_mismatch_warning(capsys, mocker):
             Directory(
                 path=None,
                 entries={
-                    "foo.py": File(("foo.py"), None, None),
+                    "foo.py": File(("foo.py",), None, None),
                     "bar": Directory(path="bar/"),
                 },
             ),
@@ -162,14 +173,19 @@ def test_apply_config_toplevel_pkgtree_mismatch_warning(capsys, mocker):
             Directory(
                 path=None,
                 entries={
-                    "foo.py": File(("foo.py"), None, None),
+                    "foo.py": File(("foo.py",), None, None),
                     "bar": Directory(path="bar/"),
                 },
             ),
         ),
     ],
 )
-def test_apply_config_no_warning(capsys, mocker, toplevel, pkgtree):
+def test_apply_config_no_warning(
+    capsys: pytest.CaptureFixture[str],
+    mocker: MockerFixture,
+    toplevel: list[str] | None,
+    pkgtree: Directory | None,
+) -> None:
     cfg = mocker.Mock(
         **{
             "get_selected_checks.return_value": mocker.sentinel.SELECTED,
@@ -198,14 +214,14 @@ def test_apply_config_no_warning(capsys, mocker, toplevel, pkgtree):
         [None],
     ],
 )
-def test_configure_options_error(value):
+def test_configure_options_error(value: Any) -> None:
     checker = WheelChecker()
     with pytest.raises(TypeError) as excinfo:
         checker.configure_options(configpath=value)
     assert str(excinfo.value) == "configpath must be None, str, or NO_CONFIG"
 
 
-def test_check_contents(mocker):
+def test_check_contents(mocker: MockerFixture) -> None:
     checker = WheelChecker()
     check_mocks = {}
     for c in Check:

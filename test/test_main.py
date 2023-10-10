@@ -1,9 +1,12 @@
+from __future__ import annotations
 import json
 from operator import attrgetter
 from pathlib import Path
 from traceback import format_exception
-from click.testing import CliRunner
+from typing import Any
+from click.testing import CliRunner, Result
 import pytest
+from pytest_mock import MockerFixture
 from check_wheel_contents.__main__ import main
 from check_wheel_contents.checker import NO_CONFIG
 from check_wheel_contents.checks import Check
@@ -11,8 +14,9 @@ from check_wheel_contents.checks import Check
 WHEEL_DIR = Path(__file__).with_name("data") / "wheels"
 
 
-def show_result(r):
+def show_result(r: Result) -> str:
     if r.exception is not None:
+        assert isinstance(r.exc_info, tuple)
         return "".join(format_exception(*r.exc_info))
     else:
         return r.output
@@ -143,7 +147,13 @@ def show_result(r):
         ),
     ],
 )
-def test_options2configargs(mocker, monkeypatch, options, configargs, tmp_path):
+def test_options2configargs(
+    mocker: MockerFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    options: list[str],
+    configargs: dict[str, Any],
+    tmp_path: Path,
+) -> None:
     (tmp_path / "foo").mkdir()
     (tmp_path / "src").mkdir()
     (tmp_path / "foo.cfg").touch()
@@ -164,7 +174,7 @@ def test_options2configargs(mocker, monkeypatch, options, configargs, tmp_path):
         ["--ignore", "W9999"],
     ],
 )
-def test_bad_checks_option_error(mocker, options):
+def test_bad_checks_option_error(mocker: MockerFixture, options: list[str]) -> None:
     mock_checker = mocker.patch(
         "check_wheel_contents.__main__.WheelChecker",
         autospec=True,
@@ -180,8 +190,8 @@ def test_bad_checks_option_error(mocker, options):
     WHEEL_DIR.glob("*.whl"),
     ids=attrgetter("name"),
 )
-def test_main(monkeypatch, whlfile):
-    with open(str(whlfile.with_suffix(".json"))) as fp:
+def test_main(monkeypatch: pytest.MonkeyPatch, whlfile: Path) -> None:
+    with whlfile.with_suffix(".json").open() as fp:
         expected = json.load(fp)
     monkeypatch.chdir(str(WHEEL_DIR))
     r = CliRunner(mix_stderr=False).invoke(main, ["--no-config", whlfile.name])
@@ -215,7 +225,13 @@ def test_main(monkeypatch, whlfile):
         ),
     ],
 )
-def test_bad_config_error(cfgname, cfgsrc, errmsg, monkeypatch, tmp_path):
+def test_bad_config_error(
+    cfgname: str,
+    cfgsrc: str,
+    errmsg: str,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
     monkeypatch.chdir(tmp_path)
     Path(cfgname).write_text(cfgsrc)
     r = CliRunner().invoke(main, ["--config", cfgname])

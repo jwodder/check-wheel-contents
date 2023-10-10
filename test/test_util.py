@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 from check_wheel_contents.errors import WheelValidationError
 from check_wheel_contents.util import (
@@ -31,7 +32,7 @@ from check_wheel_contents.util import (
         ("_ffi.abi3.so", "_ffi"),
     ],
 )
-def test_pymodule_basename(filename, expected):
+def test_pymodule_basename(filename: str, expected: str | None) -> None:
     assert pymodule_basename(filename) == expected
 
 
@@ -55,7 +56,7 @@ def test_pymodule_basename(filename, expected):
         ("foo,", ["foo"]),
     ],
 )
-def test_comma_split(sin, lout):
+def test_comma_split(sin: str, lout: list[str]) -> None:
     assert comma_split(sin) == lout
 
 
@@ -72,7 +73,7 @@ def test_comma_split(sin, lout):
         (".dist-info", False),
     ],
 )
-def test_is_dist_info_dir(name, expected):
+def test_is_dist_info_dir(name: str, expected: bool) -> None:
     assert is_dist_info_dir(name) is expected
 
 
@@ -89,7 +90,7 @@ def test_is_dist_info_dir(name, expected):
         (".data", False),
     ],
 )
-def test_is_data_dir(name, expected):
+def test_is_data_dir(name: str, expected: bool) -> None:
     assert is_data_dir(name) is expected
 
 
@@ -105,7 +106,7 @@ def test_is_data_dir(name, expected):
         ("has.period-stubs", False),
     ],
 )
-def test_is_stubs_dir(name, expected):
+def test_is_stubs_dir(name: str, expected: bool) -> None:
     assert is_stubs_dir(name) is expected
 
 
@@ -156,7 +157,9 @@ def test_is_stubs_dir(name, expected):
         ),
     ],
 )
-def test_find_wheel_dirs(namelist, project, version, expected):
+def test_find_wheel_dirs(
+    namelist: list[str], project: str, version: str, expected: tuple[str, str | None]
+) -> None:
     assert find_wheel_dirs(namelist, project, version) == expected
 
 
@@ -253,7 +256,9 @@ def test_find_wheel_dirs(namelist, project, version, expected):
         ),
     ],
 )
-def test_find_wheel_dirs_error(namelist, project, version, msg):
+def test_find_wheel_dirs_error(
+    namelist: list[str], project: str, version: str, msg: str
+) -> None:
     with pytest.raises(WheelValidationError) as excinfo:
         find_wheel_dirs(namelist, project, version)
     assert str(excinfo.value) == msg
