@@ -488,8 +488,9 @@ Common causes:
 
 - For non-Python files: You failed to declare your project's package data
   appropriately.  `See the setuptools documentation for information on how to
-  do this
-  <https://setuptools.readthedocs.io/en/latest/setuptools.html#including-data-files>_`.
+  do this`__.
+
+__ https://setuptools.pypa.io/en/latest/userguide/datafiles.html
 
 
 W102 — Wheel library contains files not in package tree
