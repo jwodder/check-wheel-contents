@@ -1,5 +1,5 @@
-v0.6.0 (in development)
------------------------
+v0.6.0 (2023-10-31)
+-------------------
 - Support Python 3.12
 - Add type annotations to tests
 - W005 will no longer fail for common names that are provided to `--toplevel`
