@@ -364,8 +364,10 @@ Common causes:
   an option because you are building a namespace package, use
   ``setuptools.find_namespace_packages()`` instead of ``find_packages()``.  Be
   sure to set the arguments appropriately so that the function only finds your
-  main package; `see the documentation for further information
-  <https://setuptools.readthedocs.io/en/latest/setuptools.html#find-namespace-packages>`_.
+  main package; `see the documentation for further information`__.
+
+__ https://setuptools.pypa.io/en/latest/userguide/package_discovery.html
+   #finding-namespace-packages
 
 - You're deliberately creating a wheel that only contains scripts, headers, or
   other data files.
