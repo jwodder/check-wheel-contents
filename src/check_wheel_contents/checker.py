@@ -32,11 +32,13 @@ ALLOWED_DUPLICATES = {
 IGNORED_TOPLEVEL_RGX = re.compile(r".\.pth\Z")
 
 #: A list of common toplevel names for W005 to fail on
-COMMON_NAMES = set("""
+COMMON_NAMES = set(
+    """
     .eggs .nox .tox .venv
     app build cli data dist doc docs example examples lib scripts src test
     tests venv
-""".split())
+""".split()
+)
 
 
 @attr.s(auto_attribs=True)
@@ -45,7 +47,9 @@ class WheelChecker:
 
     #: The set of selected (active) checks
     selected: set[Check] = attr.ib()
-    #: The toplevel names to expect for W2, or `None` to disable the checks
+    #: The toplevel names to expect for W2, or `None` to disable the checks.
+    #: Also used by W005 to exclude common names used as toplevel names from
+    #: consideration.
     toplevel: Optional[list[str]] = None
     #: The package tree to expect for W1, or `None` to disable the checks
     pkgtree: Optional[Directory] = None
@@ -187,13 +191,14 @@ class WheelChecker:
         """
         W005 — Wheel contains common toplevel name in library
 
-        Checks for `COMMON_NAMES`.
+        Checks for `COMMON_NAMES`.  If `toplevel` is set, its names are not
+        checked (i.e., they are allowed).
 
         Only purelib and platlib are checked.
         """
         badpaths = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
-            for common in (COMMON_NAMES - set(self.toplevel or [])):
+            for common in COMMON_NAMES.difference(self.toplevel or []):
                 try:
                     entry = tree[common]
                 except KeyError:

@@ -2,6 +2,8 @@ v0.6.0 (in development)
 -----------------------
 - Support Python 3.12
 - Add type annotations to tests
+- W005 will no longer fail for common names that are provided to `--toplevel`
+  (contributed by [@gaborbernat](https://github.com/gaborbernat))
 
 v0.5.0 (2023-09-23)
 -------------------

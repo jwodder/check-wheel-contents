@@ -128,7 +128,9 @@ configuration file.  Unknown keys in configuration files are ignored.
 
    In a TOML file, ``<names>`` may alternatively be given as a list of strings.
 
-   This option disables check W009 and enables checks W201 and W202.
+   This option disables check W009 and enables checks W201 and W202.  It is
+   also used by check W005 to prevent failure on common names that are
+   intentionally used as toplevel names.
 
 ``--package <path>`` / ``package = <paths>``
    Tell ``check-wheel-contents`` to check that the wheel's library sections
@@ -280,6 +282,9 @@ itself does not belong in a wheel).  Projects should only use toplevel names
 that resemble the project name; using common names will cause different
 projects' files to overwrite each other on installation.
 
+If the ``--toplevel`` option is set, the names listed in the option will not
+cause this check to fail.
+
 Common causes:
 
 - For ``src``: You failed to set up your ``src/`` layout correctly.  ``src``
@@ -307,6 +312,11 @@ Common causes:
   **Solution**: Move the tests or whatever to inside your main package
   directory (e.g., move ``tests/`` to ``somepackage/tests/``) so that they
   won't collide with other projects' files on installation.
+
+- You are actually making a package whose name is one of the listed names.
+
+  **Solution**: Include the name of your package in the ``--toplevel`` option
+  so that ``check-wheel-contents`` knows it's meant to be there.
 
 
 W006 — ``__init__.py`` at top level of library

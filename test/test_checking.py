@@ -516,13 +516,17 @@ def test_check_W004(paths: list[str], failures: list[FailedCheck]) -> None:
 @pytest.mark.parametrize(
     "paths,failures",
     [
-        pytest.param(["{}/foo.py", "not_{}/foo.py", "{}.py"], [FailedCheck(Check.W005, ["{}/"])], id="root"),
+        pytest.param(
+            ["{}/foo.py", "not_{}/foo.py", "{}.py"],
+            [FailedCheck(Check.W005, ["{}/"])],
+            id="root",
+        ),
         pytest.param(["quux/{}/foo.py"], [], id="nested"),
         pytest.param(["{}"], [FailedCheck(Check.W005, ["{}"])], id="root_dir"),
         pytest.param(
             ["foo-1.0.data/platlib/{}/foo.py"],
             [FailedCheck(Check.W005, ["foo-1.0.data/platlib/{}/"])],
-            id='deeply_nested'
+            id="deeply_nested",
         ),
         pytest.param(["foo-1.0.data/scripts/{}/foo.py"], [], id="data"),
     ],
@@ -538,10 +542,19 @@ def test_check_W005(name: str, paths: list[str], failures: list[FailedCheck]) ->
 
 
 @pytest.mark.parametrize("name", COMMON_NAMES)
-def test_check_W005_exclude_toplevel(name: str) -> None:
-    checker = WheelChecker()
-    checker.toplevel = [name]
-    failures = checker.check_W005(wheel_from_paths([name]))
+@pytest.mark.parametrize(
+    "paths",
+    [
+        pytest.param(["{}/foo.py", "not_{}/foo.py", "{}.py"], id="root"),
+        pytest.param(["quux/{}/foo.py"], id="nested"),
+        pytest.param(["{}"], id="root_dir"),
+        pytest.param(["foo-1.0.data/platlib/{}/foo.py"], id="deeply_nested"),
+        pytest.param(["foo-1.0.data/scripts/{}/foo.py"], id="data"),
+    ],
+)
+def test_check_W005_exclude_toplevel(name: str, paths: list[str]) -> None:
+    checker = WheelChecker(toplevel=[name])
+    failures = checker.check_W005(wheel_from_paths(p.format(name) for p in paths))
     assert not failures
 
 
