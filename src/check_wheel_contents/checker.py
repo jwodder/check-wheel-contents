@@ -32,11 +32,11 @@ ALLOWED_DUPLICATES = {
 IGNORED_TOPLEVEL_RGX = re.compile(r".\.pth\Z")
 
 #: A list of common toplevel names for W005 to fail on
-COMMON_NAMES = """
+COMMON_NAMES = set("""
     .eggs .nox .tox .venv
     app build cli data dist doc docs example examples lib scripts src test
     tests venv
-""".split()
+""".split())
 
 
 @attr.s(auto_attribs=True)
@@ -193,7 +193,7 @@ class WheelChecker:
         """
         badpaths = []
         for tree in (contents.purelib_tree, contents.platlib_tree):
-            for common in COMMON_NAMES:
+            for common in (COMMON_NAMES - set(self.toplevel or [])):
                 try:
                     entry = tree[common]
                 except KeyError:
