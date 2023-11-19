@@ -1,3 +1,94 @@
 [build-system]
-requires = ["setuptools >= 46.4.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "check-wheel-contents"
+dynamic = ["version"]
+description = "Check your wheels have the right contents"
+readme = "README.rst"
+requires-python = ">=3.7"
+license = "MIT"
+license-files = { paths = ["LICENSE"] }
+authors = [
+    { name = "John Thorvald Wodder II", email = "check-wheel-contents@varonathe.org" }
+]
+
+keywords = [
+    "linter",
+    "packaging",
+    "wheel",
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+]
+
+dependencies = [
+    "attrs            >= 18.1",
+    "click            >= 7.0",
+    "packaging",
+    "backports.cached-property; python_version < '3.8'",
+    "pydantic         ~= 2.0",
+    "tomli            >= 1.2, < 3.0; python_version < '3.11'",
+    "wheel-filename   ~= 1.1",
+]
+
+[project.scripts]
+check-wheel-contents = "check_wheel_contents.__main__:main"
+
+[project.urls]
+"Source Code" = "https://github.com/jwodder/check-wheel-contents"
+"Bug Tracker" = "https://github.com/jwodder/check-wheel-contents/issues"
+
+[tool.hatch.version]
+path = "src/check_wheel_contents/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/docs",
+    "/src",
+    "/test",
+    "CHANGELOG.*",
+    "CONTRIBUTORS.*",
+    "tox.ini",
+]
+
+[tool.hatch.envs.default]
+python = "3"
+
+[tool.mypy]
+allow_incomplete_defs = false
+allow_untyped_defs = false
+ignore_missing_imports = false
+# <https://github.com/python/mypy/issues/7773>:
+no_implicit_optional = true
+implicit_reexport = false
+local_partial_types = true
+pretty = true
+show_error_codes = true
+show_traceback = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+warn_required_dynamic_aliases = true

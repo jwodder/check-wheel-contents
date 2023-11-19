@@ -1,16 +1,7 @@
-*.egg
-*.egg-info/
-*.pyc
-.cache/
 .coverage
-.eggs/
 .mypy_cache/
 .nox/
-.pytest_cache/
 .tox/
 __pycache__/
-build/
 dist/
-docs/.doctrees/
 docs/_build/
-venv/

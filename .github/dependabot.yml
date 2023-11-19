@@ -1,5 +1,15 @@
 version: 2
 updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "[python]"
+    labels:
+      - dependencies
+      - d:python
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
