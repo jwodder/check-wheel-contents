@@ -71,5 +71,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+          name: ${{ matrix.python-version }}
 
 # vim:set et sts=2:
