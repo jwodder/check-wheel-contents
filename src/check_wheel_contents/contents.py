@@ -36,9 +36,9 @@ class WheelContents:
     root_is_purelib: bool = attr.ib(default=True)
     #: A mapping from ``File.signature`` values to lists of the `File` objects
     #: with those values
-    by_signature: defaultdict[
-        tuple[Optional[int], Optional[str]], list[File]
-    ] = attr.ib(factory=lambda: defaultdict(list))
+    by_signature: defaultdict[tuple[Optional[int], Optional[str]], list[File]] = (
+        attr.ib(factory=lambda: defaultdict(list))
+    )
     #: The wheel's file tree
     filetree: Directory = attr.ib(factory=Directory)
 
