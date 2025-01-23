@@ -9,7 +9,7 @@ description = "Check your wheels have the right contents"
 readme = "README.rst"
 requires-python = ">=3.8"
 license = "MIT"
-license-files = { paths = ["LICENSE"] }
+license-files = ["LICENSE"]
 authors = [
     { name = "John Thorvald Wodder II", email = "check-wheel-contents@varonathe.org" }
 ]
@@ -31,7 +31,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
-    "License :: OSI Approved :: MIT License",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Build Tools",
