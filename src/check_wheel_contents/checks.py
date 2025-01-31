@@ -23,6 +23,7 @@ class Check(Enum):
     W008 = "Wheel is empty"
     W009 = "Wheel contains multiple toplevel library entries"
     W010 = "Toplevel library directory contains no Python modules"
+    W011 = "Wheel contains module and submodule with the same name"
     W101 = "Wheel library is missing files in package tree"
     W102 = "Wheel library contains files not in package tree"
     W201 = "Wheel library is missing specified toplevel entry"
