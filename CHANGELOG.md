@@ -1,5 +1,5 @@
-v0.6.2 (in development)
------------------------
+v0.6.2 (2025-05-11)
+-------------------
 - Update tests for click v8.2.0
 - Drop support for Python 3.8 and 3.9
 

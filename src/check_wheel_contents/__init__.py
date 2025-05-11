@@ -12,7 +12,7 @@ README, along with common causes and corresponding fixes.
 Visit <https://github.com/jwodder/check-wheel-contents> for more information.
 """
 
-__version__ = "0.6.2.dev1"
+__version__ = "0.6.2"
 __author__ = "John Thorvald Wodder II"
 __author_email__ = "check-wheel-contents@varonathe.org"
 __license__ = "MIT"
