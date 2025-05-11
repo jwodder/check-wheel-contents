@@ -1,3 +1,7 @@
+v0.6.2 (in development)
+-----------------------
+- Update tests for click v8.2.0
+
 v0.6.1 (2024-12-01)
 -------------------
 - Migrated from setuptools to hatch
