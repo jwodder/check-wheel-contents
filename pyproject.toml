@@ -7,7 +7,7 @@ name = "check-wheel-contents"
 dynamic = ["version"]
 description = "Check your wheels have the right contents"
 readme = "README.rst"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
@@ -23,8 +23,6 @@ keywords = [
 classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -40,7 +38,7 @@ classifiers = [
 
 dependencies = [
     "attrs            >= 18.1",
-    "click            >= 7.0",
+    "click            ~= 8.2",
     "packaging",
     "backports.cached-property; python_version < '3.8'",
     "pydantic         ~= 2.0",

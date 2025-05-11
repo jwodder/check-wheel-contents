@@ -194,7 +194,7 @@ def test_main(monkeypatch: pytest.MonkeyPatch, whlfile: Path) -> None:
     with whlfile.with_suffix(".json").open() as fp:
         expected = json.load(fp)
     monkeypatch.chdir(str(WHEEL_DIR))
-    r = CliRunner(mix_stderr=False).invoke(main, ["--no-config", whlfile.name])
+    r = CliRunner().invoke(main, ["--no-config", whlfile.name])
     assert r.exit_code == expected["rc"], show_result(r)
     assert r.stdout.rstrip() == expected["stdout"]
     assert r.stderr.rstrip() == expected["stderr"]
