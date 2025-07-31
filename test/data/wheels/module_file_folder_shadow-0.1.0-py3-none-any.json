@@ -1,0 +1,5 @@
+{
+    "stdout": "module_file_folder_shadow-0.1.0-py3-none-any.whl: W011: Wheel library has multiple declared toplevel entries:\n  module_file_folder_shadow/foo/\n  module_file_folder_shadow/foo/bar/",
+    "stderr": "",
+    "rc": 1
+}
