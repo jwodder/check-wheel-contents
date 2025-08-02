@@ -38,7 +38,7 @@ classifiers = [
 
 dependencies = [
     "attrs            >= 18.1",
-    "click            ~= 8.2",
+    "click            ~= 8.2, != 8.2.2",
     "packaging",
     "backports.cached-property; python_version < '3.8'",
     "pydantic         ~= 2.0",
