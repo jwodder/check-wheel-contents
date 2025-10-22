@@ -1,3 +1,7 @@
+v0.7.0 (in development)
+-----------------------
+- Remove unused `backports.cached-property` dependency
+
 v0.6.3 (2025-08-02)
 -------------------
 - Exclude click v8.2.2 from dependencies due to breakage caused by

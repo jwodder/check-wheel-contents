@@ -2,10 +2,10 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable
 import csv
+from functools import cached_property
 from io import TextIOWrapper
 import os
 import re
-import sys
 from typing import Optional, TextIO
 from zipfile import ZipFile
 import attr
@@ -13,12 +13,6 @@ from wheel_filename import parse_wheel_filename
 from .errors import WheelValidationError
 from .filetree import Directory, File
 from .util import find_wheel_dirs, is_data_dir, is_dist_info_dir
-
-if sys.version_info[:2] >= (3, 8):
-    from functools import cached_property
-else:
-    from backports.cached_property import cached_property
-
 
 ROOT_IS_PURELIB_RGX = re.compile(r"Root-Is-Purelib\s*:\s*(.*?)\s*", flags=re.I)
 
