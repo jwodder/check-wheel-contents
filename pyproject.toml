@@ -40,7 +40,6 @@ dependencies = [
     "attrs            >= 18.1",
     "click            ~= 8.2, != 8.2.2",
     "packaging",
-    "backports.cached-property; python_version < '3.8'",
     "pydantic         ~= 2.0",
     "tomli            >= 1.2, < 3.0; python_version < '3.11'",
     "wheel-filename   ~= 1.1",
