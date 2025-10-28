@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from configparser import ConfigParser
 from pathlib import Path
 import sys
-from typing import Any, List, Optional, Set
+from typing import Any
 from pydantic import BaseModel, Field, ValidationError, field_validator
 from .checks import Check, parse_check_prefix
 from .errors import UserInputError
@@ -38,21 +38,21 @@ class Configuration(BaseModel, populate_by_name=True):
     """A container for a `WheelChecker`'s raw configuration values"""
 
     #: The set of selected checks, or `None` if not specified
-    select: Optional[Set[Check]] = None
+    select: set[Check] | None = None
     #: The set of ignored checks, or `None` if not specified
-    ignore: Optional[Set[Check]] = None
+    ignore: set[Check] | None = None
     #: The list of toplevel names to check for with the W2 checks, or `None` if
     #: not specified
-    toplevel: Optional[List[str]] = None
+    toplevel: list[str] | None = None
     #: The list of paths specified with ``--package``, or `None` if not
     #: specified
-    package_paths: Optional[List[Path]] = Field(None, alias="package")
+    package_paths: list[Path] | None = Field(None, alias="package")
     #: The list of paths specified with ``--src-dir``, or `None` if not
     #: specified
-    src_dirs: Optional[List[Path]] = Field(None, alias="src_dir")
+    src_dirs: list[Path] | None = Field(None, alias="src_dir")
     #: The set of exclusion patterns for traversing ``package_paths`` and
     #: ``src_dirs``, or `None` if not specified
-    package_omit: Optional[List[str]] = None
+    package_omit: list[str] | None = None
 
     @field_validator("select", "ignore", mode="before")
     @classmethod
@@ -94,7 +94,7 @@ class Configuration(BaseModel, populate_by_name=True):
 
     @field_validator("toplevel")
     @classmethod
-    def _convert_toplevel(cls, value: Optional[list[str]]) -> Optional[list[str]]:
+    def _convert_toplevel(cls, value: list[str] | None) -> list[str] | None:
         """
         Strip trailing forward slashes from the elements of a list, if defined
         """
@@ -105,12 +105,12 @@ class Configuration(BaseModel, populate_by_name=True):
     @classmethod
     def from_command_options(
         cls,
-        select: Optional[set[Check]] = None,
-        ignore: Optional[set[Check]] = None,
-        toplevel: Optional[list[str]] = None,
+        select: set[Check] | None = None,
+        ignore: set[Check] | None = None,
+        toplevel: list[str] | None = None,
         package: tuple[str, ...] = (),
         src_dir: tuple[str, ...] = (),
-        package_omit: Optional[list[str]] = None,
+        package_omit: list[str] | None = None,
     ) -> Configuration:
         """
         Construct a `Configuration` instance from option values passed in on
@@ -128,7 +128,7 @@ class Configuration(BaseModel, populate_by_name=True):
         )
 
     @classmethod
-    def from_config_file(cls, path: Optional[str] = None) -> Configuration:
+    def from_config_file(cls, path: str | None = None) -> Configuration:
         """
         Construct a `Configuration` instance from the configuration file at the
         given path.  If the path is `None`, read from the default configuration
@@ -146,7 +146,7 @@ class Configuration(BaseModel, populate_by_name=True):
             return cfg
 
     @classmethod
-    def find_default(cls) -> Optional["Configuration"]:
+    def find_default(cls) -> Configuration | None:
         """
         Find the default configuration file and read the relevant section from
         it.  Returns `None` if no file with the appropriate section is found.
@@ -163,7 +163,7 @@ class Configuration(BaseModel, populate_by_name=True):
         return None
 
     @classmethod
-    def from_file(cls, path: Path) -> Optional["Configuration"]:
+    def from_file(cls, path: Path) -> Configuration | None:
         """
         Read the relevant section from the given configuration file.  Returns
         `None` if the section does not exist.
@@ -251,7 +251,7 @@ class Configuration(BaseModel, populate_by_name=True):
             selected -= self.ignore
         return selected
 
-    def get_package_tree(self) -> Optional[Directory]:
+    def get_package_tree(self) -> Directory | None:
         """
         Return the combined file tree obtained by traversing all of the paths
         in ``package_paths`` and ``src_dirs``.  If both fields are `None`,
