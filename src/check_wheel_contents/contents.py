@@ -6,7 +6,7 @@ from functools import cached_property
 from io import TextIOWrapper
 import os
 import re
-from typing import Optional, TextIO
+from typing import TextIO
 from zipfile import ZipFile
 import attr
 from wheel_filename import parse_wheel_filename
@@ -30,8 +30,8 @@ class WheelContents:
     root_is_purelib: bool = attr.ib(default=True)
     #: A mapping from ``File.signature`` values to lists of the `File` objects
     #: with those values
-    by_signature: defaultdict[tuple[Optional[int], Optional[str]], list[File]] = (
-        attr.ib(factory=lambda: defaultdict(list))
+    by_signature: defaultdict[tuple[int | None, str | None], list[File]] = attr.ib(
+        factory=lambda: defaultdict(list)
     )
     #: The wheel's file tree
     filetree: Directory = attr.ib(factory=Directory)

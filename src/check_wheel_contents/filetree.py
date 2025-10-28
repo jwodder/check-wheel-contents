@@ -5,7 +5,6 @@ from keyword import iskeyword
 import os
 from os.path import splitext
 from pathlib import Path
-from typing import Optional
 import attr
 from .errors import WheelValidationError
 from .util import is_data_dir, is_dist_info_dir, pymodule_basename, validate_path
@@ -18,10 +17,10 @@ class File:
     #: The components of the file's path within the file tree
     parts: tuple[str, ...]
     #: The file's size, or `None` if unknown/irrelevant
-    size: Optional[int]
+    size: int | None
     #: A hash of the file's contents in the same ``{alg}={digest}`` form as
     #: used by :file:`RECORD` files in wheels, or `None` if unknown/irrelevant
-    hashsum: Optional[str]
+    hashsum: str | None
 
     @classmethod
     def from_record_row(cls, row: list[str]) -> File:
@@ -59,12 +58,12 @@ class File:
         return "/".join(self.parts)
 
     @property
-    def signature(self) -> tuple[Optional[int], Optional[str]]:
+    def signature(self) -> tuple[int | None, str | None]:
         """A tuple of the file's ``size`` and ``hashsum`` fields"""
         return (self.size, self.hashsum)
 
     @property
-    def libparts(self) -> Optional[tuple[str, ...]]:
+    def libparts(self) -> tuple[str, ...] | None:
         """
         The path components of the file relative to the root of the purelib or
         platlib folder, whichever contains it.  If the file is in neither the
@@ -81,7 +80,7 @@ class File:
             return self.parts
 
     @property
-    def libpath(self) -> Optional[str]:
+    def libpath(self) -> str | None:
         """
         The file's path relative to the root of the purelib or platlib folder,
         whichever contains it.  If the file is in neither the purelib nor
@@ -128,12 +127,12 @@ class Directory:
     #: The directory's path within the file tree, relative to the root, using
     #: ``/`` as a component separator, and terminated with ``/``; or `None` if
     #: this directory is the root of the tree
-    path: Optional[str] = attr.ib(default=None)
+    path: str | None = attr.ib(default=None)
     #: Entries in the directory, as a mapping from basenames to entries
     entries: dict[str, File | Directory] = attr.Factory(dict)
 
     @path.validator
-    def _validate_path(self, _attribute: attr.Attribute, value: Optional[str]) -> None:
+    def _validate_path(self, _attribute: attr.Attribute, value: str | None) -> None:
         if value is not None:
             if not value.endswith("/"):
                 # This is a ValueError, not a WheelValidationError, because it
@@ -153,7 +152,7 @@ class Directory:
             return tuple(self.path.rstrip("/").split("/"))
 
     @property
-    def subdirectories(self) -> dict[str, "Directory"]:
+    def subdirectories(self) -> dict[str, Directory]:
         """
         The directories in the directory, as a mapping from basenames to
         `Directory` objects
@@ -241,7 +240,7 @@ class Directory:
     def from_local_tree(
         cls,
         root: Path,
-        exclude: Optional[list[str]] = None,
+        exclude: list[str] | None = None,
         include_root: bool = True,
     ) -> Directory:
         """

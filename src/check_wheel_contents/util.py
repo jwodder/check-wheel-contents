@@ -3,7 +3,6 @@ import base64
 import hashlib
 from keyword import iskeyword
 import re
-from typing import Optional
 from packaging.utils import canonicalize_name, canonicalize_version
 from .errors import WheelValidationError
 
@@ -38,7 +37,7 @@ def urlsafe_b64encode_nopad(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("us-ascii")
 
 
-def pymodule_basename(filename: str) -> Optional[str]:
+def pymodule_basename(filename: str) -> str | None:
     """
     If ``filename`` (a filename without any directory components) has a file
     extension indicating it is a Python module (either source or binary
@@ -80,7 +79,7 @@ def is_stubs_dir(name: str) -> bool:
 
 def find_wheel_dirs(
     namelist: list[str], project: str, version: str
-) -> tuple[str, Optional[str]]:
+) -> tuple[str, str | None]:
     """
     Given a list ``namelist`` of files in a wheel for a project ``project`` and
     version ``version``, find & return the name of the wheel's ``.dist-info``
@@ -120,7 +119,7 @@ def find_wheel_dirs(
             )
     else:
         raise WheelValidationError("No .dist-info directory in wheel")
-    data_dir: Optional[str]
+    data_dir: str | None
     if len(data_dirs) > 1:
         raise WheelValidationError("Wheel contains multiple .data directories")
     elif len(data_dirs) == 1:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 import click
 from wheel_filename import InvalidFilenameError
 from . import __version__
@@ -18,8 +18,8 @@ class ChecksParamType(click.ParamType):
     def convert(
         self,
         value: str,
-        param: Optional[click.Parameter],
-        ctx: Optional[click.Context],
+        param: click.Parameter | None,
+        ctx: click.Context | None,
     ) -> set[Check]:
         try:
             return parse_checks_string(value)
@@ -38,8 +38,8 @@ class ConfigParamType(click.ParamType):
     def convert(
         self,
         value: Any,
-        param: Optional[click.Parameter],
-        ctx: Optional[click.Context],
+        param: click.Parameter | None,
+        ctx: click.Context | None,
     ) -> Any:
         if value is NO_CONFIG:
             return value
@@ -109,12 +109,12 @@ def main(
     ctx: click.Context,
     wheel: list[str],
     config: Any,
-    select: Optional[set[Check]],
-    ignore: Optional[set[Check]],
-    toplevel: Optional[list[str]],
+    select: set[Check] | None,
+    ignore: set[Check] | None,
+    toplevel: list[str] | None,
     package: tuple[str, ...],
     src_dir: tuple[str, ...],
-    package_omit: Optional[list[str]],
+    package_omit: list[str] | None,
 ) -> None:
     """
     Check that your wheels have the right contents.

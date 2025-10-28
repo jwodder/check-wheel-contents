@@ -2,7 +2,6 @@ from __future__ import annotations
 from enum import Enum
 from functools import reduce
 from operator import or_
-from typing import Optional
 import attr
 from .errors import UserInputError
 from .util import comma_split
@@ -38,7 +37,7 @@ class FailedCheck:
     #: The relevant filepaths, if any
     args: list[str] = attr.Factory(list)
 
-    def show(self, filename: Optional[str] = None) -> str:
+    def show(self, filename: str | None = None) -> str:
         """
         Return a string showing the check name, error message, and file paths
         (if any).  If ``filename`` is specified, it is taken to be the name of

@@ -2,7 +2,7 @@ from __future__ import annotations
 from operator import attrgetter
 import re
 import sys
-from typing import Any, Optional
+from typing import Any
 import attr
 from .checks import Check, FailedCheck
 from .config import Configuration
@@ -50,9 +50,9 @@ class WheelChecker:
     #: The toplevel names to expect for W2, or `None` to disable the checks.
     #: Also used by W005 to exclude common names used as toplevel names from
     #: consideration.
-    toplevel: Optional[list[str]] = None
+    toplevel: list[str] | None = None
     #: The package tree to expect for W1, or `None` to disable the checks
-    pkgtree: Optional[Directory] = None
+    pkgtree: Directory | None = None
 
     @selected.default
     def _selected_default(self) -> set[Check]:
@@ -61,12 +61,12 @@ class WheelChecker:
     def configure_options(
         self,
         configpath: Any = NO_CONFIG,
-        select: Optional[set[Check]] = None,
-        ignore: Optional[set[Check]] = None,
-        toplevel: Optional[list[str]] = None,
+        select: set[Check] | None = None,
+        ignore: set[Check] | None = None,
+        toplevel: list[str] | None = None,
         package: tuple[str, ...] = (),
         src_dir: tuple[str, ...] = (),
-        package_omit: Optional[list[str]] = None,
+        package_omit: list[str] | None = None,
     ) -> None:
         """
         Configure the `WheelChecker` according to the given command-line
