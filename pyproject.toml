@@ -43,7 +43,7 @@ dependencies = [
     "packaging",
     "pydantic         ~= 2.0",
     "tomli            >= 1.2, < 3.0; python_version < '3.11'",
-    "wheel-filename   ~= 1.1",
+    "wheel-filename   ~= 2.0",
 ]
 
 [project.scripts]
