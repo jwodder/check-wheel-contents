@@ -9,7 +9,7 @@ import re
 from typing import TextIO
 from zipfile import ZipFile
 import attr
-from wheel_filename import parse_wheel_filename
+from wheel_filename import WheelFilename
 from .errors import WheelValidationError
 from .filetree import Directory, File
 from .util import find_wheel_dirs, is_data_dir, is_dist_info_dir
@@ -91,7 +91,7 @@ class WheelContents:
     @classmethod
     def from_wheel(cls, path: str | os.PathLike) -> WheelContents:
         """Construct a `WheelContents` from the wheel at the given path"""
-        whlname = parse_wheel_filename(path)
+        whlname = WheelFilename.parse(path)
         with open(path, "rb") as fp, ZipFile(fp) as zf:
             dist_info_dir, data_dir = find_wheel_dirs(
                 zf.namelist(),

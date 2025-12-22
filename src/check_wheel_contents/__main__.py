@@ -3,7 +3,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 import click
-from wheel_filename import InvalidFilenameError
+from wheel_filename import ParseError
 from . import __version__
 from .checker import NO_CONFIG, WheelChecker
 from .checks import Check, parse_checks_string
@@ -139,7 +139,7 @@ def main(
     for w in args2wheelpaths(wheel):
         try:
             contents = WheelContents.from_wheel(w)
-        except InvalidFilenameError:
+        except ParseError:
             click.echo(f"{w}: wheel has invalid filename", err=True)
             ok = False
             continue
