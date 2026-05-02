@@ -100,43 +100,41 @@ The following options may be set either on the command line or in the
 configuration file.  Settings given on the command line override those in the
 configuration file.  Unknown keys in configuration files are ignored.
 
-``--select <checks>`` / ``select = <checks>``
-   Select/enable only the given checks.  ``<checks>`` is a comma-separated list
+``--select CHECKS`` / ``select = CHECKS``
+   Select/enable only the given checks.  ``CHECKS`` is a comma-separated list
    of check IDs and/or check ID prefixes (to select all checks beginning with
    the given prefixes).
 
-   In a TOML file, ``<checks>`` may alternatively be given as a list of
-   strings.
+   In a TOML file, ``CHECKS`` may alternatively be given as a list of strings.
 
    By default, all checks are selected (though some checks are no-ops when
    certain other options are/aren't given).
 
-``--ignore <checks>`` / ``ignore = <checks>``
-   Ignore/skip the given checks.  ``<checks>`` is a comma-separated list of
-   check IDs and/or check ID prefixes (to ignore all checks beginning with the
-   given prefixes).
+``--ignore CHECKS`` / ``ignore = CHECKS``
+   Ignore/skip the given checks.  ``CHECKS`` is a comma-separated list of check
+   IDs and/or check ID prefixes (to ignore all checks beginning with the given
+   prefixes).
 
-   In a TOML file, ``<checks>`` may alternatively be given as a list of
-   strings.
+   In a TOML file, ``CHECKS`` may alternatively be given as a list of strings.
 
    By default, no checks are ignored.
 
-``--toplevel <names>`` / ``toplevel = <names>``
+``--toplevel NAMES`` / ``toplevel = NAMES``
    Tell ``check-wheel-contents`` to check that the toplevel library entries of
-   the wheel equal the set of names in the comma-separated list ``<names>``;
+   the wheel equal the set of names in the comma-separated list ``NAMES``;
    e.g., ``--toplevel foo.py,bar/`` checks that ``foo.py``, ``bar``, and
    nothing else is at the top level of your wheel.  Trailing slashes on
    directory names are optional.
 
-   In a TOML file, ``<names>`` may alternatively be given as a list of strings.
+   In a TOML file, ``NAMES`` may alternatively be given as a list of strings.
 
    This option disables check W009 and enables checks W201 and W202.  It is
    also used by check W005 to prevent failure on common names that are
    intentionally used as toplevel names.
 
-``--package <path>`` / ``package = <paths>``
+``--package PATH`` / ``package = PATHS``
    Tell ``check-wheel-contents`` to check that the wheel's library sections
-   contain the file tree rooted at ``<path>``.
+   contain the file tree rooted at ``PATH``.
 
    Paths given on the command line are resolved relative to the current working
    directory.  Paths given in a configuration file are resolved relative to the
@@ -145,23 +143,23 @@ configuration file.  Unknown keys in configuration files are ignored.
    On the command line, multiple paths can be specified by supplying
    ``--package`` multiple times.  In a configuration file, multiple paths can
    be specified by setting ``package`` to a comma-separated list of paths.  In
-   a TOML file, ``<paths>`` may alternatively be given as a list of strings.
+   a TOML file, ``PATHS`` may alternatively be given as a list of strings.
 
    This option disables check W009 and enables checks W101 and W102.
 
-``--src-dir <path>`` / ``src_dir = <paths>``
-   The same as ``--package``, except that only the contents of ``<path>``
-   (which must be a directory) and not ``<path>`` itself are checked against
-   the wheel's contents.
+``--src-dir PATH`` / ``src_dir = PATHS``
+   The same as ``--package``, except that only the contents of ``PATH`` (which
+   must be a directory) and not ``PATH`` itself are checked against the wheel's
+   contents.
 
-``--package-omit <patterns>`` / ``package_omit = <patterns>``
+``--package-omit PATTERNS`` / ``package_omit = PATTERNS``
    Ignore files & directories inside ``--package`` or ``--src-dir`` arguments
    that match any of the glob patterns in the comma-separated list
-   ``<patterns>``.  Ignored files will not be looked for in wheels for check
+   ``PATTERNS``.  Ignored files will not be looked for in wheels for check
    W101, and if any of them do show up in a wheel, it will cause check W102 to
    fail.
 
-   In a TOML file, ``<patterns>`` may alternatively be given as a list of
+   In a TOML file, ``PATTERNS`` may alternatively be given as a list of
    strings.
 
    The default set of ignored patterns is ``.*, CVS, RCS, *.pyc, *.pyo,
