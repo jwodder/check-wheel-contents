@@ -187,7 +187,7 @@ def test_bad_checks_option_error(mocker: MockerFixture, options: list[str]) -> N
 
 @pytest.mark.parametrize(
     "whlfile",
-    WHEEL_DIR.glob("*.whl"),
+    list(WHEEL_DIR.glob("*.whl")),
     ids=attrgetter("name"),
 )
 def test_main(monkeypatch: pytest.MonkeyPatch, whlfile: Path) -> None:
