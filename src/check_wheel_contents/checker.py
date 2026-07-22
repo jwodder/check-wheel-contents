@@ -299,6 +299,29 @@ class WheelChecker:
         else:
             return []
 
+    def check_W011(self, contents: WheelContents) -> list[FailedCheck]:
+        """
+        W011 — Wheel contains module and submodule with the same name
+
+        E.g: checks for both `path/foo.py` and `path/foo/__init__.py` being present
+        """
+        conflicts: list[str] = []
+
+        def check_dir(tree: Directory) -> None:
+            for name, entry in tree.entries.items():
+                if isinstance(entry, Directory):
+                    if tree.files.get(name + ".py") is not None:
+                        conflicts.append(entry.path or name)
+                    check_dir(entry)
+
+        for tree in (contents.purelib_tree, contents.platlib_tree):
+            if isinstance(tree, Directory):
+                check_dir(tree)
+
+        if conflicts:
+            return [FailedCheck(Check.W011, conflicts)]
+        return []
+
     def check_W101(self, contents: WheelContents) -> list[FailedCheck]:
         """
         W101 — Wheel library is missing files in package tree
