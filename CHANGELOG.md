@@ -1,5 +1,7 @@
 v0.7.0 (in development)
 -----------------------
+- Allow hyphens in configuration option names; underscore spellings take
+  precedence when both are present (contributed by @GitHubCatTest; closes #33)
 - Remove unused `backports.cached-property` dependency
 - Support Python 3.14
 

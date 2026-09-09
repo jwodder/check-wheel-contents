@@ -262,7 +262,13 @@ def test_from_file(path: Path) -> None:
         ),
     ],
 )
-def test_from_file_in_project(cfgname: str, cfgsrc: str, tmp_path: Path) -> None:
+@pytest.mark.parametrize("separator", ["_", "-"])
+def test_from_file_in_project(
+    cfgname: str, cfgsrc: str, tmp_path: Path, separator: str
+) -> None:
+    cfgsrc = cfgsrc.replace("src_dir", f"src{separator}dir").replace(
+        "package_omit", f"package{separator}omit"
+    )
     project_dir = tmp_path / "project"
     copytree(PROJECT_TREE, project_dir)
     cfgpath = project_dir / cfgname
@@ -944,3 +950,18 @@ def test_toml_unicode(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     Configuration.from_file(tmp_path / "pyproject.toml")
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_config_underscore_spelling_takes_precedence(reverse: bool) -> None:
+    items = [
+        ("src_dir", ["source"]),
+        ("src-dir", ["ignored"]),
+        ("package_omit", ["*.pyc"]),
+        ("package-omit", ["ignored"]),
+    ]
+    if reverse:
+        items.reverse()
+    cfg = Configuration.model_validate(dict(items))
+    assert cfg.src_dirs == [Path("source")]
+    assert cfg.package_omit == ["*.pyc"]

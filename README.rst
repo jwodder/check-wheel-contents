@@ -99,6 +99,9 @@ Configuration Options
 The following options may be set either on the command line or in the
 configuration file.  Settings given on the command line override those in the
 configuration file.  Unknown keys in configuration files are ignored.
+Underscores in configuration option names may also be written as hyphens (for
+example, ``src-dir`` and ``package-omit``).  If both spellings of an option are
+present, the underscore spelling takes precedence.
 
 ``--select CHECKS`` / ``select = CHECKS``
    Select/enable only the given checks.  ``CHECKS`` is a comma-separated list

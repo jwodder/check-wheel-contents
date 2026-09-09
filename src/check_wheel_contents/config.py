@@ -4,7 +4,7 @@ from configparser import ConfigParser
 from pathlib import Path
 import sys
 from typing import Any
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import AliasChoices, BaseModel, Field, ValidationError, field_validator
 from .checks import Check, parse_check_prefix
 from .errors import UserInputError
 from .filetree import Directory
@@ -49,10 +49,14 @@ class Configuration(BaseModel, populate_by_name=True):
     package_paths: list[Path] | None = Field(None, alias="package")
     #: The list of paths specified with ``--src-dir``, or `None` if not
     #: specified
-    src_dirs: list[Path] | None = Field(None, alias="src_dir")
+    src_dirs: list[Path] | None = Field(
+        None, alias="src_dir", validation_alias=AliasChoices("src_dir", "src-dir")
+    )
     #: The set of exclusion patterns for traversing ``package_paths`` and
     #: ``src_dirs``, or `None` if not specified
-    package_omit: list[str] | None = None
+    package_omit: list[str] | None = Field(
+        None, validation_alias=AliasChoices("package_omit", "package-omit")
+    )
 
     @field_validator("select", "ignore", mode="before")
     @classmethod
