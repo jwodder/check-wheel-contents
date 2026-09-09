@@ -275,13 +275,6 @@ def test_check_W001(paths: list[str], failures: list[FailedCheck]) -> None:
                 ],
             ],
             [
-                FailedCheck(
-                    Check.W002,
-                    [
-                        "foo-1.0.dist-info/LICENSE",
-                        "foo-1.0.dist-info/NOTICE.txt",
-                    ],
-                ),
                 FailedCheck(Check.W002, ["foo.py", "foo/duplicate.py"]),
             ],
         ),
@@ -928,3 +921,42 @@ def test_check_W202(
     checker = WheelChecker()
     checker.configure_options(toplevel=toplevel)
     assert checker.check_W202(wheel_from_paths(paths)) == failures
+
+
+@pytest.mark.parametrize(
+    "paths,duplicates",
+    [
+        (
+            [
+                "foo-1.0.dist-info/namespace_packages.txt",
+                "foo-1.0.dist-info/top_level.txt",
+            ],
+            [],
+        ),
+        (["foo-1.0.dist-info/licenses/LICENSE", "foo/LICENSE"], []),
+        (
+            ["foo-1.0.dist-info/licenses/LICENSE", "foo/LICENSE", "bar/LICENSE"],
+            ["foo/LICENSE", "bar/LICENSE"],
+        ),
+        (
+            ["foo/vendor.dist-info/NOTICE", "foo/NOTICE"],
+            ["foo/vendor.dist-info/NOTICE", "foo/NOTICE"],
+        ),
+    ],
+)
+def test_W002_metadata_exclusion(paths: list[str], duplicates: list[str]) -> None:
+    contents = WheelContents(
+        dist_info_dir="foo-1.0.dist-info",
+        data_dir="foo-1.0.data",
+        root_is_purelib=True,
+    )
+    contents.add_record_rows(
+        [["foo-1.0.dist-info/METADATA", DUMMY_HASH, DUMMY_SIZE]]
+        + [
+            [path, "sha256=oVov1f8LxBN1tMMdn93JEkqCNaMTunicL391TsKTYs8", "1012"]
+            for path in paths
+        ]
+    )
+    contents.validate_tree()
+    expected = [FailedCheck(Check.W002, duplicates)] if duplicates else []
+    assert WheelChecker().check_W002(contents) == expected

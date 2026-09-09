@@ -1,5 +1,7 @@
 v0.7.0 (in development)
 -----------------------
+- Exclude metadata files from W002 duplicate-content checks
+  (contributed by @GitHubCatTest; closes #35)
 - Remove unused `backports.cached-property` dependency
 - Support Python 3.14
 

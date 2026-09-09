@@ -135,11 +135,13 @@ class WheelChecker:
         """
         Check W002 — Wheel contains duplicate files
 
-        Files whose signatures are in `ALLOWED_DUPLICATES` are ignored.
+        Files in the metadata directory and files whose signatures are in
+        `ALLOWED_DUPLICATES` are ignored.
         """
         ### TODO: Support reading sets of allowed duplicates from config
         dups = []
         for sig, files in contents.by_signature.items():
+            files = [f for f in files if f.parts[0] != contents.dist_info_dir]
             if len(files) > 1 and sig not in ALLOWED_DUPLICATES:
                 dups.append(FailedCheck(Check.W002, [f.path for f in files]))
         return dups

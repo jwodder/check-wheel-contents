@@ -210,7 +210,9 @@ W002 — Wheel contains duplicate files
 -------------------------------------
 This check fails if any two files in the wheel have the same contents.  Common
 file contents, such as files that are empty or just contain the line "``# -*-
-coding: utf-8 -*-``", are excluded from this check.
+coding: utf-8 -*-``", are excluded from this check.  Files in the wheel's
+``*.dist-info`` metadata directory are also excluded, as metadata files can
+legitimately have identical contents.
 
 Common causes:
 
