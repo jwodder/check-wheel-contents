@@ -1,7 +1,7 @@
 v0.7.0 (in development)
 -----------------------
 - Remove unused `backports.cached-property` dependency
-- Support Python 3.14
+- Support Python 3.14 and 3.15
 
 v0.6.3 (2025-08-02)
 -------------------
