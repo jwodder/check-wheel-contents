@@ -238,3 +238,24 @@ def test_bad_config_error(
     assert r.exit_code != 0, show_result(r)
     assert f"Error: {cfgname}: " in r.output
     assert errmsg.format(missing_path=str(tmp_path / "missing")) in r.output
+
+
+def test_main_empty_select_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    # An explicitly empty --select must not silently disable every check.
+    monkeypatch.chdir(str(WHEEL_DIR))
+    whlfile = sorted(WHEEL_DIR.glob("*.whl"))[0].name
+    r = CliRunner().invoke(main, ["--no-config", "--select=", whlfile])
+    assert r.exit_code == 2, show_result(r)
+    assert "No checks selected" in r.output
+
+
+def test_main_nonempty_select_still_runs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Control: a non-empty --select keeps working after the empty-select
+    # guard (exit 0 or 1 depending on findings, never a usage error).
+    monkeypatch.chdir(str(WHEEL_DIR))
+    whlfile = sorted(WHEEL_DIR.glob("*.whl"))[0].name
+    r = CliRunner().invoke(main, ["--no-config", "--select=W001", whlfile])
+    assert r.exit_code in (0, 1), show_result(r)
+    assert "No checks selected" not in r.output

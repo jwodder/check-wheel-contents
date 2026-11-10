@@ -22,9 +22,16 @@ class ChecksParamType(click.ParamType):
         ctx: click.Context | None,
     ) -> set[Check]:
         try:
-            return parse_checks_string(value)
+            checks = parse_checks_string(value)
         except UserInputError as e:
             self.fail(str(e), param, ctx)
+        if not checks and getattr(param, "name", None) == "select":
+            # An explicitly empty --select would silently disable every
+            # check and report every wheel as OK; fail closed instead.
+            # (An empty --ignore is harmless -- it ignores nothing -- so
+            # it stays allowed.)
+            self.fail(f"No checks selected by {value!r}", param, ctx)
+        return checks
 
 
 class ConfigParamType(click.ParamType):
