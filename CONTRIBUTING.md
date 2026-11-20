@@ -1,25 +1,28 @@
 Golden Rules
 ============
 
-1. No pull request will be accepted unless all of the tests pass
+1. Submissions generated in whole or in part by an LLM or other generative AI
+   will NOT be accepted.
+
+2. No pull request will be accepted unless all of the tests pass
 
     - New contributors will have to wait for their PRs to be manually approved
       before GitHub Actions will test their contributions.  The wait should be
       no longer than 24 hours.
 
-2. Lint your code!  Install [pre-commit](https://pre-commit.com) on your
+3. Lint your code!  Install [pre-commit](https://pre-commit.com) on your
    machine, run `pre-commit install` in your local clone of the repository, and
    then let pre-commit automatically format & lint the code before each commit.
 
-3. If making a nontrivial contribution, add tests!  Tests are stored in
+4. If making a nontrivial contribution, add tests!  Tests are stored in
    `test/`, are written using [pytest](https://docs.pytest.org), and are run
-   using [tox](http://tox.readthedocs.org).
+   using [tox](https://tox.wiki).
 
-4. Use type annotations!  Type checking is run via tox.
+5. Use type annotations!  Type checking is run via tox.
 
-5. If adding or changing a feature, update the documentation in `README.rst`
+6. If adding or changing a feature, update the documentation in `README.rst`
 
-6. If making a nontrivial contribution, add a summary to the "in development"
+7. If making a nontrivial contribution, add a summary to the "in development"
    section at the top of `CHANGELOG.md` (if there isn't one, start one);
    include your GitHub username and any issues that your PR closes.
 
