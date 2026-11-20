@@ -31,7 +31,18 @@ CONFIG_SECTION = "check-wheel-contents"
 
 #: The default set of exclusion patterns for traversing ``--package`` and
 #: ``--src-dir`` directories
-TRAVERSAL_EXCLUSIONS = [".*", "CVS", "RCS", "*.pyc", "*.pyo", "*.egg-info"]
+TRAVERSAL_EXCLUSIONS = [
+    ".*",
+    "CVS",
+    "RCS",
+    "*.pyc",
+    "*.pyo",
+    "*.egg-info",
+    "*~",
+    "*.bak",
+    "Thumbs.db",
+    "__MACOSX",
+]
 
 
 class Configuration(BaseModel, populate_by_name=True):
@@ -267,7 +278,9 @@ class Configuration(BaseModel, populate_by_name=True):
             exclude = self.package_omit
         tree = Directory()
         for p in self.package_paths or []:
-            subtree = Directory.from_local_tree(p, exclude=exclude)
+            subtree = Directory.from_local_tree(
+                p, exclude=exclude, exclude_cache_dirs=self.package_omit is None
+            )
             ### TODO: Move the below logic to Directory?
             for name, entry in subtree.entries.items():
                 if name in tree:
@@ -281,6 +294,7 @@ class Configuration(BaseModel, populate_by_name=True):
                 p,
                 exclude=exclude,
                 include_root=False,
+                exclude_cache_dirs=self.package_omit is None,
             )
             ### TODO: Move the below logic to Directory?
             for name, entry in subtree.entries.items():

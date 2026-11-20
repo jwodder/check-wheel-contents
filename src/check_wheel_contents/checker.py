@@ -1,4 +1,5 @@
 from __future__ import annotations
+from fnmatch import fnmatchcase
 from operator import attrgetter
 import re
 import sys
@@ -8,7 +9,12 @@ from .checks import Check, FailedCheck
 from .config import Configuration
 from .contents import WheelContents
 from .filetree import Directory, File
-from .util import bytes_signature, is_stubs_dir
+from .util import (
+    UNWANTED_DIR_NAMES,
+    UNWANTED_FILE_PATTERNS,
+    bytes_signature,
+    is_stubs_dir,
+)
 
 #: A sentinel object used to disable reading from a configuration file
 NO_CONFIG = object()
@@ -298,6 +304,29 @@ class WheelChecker:
             return [FailedCheck(Check.W010, baddirs)]
         else:
             return []
+
+    def check_W011(self, contents: WheelContents) -> list[FailedCheck]:
+        """W011 — Wheel contains unwanted files"""
+        badpaths = []
+
+        def check_tree(directory: Directory) -> None:
+            if (
+                directory.parts and directory.parts[-1] in UNWANTED_DIR_NAMES
+            ) or directory.parts in contents.cache_dirs:
+                badpaths.append(directory.path or "CACHEDIR.TAG")
+                return
+            for name, entry in directory.entries.items():
+                if isinstance(entry, Directory):
+                    check_tree(entry)
+                elif any(
+                    fnmatchcase(name, pattern) for pattern in UNWANTED_FILE_PATTERNS
+                ):
+                    badpaths.append(entry.path)
+
+        check_tree(contents.filetree)
+        if badpaths:
+            return [FailedCheck(Check.W011, sorted(badpaths))]
+        return []
 
     def check_W101(self, contents: WheelContents) -> list[FailedCheck]:
         """

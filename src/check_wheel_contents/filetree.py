@@ -7,7 +7,13 @@ from os.path import splitext
 from pathlib import Path
 import attr
 from .errors import WheelValidationError
-from .util import is_data_dir, is_dist_info_dir, pymodule_basename, validate_path
+from .util import (
+    is_cache_dir,
+    is_data_dir,
+    is_dist_info_dir,
+    pymodule_basename,
+    validate_path,
+)
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -242,6 +248,8 @@ class Directory:
         root: Path,
         exclude: list[str] | None = None,
         include_root: bool = True,
+        *,
+        exclude_cache_dirs: bool = False,
     ) -> Directory:
         """
         Construct a file tree mirroring the structure on the local disk at
@@ -264,6 +272,10 @@ class Directory:
 
         File & directories within root (but not ``root`` itself) that match any
         of the patterns in ``exclude`` will be omitted from the resulting tree.
+
+        If ``exclude_cache_dirs`` is true, directories within ``root`` containing
+        a valid regular ``CACHEDIR.TAG`` file are also omitted.  Directory and tag
+        symlinks are not used to identify caches.  The explicit root is retained.
 
         :raises FileNotFoundError: if ``root`` does not exist
         """
@@ -292,14 +304,17 @@ class Directory:
             def add_tree(d: Directory, path: Path) -> None:
                 """Adds the contents of the directory ``path`` to ``d``"""
                 for p in path.iterdir():
-                    if not any(p.match(e) for e in exclude_list):
-                        parts = p.relative_to(relroot).parts
-                        if p.is_dir():
-                            subdir = cls("/".join(parts) + "/")
-                            d.add_entry(subdir)
-                            add_tree(subdir, p)
-                        else:
-                            d.add_entry(File(parts, None, None))
+                    if any(p.match(e) for e in exclude_list):
+                        continue
+                    if exclude_cache_dirs and p.is_dir() and is_cache_dir(p):
+                        continue
+                    parts = p.relative_to(relroot).parts
+                    if p.is_dir():
+                        subdir = cls("/".join(parts) + "/")
+                        d.add_entry(subdir)
+                        add_tree(subdir, p)
+                    else:
+                        d.add_entry(File(parts, None, None))
 
             add_tree(d1, root)
         else:

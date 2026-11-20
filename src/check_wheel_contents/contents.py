@@ -6,13 +6,14 @@ from functools import cached_property
 from io import TextIOWrapper
 import os
 import re
+import stat
 from typing import TextIO
 from zipfile import ZipFile
 import attr
 from wheel_filename import WheelFilename
 from .errors import WheelValidationError
 from .filetree import Directory, File
-from .util import find_wheel_dirs, is_data_dir, is_dist_info_dir
+from .util import CACHE_TAG_SIGNATURE, find_wheel_dirs, is_data_dir, is_dist_info_dir
 
 ROOT_IS_PURELIB_RGX = re.compile(r"Root-Is-Purelib\s*:\s*(.*?)\s*", flags=re.I)
 
@@ -35,6 +36,9 @@ class WheelContents:
     )
     #: The wheel's file tree
     filetree: Directory = attr.ib(factory=Directory)
+
+    #: Paths of directories with verified regular ``CACHEDIR.TAG`` files
+    cache_dirs: set[tuple[str, ...]] = attr.ib(factory=set)
 
     @cached_property
     def purelib_tree(self) -> Directory:
@@ -130,6 +134,15 @@ class WheelContents:
                 raise WheelValidationError("No RECORD file in wheel")
             with zf.open(record_info) as rf:
                 wc.add_record_file(TextIOWrapper(rf, "utf-8", newline=""))
+            for entry in wc.filetree.all_files():
+                if entry.parts[-1] != "CACHEDIR.TAG":
+                    continue
+                info = zf.getinfo(entry.path)
+                if stat.S_IFMT(info.external_attr >> 16) not in (0, stat.S_IFREG):
+                    continue
+                with zf.open(info) as tag:
+                    if tag.read(len(CACHE_TAG_SIGNATURE)) == CACHE_TAG_SIGNATURE:
+                        wc.cache_dirs.add(entry.parts[:-1])
         wc.validate_tree()
         return wc
 
