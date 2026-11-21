@@ -773,7 +773,9 @@ def test_get_package_tree_package_path(
     )
     fltmock = mocker.patch.object(Directory, "from_local_tree", return_value=tree)
     assert cfg.get_package_tree() == tree
-    fltmock.assert_called_once_with(path, exclude=exclude)
+    fltmock.assert_called_once_with(
+        path, exclude=exclude, exclude_cache_dirs=package_omit is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -804,7 +806,12 @@ def test_get_package_tree_src_dir(
     )
     fltmock = mocker.patch.object(Directory, "from_local_tree", return_value=tree)
     assert cfg.get_package_tree() == tree
-    fltmock.assert_called_once_with(path, exclude=exclude, include_root=False)
+    fltmock.assert_called_once_with(
+        path,
+        exclude=exclude,
+        include_root=False,
+        exclude_cache_dirs=package_omit is None,
+    )
 
 
 def test_get_package_tree_multiple_package_paths(

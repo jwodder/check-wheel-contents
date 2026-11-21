@@ -163,7 +163,16 @@ configuration file.  Unknown keys in configuration files are ignored.
    strings.
 
    The default set of ignored patterns is ``.*, CVS, RCS, *.pyc, *.pyo,
-   *.egg-info``.
+   *.egg-info, *~, *.bak, Thumbs.db, __MACOSX``.  By default, directories
+   within these roots with a valid, regular ``CACHEDIR.TAG`` file are also
+   omitted.  The tag must start with the signature from the `Cache Directory
+   Tagging Specification <https://bford.info/cachedir/>`_; symbolic links to
+   tags or directories are not used to identify caches.
+
+   Setting ``package_omit`` or ``--package-omit`` replaces all of these
+   defaults, including cache-directory omission.  An empty value disables the
+   default omissions.  Explicitly selected ``--package`` and ``--src-dir``
+   roots themselves are retained.
 
 
 Checks
@@ -436,6 +445,27 @@ platlib section of the wheel contains no Python modules.  ``*-stubs``
 directories are excluded from this check.
 
 
+W011 — Wheel contains unwanted files
+-------------------------------------
+This check fails if a wheel contains editor backup/swap files (``.*.swp``,
+``*~``, ``.#*``, ``*.bak``), operating-system artifacts (``.DS_Store``,
+``._*``, ``Thumbs.db``, ``__MACOSX/``), coverage data (``.coverage`` or
+``.coverage.*``), or ``.mypy_cache/`` directories.  Filenames are matched
+case-sensitively at every level, including the wheel's data and metadata
+sections.  Other hidden files, such as ``.gitignore`` or ``.coveragerc``,
+are not rejected by this check.
+
+Directories with a valid, regular ``CACHEDIR.TAG`` file are also reported.
+Only the required first 43 bytes of each tag are read; a same-named file with
+a different header, or a symbolic link, does not mark a cache directory.
+A reported directory includes its entire subtree and is listed once.
+
+Remove these artifacts from the wheel's build inputs.  If they are
+intentional package data, use ``--ignore W011`` to disable this check.
+The default source-tree omissions for ``--package`` and ``--src-dir`` also
+exclude these artifacts; setting ``--package-omit`` replaces those defaults.
+
+
 W101 — Wheel library is missing files in package tree
 -----------------------------------------------------
 This check is only enabled if the ``--package`` or ``--src-dir`` option is set.
@@ -445,8 +475,9 @@ platlib section.  Empty directories and local files & directories that match
 any of the patterns specified with ``--package-omit`` or its default value are
 excluded from this check.
 
-Note that this check only checks file paths, i.e., names of files &
-directories.  File contents are not examined.
+Note that this check only compares file paths, i.e., names of files &
+directories.  File contents are not compared.  Cache-tag headers are read
+only to apply the default source-tree omissions.
 
 For example, given the below local tree::
 
@@ -502,8 +533,9 @@ This check fails if the purelib or platlib section of the wheel contains any
 files at paths that do not exist in any of the file trees specified with
 ``--package`` or ``--src-dir``.
 
-Note that this check only checks file paths, i.e., names of files &
-directories.  File contents are not examined.
+Note that this check only compares file paths, i.e., names of files &
+directories.  File contents are not compared.  Cache-tag headers are read
+only to apply the default source-tree omissions.
 
 For example, given the local tree and options shown in the example under W101,
 this check will fail if the wheel contains any files in its purelib or platlib

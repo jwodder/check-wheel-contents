@@ -1,5 +1,9 @@
 v0.7.0 (in development)
 -----------------------
+- Add W011 to reject editor, operating-system, coverage, and cache artifacts in
+  wheels, and omit these artifacts from source comparisons by default.  Cache
+  directory tags require their standard signature and must not be symbolic links.
+  Contributed by @mayankdhingra02; closes #9.
 - Remove unused `backports.cached-property` dependency
 - Support Python 3.14 and 3.15
 

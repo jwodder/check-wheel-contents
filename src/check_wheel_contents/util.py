@@ -2,6 +2,7 @@ from __future__ import annotations
 import base64
 import hashlib
 from keyword import iskeyword
+from pathlib import Path
 import re
 from packaging.utils import canonicalize_name, canonicalize_version
 from .errors import WheelValidationError
@@ -16,6 +17,26 @@ DIST_INFO_DIR_RGX = re.compile(
 DATA_DIR_RGX = re.compile(
     r"[A-Za-z0-9](?:[A-Za-z0-9._]*[A-Za-z0-9])?-[A-Za-z0-9_.!+]+\.data"
 )
+
+
+#: The required first 43 bytes of a Cache Directory Tagging Specification tag
+CACHE_TAG_SIGNATURE = b"Signature: 8a477f597d28d172789f06886806bc55"
+
+#: Filenames indicating editor, operating system, or coverage artifacts
+UNWANTED_FILE_PATTERNS = (
+    ".*.swp",
+    "*~",
+    ".#*",
+    "*.bak",
+    ".DS_Store",
+    "._*",
+    "Thumbs.db",
+    ".coverage",
+    ".coverage.*",
+)
+
+#: Directory names indicating generated caches or archive metadata
+UNWANTED_DIR_NAMES = {".mypy_cache", "__MACOSX"}
 
 
 def comma_split(s: str) -> list[str]:
@@ -136,3 +157,12 @@ def find_wheel_dirs(
     else:
         data_dir = None
     return (dist_info_dir, data_dir)
+
+
+def is_cache_dir(path: Path) -> bool:
+    """Return whether a directory has a regular, valid ``CACHEDIR.TAG`` file."""
+    tag = path / "CACHEDIR.TAG"
+    if path.is_symlink() or tag.is_symlink() or not tag.is_file():
+        return False
+    with tag.open("rb") as fp:
+        return fp.read(len(CACHE_TAG_SIGNATURE)) == CACHE_TAG_SIGNATURE
